@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from dataclasses import asdict, dataclass
 
 import httpx
 
@@ -13,10 +14,25 @@ from src.domain.language_model import (
 UNEXPECTED_FORMAT_MESSAGE = "Unexpected response format from Ollama"
 
 
+@dataclass(frozen=True)
+class OllamaGenerationOptions:
+    """Sampling settings sent as Ollama's "options"; field names match the Ollama API."""
+
+    num_predict: int
+    temperature: float
+    repeat_penalty: float
+
+
 class OllamaLanguageModel:
-    def __init__(self, client: httpx.Client, model: str) -> None:
+    def __init__(
+        self,
+        client: httpx.Client,
+        model: str,
+        generation_options: OllamaGenerationOptions | None = None,
+    ) -> None:
         self._client = client
         self._model = model
+        self._generation_options = generation_options
 
     def chat(
         self,
@@ -30,6 +46,8 @@ class OllamaLanguageModel:
         }
         if tools:
             payload["tools"] = [self._serialize_tool(tool) for tool in tools]
+        if self._generation_options is not None:
+            payload["options"] = asdict(self._generation_options)
         try:
             response = self._client.post("/api/chat", json=payload)
             response.raise_for_status()

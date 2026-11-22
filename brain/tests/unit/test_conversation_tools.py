@@ -12,6 +12,7 @@ FINAL_ANSWER = "About 384,000 km."
 MOON_TOOL_CALL = ToolCall(name="echo", arguments={"text": "moon distance"})
 UNKNOWN_TOOL_CALL = ToolCall(name="teleport", arguments={})
 MAX_STEPS = 3
+REMINDER = "(Tell it like a capybara, no lists.)"
 
 
 class EchoTool:
@@ -183,6 +184,38 @@ def test_tells_the_model_when_the_tool_fails(
 
     tool_result = language_model_asking_for_echo.received_histories[1][-1]
     assert tool_result.content == "Error: the search engine is down"
+
+
+def test_appends_the_reminder_after_the_tool_result(
+    language_model_asking_for_echo: ScriptedLanguageModel, echo_tool: EchoTool
+) -> None:
+    conversation = Conversation(
+        language_model_asking_for_echo,
+        SYSTEM_PROMPT,
+        tools=[echo_tool],
+        tool_result_reminder=REMINDER,
+    )
+
+    conversation.send(QUESTION)
+
+    tool_result = language_model_asking_for_echo.received_histories[1][-1]
+    assert tool_result.content == f"echo: moon distance\n\n{REMINDER}"
+
+
+def test_appends_the_reminder_after_a_tool_error(
+    language_model_asking_for_echo: ScriptedLanguageModel,
+) -> None:
+    conversation = Conversation(
+        language_model_asking_for_echo,
+        SYSTEM_PROMPT,
+        tools=[BrokenTool()],
+        tool_result_reminder=REMINDER,
+    )
+
+    conversation.send(QUESTION)
+
+    tool_result = language_model_asking_for_echo.received_histories[1][-1]
+    assert tool_result.content == f"Error: the search engine is down\n\n{REMINDER}"
 
 
 def test_raises_when_the_model_exceeds_the_step_limit(

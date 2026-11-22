@@ -1,7 +1,9 @@
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
+from src.infrastructure.ollama_language_model import OllamaGenerationOptions
 from src.infrastructure.settings import Settings
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -26,6 +28,75 @@ def environment_without_web_search_backend(monkeypatch: pytest.MonkeyPatch) -> N
 @pytest.fixture
 def auto_web_search_backend(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("WEB_SEARCH_BACKEND", "auto")
+
+
+@pytest.fixture
+def environment_without_log_level(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("LOG_LEVEL", raising=False)
+
+
+@pytest.fixture
+def debug_log_level(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LOG_LEVEL", "DEBUG")
+
+
+@pytest.fixture
+def invalid_log_level(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LOG_LEVEL", "LOUD")
+
+
+@pytest.fixture
+def custom_generation_options(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("OLLAMA_NUM_PREDICT", "150")
+    monkeypatch.setenv("OLLAMA_TEMPERATURE", "0.5")
+    monkeypatch.setenv("OLLAMA_REPEAT_PENALTY", "1.2")
+
+
+@pytest.fixture
+def temperature_above_the_limit(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("OLLAMA_TEMPERATURE", "3")
+
+
+@pytest.fixture
+def zero_num_predict(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("OLLAMA_NUM_PREDICT", "0")
+
+
+def test_generation_options_come_from_environment_variables(
+    custom_generation_options: None,
+) -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.ollama_generation_options() == OllamaGenerationOptions(
+        num_predict=150, temperature=0.5, repeat_penalty=1.2
+    )
+
+
+def test_rejects_a_temperature_above_two(temperature_above_the_limit: None) -> None:
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None)
+
+
+def test_rejects_a_num_predict_of_zero(zero_num_predict: None) -> None:
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None)
+
+
+def test_log_level_defaults_to_info(environment_without_log_level: None) -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.log_level == "INFO"
+
+
+def test_log_level_comes_from_environment_variable(debug_log_level: None) -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.log_level == "DEBUG"
+
+
+def test_rejects_an_unknown_log_level(invalid_log_level: None) -> None:
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None)
 
 
 def test_web_search_backend_defaults_to_duckduckgo(

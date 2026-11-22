@@ -11,7 +11,10 @@ from src.domain.language_model import (
     ToolCall,
     ToolDefinition,
 )
-from src.infrastructure.ollama_language_model import OllamaLanguageModel
+from src.infrastructure.ollama_language_model import (
+    OllamaGenerationOptions,
+    OllamaLanguageModel,
+)
 
 OLLAMA_URL = "http://ollama.test"
 MODEL_NAME = "llama3.1:8b"
@@ -20,6 +23,7 @@ MESSAGES = [
     ChatMessage(Role.USER, "What do you want to research today?"),
 ]
 ASSISTANT_REPLY = "I want to research the stars."
+GENERATION_OPTIONS = OllamaGenerationOptions(num_predict=300, temperature=0.8, repeat_penalty=1.1)
 SEARCH_TOOL = ToolDefinition(
     name="web_search",
     description="Searches the web.",
@@ -117,6 +121,25 @@ def test_posts_model_and_messages_to_the_chat_endpoint(
             {"role": "user", "content": "What do you want to research today?"},
         ],
         "stream": False,
+    }
+
+
+def test_sends_the_generation_options(received_requests: list[httpx.Request]) -> None:
+    def reply_successfully(request: httpx.Request) -> httpx.Response:
+        received_requests.append(request)
+        return httpx.Response(200, json={"message": {"role": "assistant", "content": "Hi"}})
+
+    client = httpx.Client(base_url=OLLAMA_URL, transport=httpx.MockTransport(reply_successfully))
+    language_model = OllamaLanguageModel(
+        client=client, model=MODEL_NAME, generation_options=GENERATION_OPTIONS
+    )
+
+    language_model.chat(MESSAGES)
+
+    assert json.loads(received_requests[0].content)["options"] == {
+        "num_predict": 300,
+        "temperature": 0.8,
+        "repeat_penalty": 1.1,
     }
 
 

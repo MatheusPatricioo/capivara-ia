@@ -1,3 +1,5 @@
+import logging
+
 import pytest
 
 from src.application.tools.web_search_tool import WebSearchTool
@@ -7,6 +9,7 @@ from src.domain.web_search import SearchResult, WebSearchError
 QUERY = "capybara diet"
 MAX_RESULTS = 2
 MAX_SNIPPET_LENGTH = 20
+WEB_SEARCH_TOOL_LOGGER = "src.application.tools.web_search_tool"
 GRASS_RESULT = SearchResult(
     title="What capybaras eat",
     url="https://example.com/diet",
@@ -115,6 +118,24 @@ def test_says_so_when_there_are_no_results() -> None:
     output = tool.run({"query": QUERY})
 
     assert output == "No results found."
+
+
+def test_logs_how_many_results_were_returned(caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.INFO, logger=WEB_SEARCH_TOOL_LOGGER)
+    tool = build_tool([GRASS_RESULT, WATER_RESULT, EXTRA_RESULT])
+
+    tool.run({"query": QUERY})
+
+    assert "web_search returned 2 result(s)" in caplog.messages
+
+
+def test_logs_zero_results_when_nothing_is_found(caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.INFO, logger=WEB_SEARCH_TOOL_LOGGER)
+    tool = build_tool([])
+
+    tool.run({"query": QUERY})
+
+    assert "web_search returned 0 result(s)" in caplog.messages
 
 
 def test_rejects_a_missing_query(web_search_tool: WebSearchTool) -> None:

@@ -1,3 +1,5 @@
+import logging
+
 from src.domain.language_model import ToolDefinition
 from src.domain.tool import ToolError
 from src.domain.web_search import SearchResult, WebSearcher, WebSearchError
@@ -6,6 +8,8 @@ DEFAULT_MAX_RESULTS = 5
 DEFAULT_MAX_SNIPPET_LENGTH = 300
 NO_RESULTS_MESSAGE = "No results found."
 ELLIPSIS = "..."
+
+logger = logging.getLogger(__name__)
 
 
 class WebSearchTool:
@@ -41,9 +45,10 @@ class WebSearchTool:
             results = self._web_searcher.search(query.strip(), self._max_results)
         except WebSearchError as error:
             raise ToolError(f"web search failed: {error}") from error
-        if not results:
-            return NO_RESULTS_MESSAGE
         limited_results = results[: self._max_results]
+        logger.info("web_search returned %d result(s)", len(limited_results))
+        if not limited_results:
+            return NO_RESULTS_MESSAGE
         return "\n\n".join(
             self._format_result(position, result)
             for position, result in enumerate(limited_results, start=1)

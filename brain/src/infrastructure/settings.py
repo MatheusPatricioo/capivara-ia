@@ -1,16 +1,34 @@
 from pathlib import Path
+from typing import Literal
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from src.infrastructure.ollama_language_model import OllamaGenerationOptions
+
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
+
+LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     ollama_base_url: str = "http://localhost:11434"
-    ollama_model: str = "llama3.1:8b"
+    ollama_model: str = "qwen2.5:7b"
     ollama_timeout_seconds: float = 120.0
+    ollama_num_predict: int = Field(default=300, gt=0)
+    ollama_temperature: float = Field(default=0.8, ge=0.0, le=2.0)
+    ollama_repeat_penalty: float = Field(default=1.1, gt=0.0)
     max_tool_steps: int = 5
     web_search_backend: str = "duckduckgo"
     discoveries_dir: Path = PROJECT_ROOT / "discoveries"
+    log_level: LogLevel = "INFO"
+    log_file: Path = PROJECT_ROOT / "logs" / "capybara.log"
+
+    def ollama_generation_options(self) -> OllamaGenerationOptions:
+        return OllamaGenerationOptions(
+            num_predict=self.ollama_num_predict,
+            temperature=self.ollama_temperature,
+            repeat_penalty=self.ollama_repeat_penalty,
+        )
