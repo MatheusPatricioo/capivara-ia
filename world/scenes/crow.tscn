@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dfity88r7mbwf" path="res://scripts/crow.gd" id="1_crow"]
 [ext_resource type="Script" path="res://scripts/crow_wander.gd" id="2_crow_wander"]
+[ext_resource type="Script" path="res://scripts/crow_body_animation.gd" id="3_crow_body_animation"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_feathers"]
 albedo_color = Color(0.08, 0.08, 0.11, 1)
@@ -95,6 +96,7 @@ height = 0.8
 script = ExtResource("2_crow_wander")
 
 [node name="Body" type="Node3D" parent="."]
+script = ExtResource("3_crow_body_animation")
 
 [node name="Torso" type="MeshInstance3D" parent="Body"]
 position = Vector3(0, 0.32, 0)
@@ -110,8 +112,11 @@ position = Vector3(0.27, 0.32, 0.03)
 rotation_degrees = Vector3(0, 0, 15)
 mesh = SubResource("BoxMesh_wing")
 
-[node name="Tail" type="MeshInstance3D" parent="Body"]
-position = Vector3(0, 0.24, 0.3)
+[node name="TailPivot" type="Node3D" parent="Body"]
+position = Vector3(0, 0.287, 0.2)
+
+[node name="Tail" type="MeshInstance3D" parent="Body/TailPivot"]
+position = Vector3(0, -0.047, 0.1)
 rotation_degrees = Vector3(25, 0, 0)
 mesh = SubResource("BoxMesh_tail")
 

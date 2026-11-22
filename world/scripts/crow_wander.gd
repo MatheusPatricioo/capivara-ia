@@ -6,10 +6,14 @@ extends Node
 
 const ALL_NAVIGATION_LAYERS: int = 1
 
-## Shortest rest between two walks, in seconds.
-@export var min_rest_seconds: float = 2.0
+## Shortest rest between two walks, in seconds. Short rests look like a quick sniff.
+@export var min_rest_seconds: float = 0.8
 ## Longest rest between two walks, in seconds.
-@export var max_rest_seconds: float = 5.0
+@export var max_rest_seconds: float = 4.0
+## Chance (0 to 1) that a walk is a trot instead of a calm stroll.
+@export var trot_chance: float = 0.3
+## Speed multiplier used when trotting.
+@export var trot_speed_scale: float = 1.5
 ## How many random points to try before giving up until the next rest.
 @export var max_destination_attempts: int = 10
 ## How close the end of a path must be to the picked point to count as reachable.
@@ -43,9 +47,13 @@ func _walk_to_random_point() -> void:
 			navigation_map, ALL_NAVIGATION_LAYERS, true
 		)
 		if _is_reachable(navigation_map, destination):
-			_crow.walk_to(destination)
+			_crow.walk_to(destination, _pick_pace())
 			return
 	_start_rest()
+
+
+func _pick_pace() -> float:
+	return trot_speed_scale if randf() < trot_chance else 1.0
 
 
 ## Random points may land on an island the crow cannot reach (like the top of a rock),
