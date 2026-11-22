@@ -5,6 +5,8 @@
 [ext_resource type="PackedScene" path="res://scenes/props/rock.tscn" id="3_rock"]
 [ext_resource type="PackedScene" path="res://scenes/props/desk.tscn" id="4_desk"]
 [ext_resource type="PackedScene" path="res://scenes/props/chalkboard.tscn" id="5_chalkboard"]
+[ext_resource type="PackedScene" path="res://scenes/boundary.tscn" id="6_boundary"]
+[ext_resource type="PackedScene" path="res://scenes/props/bush.tscn" id="7_bush"]
 [ext_resource type="PackedScene" uid="uid://t61g1autgtyo" path="res://assets/nature/Models/GLTF format/tree_oak.glb" id="10_tree_oak"]
 [ext_resource type="PackedScene" uid="uid://80bofm65m2fc" path="res://assets/nature/Models/GLTF format/tree_pineRoundA.glb" id="11_tree_pine_round_a"]
 [ext_resource type="PackedScene" uid="uid://b42t4ph5t36qi" path="res://assets/nature/Models/GLTF format/tree_pineRoundC.glb" id="12_tree_pine_round_c"]
@@ -18,7 +20,6 @@
 [ext_resource type="PackedScene" uid="uid://n8ry41m2ttpv" path="res://assets/nature/Models/GLTF format/flower_redA.glb" id="30_flower_red_a"]
 [ext_resource type="PackedScene" uid="uid://l2a7obtv5a4p" path="res://assets/nature/Models/GLTF format/flower_yellowB.glb" id="31_flower_yellow_b"]
 [ext_resource type="PackedScene" uid="uid://c0f3o1ulotjcu" path="res://assets/nature/Models/GLTF format/flower_purpleC.glb" id="32_flower_purple_c"]
-[ext_resource type="PackedScene" uid="uid://cr2kvv5a0dwce" path="res://assets/nature/Models/GLTF format/plant_bush.glb" id="33_plant_bush"]
 [ext_resource type="PackedScene" uid="uid://dx7psuvg1bj8g" path="res://assets/nature/Models/GLTF format/plant_bushSmall.glb" id="34_plant_bush_small"]
 [ext_resource type="PackedScene" uid="uid://cwo6nfxvoiyun" path="res://assets/nature/Models/GLTF format/grass.glb" id="35_grass"]
 
@@ -37,10 +38,10 @@ albedo_color = Color(0.36, 0.55, 0.3, 1)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
 material = SubResource("StandardMaterial3D_grass")
-size = Vector2(20, 20)
+size = Vector2(32, 32)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
-size = Vector3(20, 0.2, 20)
+size = Vector3(32, 0.2, 32)
 
 [node name="World" type="Node3D" unique_id=1778038994]
 
@@ -129,49 +130,53 @@ model = ExtResource("25_stone_small_a")
 [node name="Flowers" type="Node3D" parent="Nature" unique_id=871569277]
 
 [node name="RedFlowerWestA" parent="Nature/Flowers" unique_id=46581214 instance=ExtResource("30_flower_red_a")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -4.5, 0, 1.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 0, 1.5)
 
 [node name="RedFlowerWestB" parent="Nature/Flowers" unique_id=1848976285 instance=ExtResource("30_flower_red_a")]
-transform = Transform3D(0, 0, -2, 0, 2, 0, 2, 0, 0, -5, 0, 2.2)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -5, 0, 2.2)
 
 [node name="RedFlowerEast" parent="Nature/Flowers" unique_id=1663847914 instance=ExtResource("30_flower_red_a")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 5.5, 0, -1.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0, -1.5)
 
 [node name="YellowFlowerSouthEastA" parent="Nature/Flowers" unique_id=1852272041 instance=ExtResource("31_flower_yellow_b")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 3.5, 0, 3.8)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 0, 3.8)
 
 [node name="YellowFlowerSouthEastB" parent="Nature/Flowers" unique_id=882968363 instance=ExtResource("31_flower_yellow_b")]
-transform = Transform3D(0, 0, 2, 0, 2, 0, -2, 0, 0, 4.2, 0, 3.1)
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 4.2, 0, 3.1)
 
 [node name="YellowFlowerWest" parent="Nature/Flowers" unique_id=884729354 instance=ExtResource("31_flower_yellow_b")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -6, 0, -1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -1)
 
 [node name="PurpleFlowerSouthA" parent="Nature/Flowers" unique_id=807929873 instance=ExtResource("32_flower_purple_c")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -2.5, 0, 5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0, 5)
 
 [node name="PurpleFlowerSouthB" parent="Nature/Flowers" unique_id=783353074 instance=ExtResource("32_flower_purple_c")]
-transform = Transform3D(0, 0, -2, 0, 2, 0, 2, 0, 0, -1.8, 0, 5.6)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -1.8, 0, 5.6)
 
 [node name="PurpleFlowerNorth" parent="Nature/Flowers" unique_id=622951829 instance=ExtResource("32_flower_purple_c")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 1.5, 0, -5)
-
-[node name="BushNorthWest" parent="Nature/Flowers" unique_id=2067411809 instance=ExtResource("33_plant_bush")]
-transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, -6.5, 0, -4.5)
-
-[node name="BushSouthEast" parent="Nature/Flowers" unique_id=1865379186 instance=ExtResource("33_plant_bush")]
-transform = Transform3D(0, 0, 2.5, 0, 2.5, 0, -2.5, 0, 0, 6.5, 0, 7)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, -5)
 
 [node name="SmallBushNorth" parent="Nature/Flowers" unique_id=223096519 instance=ExtResource("34_plant_bush_small")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -3, 0, -5.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0, -5.5)
 
 [node name="GrassSouth" parent="Nature/Flowers" unique_id=1335313841 instance=ExtResource("35_grass")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 2.5, 0, 5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0, 5)
 
 [node name="GrassSouthWest" parent="Nature/Flowers" unique_id=996206963 instance=ExtResource("35_grass")]
-transform = Transform3D(0, 0, -2, 0, 2, 0, 2, 0, 0, -5.5, 0, 5.5)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -5.5, 0, 5.5)
 
 [node name="GrassEast" parent="Nature/Flowers" unique_id=1708394374 instance=ExtResource("35_grass")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 5, 0, 1.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 1.5)
+
+[node name="Bushes" type="Node3D" parent="Nature"]
+
+[node name="BushNorthWest" parent="Nature/Bushes" unique_id=2067411809 instance=ExtResource("7_bush")]
+transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, -6.5, 0, -4.5)
+
+[node name="BushSouthEast" parent="Nature/Bushes" unique_id=1865379186 instance=ExtResource("7_bush")]
+transform = Transform3D(0, 0, 2.5, 0, 2.5, 0, -2.5, 0, 0, 6.5, 0, 7)
+
+[node name="Boundary" parent="." instance=ExtResource("6_boundary")]
 
 [node name="Workspace" type="Node3D" parent="." unique_id=1589149773]
 transform = Transform3D(0.70710677, 0, -0.70710677, 0, 1, 0, 0.70710677, 0, 0.70710677, 6.5, 0, -6.5)
