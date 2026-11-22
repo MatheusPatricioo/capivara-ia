@@ -5,6 +5,7 @@ from ddgs import DDGS
 
 from src.application.conversation import Conversation, StepLimitReachedError
 from src.application.tools.save_discovery_tool import SaveDiscoveryTool
+from src.application.tools.seen_sources import SeenSources
 from src.application.tools.web_search_tool import WebSearchTool
 from src.domain.language_model import LanguageModelError
 from src.infrastructure.duckduckgo_web_searcher import DuckDuckGoWebSearcher
@@ -32,9 +33,11 @@ def main() -> None:
             generation_options=settings.ollama_generation_options(),
         )
         web_searcher = DuckDuckGoWebSearcher(DDGS(), backend=settings.web_search_backend)
-        web_search_tool = WebSearchTool(web_searcher)
+        seen_sources = SeenSources()
+        web_search_tool = WebSearchTool(web_searcher, seen_sources=seen_sources)
         save_discovery_tool = SaveDiscoveryTool(
-            MarkdownDiscoveryRepository(settings.discoveries_dir)
+            MarkdownDiscoveryRepository(settings.discoveries_dir),
+            seen_sources,
         )
         conversation = Conversation(
             language_model,

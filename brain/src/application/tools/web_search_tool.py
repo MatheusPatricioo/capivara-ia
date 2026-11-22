@@ -1,5 +1,6 @@
 import logging
 
+from src.application.tools.seen_sources import SeenSources
 from src.domain.language_model import ToolDefinition
 from src.domain.tool import ToolError
 from src.domain.web_search import SearchResult, WebSearcher, WebSearchError
@@ -18,10 +19,12 @@ class WebSearchTool:
         web_searcher: WebSearcher,
         max_results: int = DEFAULT_MAX_RESULTS,
         max_snippet_length: int = DEFAULT_MAX_SNIPPET_LENGTH,
+        seen_sources: SeenSources | None = None,
     ) -> None:
         self._web_searcher = web_searcher
         self._max_results = max_results
         self._max_snippet_length = max_snippet_length
+        self._seen_sources = seen_sources if seen_sources is not None else SeenSources()
 
     @property
     def definition(self) -> ToolDefinition:
@@ -46,6 +49,7 @@ class WebSearchTool:
         except WebSearchError as error:
             raise ToolError(f"web search failed: {error}") from error
         limited_results = results[: self._max_results]
+        self._seen_sources.remember(result.url for result in limited_results)
         logger.info("web_search returned %d result(s)", len(limited_results))
         if not limited_results:
             return NO_RESULTS_MESSAGE

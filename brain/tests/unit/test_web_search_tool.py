@@ -2,6 +2,7 @@ import logging
 
 import pytest
 
+from src.application.tools.seen_sources import SeenSources
 from src.application.tools.web_search_tool import WebSearchTool
 from src.domain.tool import ToolError
 from src.domain.web_search import SearchResult, WebSearchError
@@ -110,6 +111,28 @@ def test_shortens_long_snippets() -> None:
     output = tool.run({"query": QUERY})
 
     assert output.endswith("\nCapybaras are the...")
+
+
+def test_remembers_the_urls_it_showed_to_the_model(fake_web_searcher: FakeWebSearcher) -> None:
+    seen_sources = SeenSources()
+    tool = WebSearchTool(fake_web_searcher, seen_sources=seen_sources)
+
+    tool.run({"query": QUERY})
+
+    assert seen_sources.contains(GRASS_RESULT.url)
+
+
+def test_does_not_remember_urls_left_out_by_the_limit() -> None:
+    seen_sources = SeenSources()
+    tool = WebSearchTool(
+        FakeWebSearcher([GRASS_RESULT, WATER_RESULT, EXTRA_RESULT]),
+        max_results=MAX_RESULTS,
+        seen_sources=seen_sources,
+    )
+
+    tool.run({"query": QUERY})
+
+    assert not seen_sources.contains(EXTRA_RESULT.url)
 
 
 def test_says_so_when_there_are_no_results() -> None:

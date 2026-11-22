@@ -2,6 +2,7 @@ import logging
 from collections.abc import Callable
 from datetime import date
 
+from src.application.tools.seen_sources import SeenSources
 from src.domain.discovery import Discovery, DiscoveryRepository, DiscoveryStorageError
 from src.domain.language_model import ToolDefinition
 from src.domain.tool import ToolError
@@ -15,9 +16,11 @@ class SaveDiscoveryTool:
     def __init__(
         self,
         repository: DiscoveryRepository,
+        seen_sources: SeenSources,
         today: Callable[[], date] = date.today,
     ) -> None:
         self._repository = repository
+        self._seen_sources = seen_sources
         self._today = today
 
     @property
@@ -40,7 +43,7 @@ class SaveDiscoveryTool:
                     "sources": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "description": "URLs of the pages where you found it.",
+                        "description": "URLs from your web_search results where you found it.",
                     },
                 },
                 "required": ["title", "topic", "summary", "sources"],
@@ -69,12 +72,28 @@ class SaveDiscoveryTool:
             raise ToolError(f"the '{name}' argument must be a non-empty text")
         return value.strip()
 
-    @staticmethod
-    def _sources(arguments: dict[str, object]) -> tuple[str, ...]:
+    def _sources(self, arguments: dict[str, object]) -> tuple[str, ...]:
         sources = arguments.get("sources")
         if not isinstance(sources, list):
             raise ToolError("the 'sources' argument must be a list of URLs")
-        return tuple(SaveDiscoveryTool._valid_url(source) for source in sources)
+        urls = tuple(self._valid_url(source) for source in sources)
+        self._ensure_sources_came_from_web_search(urls)
+        return urls
+
+    def _ensure_sources_came_from_web_search(self, urls: tuple[str, ...]) -> None:
+        if self._seen_sources.is_empty:
+            raise ToolError(
+                "no web search was done in this conversation yet: "
+                "use web_search first and cite the URLs it returns"
+            )
+        if not urls:
+            raise ToolError("a discovery needs at least one source from your web_search results")
+        for url in urls:
+            if not self._seen_sources.contains(url):
+                raise ToolError(
+                    f"source '{url}' did not come from your web_search results: "
+                    "search first and cite only URLs it returned"
+                )
 
     @staticmethod
     def _valid_url(source: object) -> str:
