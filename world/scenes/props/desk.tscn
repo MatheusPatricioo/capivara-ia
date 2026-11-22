@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/furniture/Models/GLTF format/desk.glb" id="1_desk"]
+[ext_resource type="PackedScene" path="res://assets/furniture/Models/GLTF format/computerScreen.glb" id="2_computer_screen"]
+[ext_resource type="PackedScene" path="res://assets/furniture/Models/GLTF format/chairDesk.glb" id="3_chair_desk"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_desk"]
+size = Vector3(0.8, 0.4, 0.4)
+
+[node name="Desk" type="StaticBody3D"]
+
+[node name="DeskModel" parent="." instance=ExtResource("1_desk")]
+
+[node name="Monitor" parent="." instance=ExtResource("2_computer_screen")]
+position = Vector3(0, 0.38, -0.05)
+
+[node name="Chair" parent="." instance=ExtResource("3_chair_desk")]
+position = Vector3(0, 0, 0.45)
+rotation_degrees = Vector3(0, 180, 0)
+
+[node name="DeskCollision" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.2, 0)
+shape = SubResource("BoxShape3D_desk")

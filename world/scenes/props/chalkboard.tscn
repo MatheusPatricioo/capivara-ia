@@ -1,0 +1,63 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood"]
+albedo_color = Color(0.55, 0.36, 0.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_slate"]
+albedo_color = Color(0.12, 0.25, 0.18, 1)
+roughness = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_surface"]
+material = SubResource("StandardMaterial3D_slate")
+size = Vector3(1.6, 1, 0.02)
+
+[sub_resource type="BoxMesh" id="BoxMesh_frame_horizontal"]
+material = SubResource("StandardMaterial3D_wood")
+size = Vector3(1.72, 0.06, 0.06)
+
+[sub_resource type="BoxMesh" id="BoxMesh_frame_post"]
+material = SubResource("StandardMaterial3D_wood")
+size = Vector3(0.06, 1.56, 0.06)
+
+[sub_resource type="BoxMesh" id="BoxMesh_foot"]
+material = SubResource("StandardMaterial3D_wood")
+size = Vector3(0.06, 0.04, 0.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_chalkboard"]
+size = Vector3(1.72, 1.56, 0.4)
+
+[node name="Chalkboard" type="StaticBody3D"]
+
+[node name="Surface" type="MeshInstance3D" parent="."]
+position = Vector3(0, 1, 0)
+mesh = SubResource("BoxMesh_surface")
+
+[node name="Frame" type="Node3D" parent="."]
+
+[node name="FrameTop" type="MeshInstance3D" parent="Frame"]
+position = Vector3(0, 1.53, 0)
+mesh = SubResource("BoxMesh_frame_horizontal")
+
+[node name="FrameBottom" type="MeshInstance3D" parent="Frame"]
+position = Vector3(0, 0.47, 0)
+mesh = SubResource("BoxMesh_frame_horizontal")
+
+[node name="PostLeft" type="MeshInstance3D" parent="Frame"]
+position = Vector3(-0.83, 0.78, 0)
+mesh = SubResource("BoxMesh_frame_post")
+
+[node name="PostRight" type="MeshInstance3D" parent="Frame"]
+position = Vector3(0.83, 0.78, 0)
+mesh = SubResource("BoxMesh_frame_post")
+
+[node name="FootLeft" type="MeshInstance3D" parent="Frame"]
+position = Vector3(-0.83, 0.02, 0)
+mesh = SubResource("BoxMesh_foot")
+
+[node name="FootRight" type="MeshInstance3D" parent="Frame"]
+position = Vector3(0.83, 0.02, 0)
+mesh = SubResource("BoxMesh_foot")
+
+[node name="ChalkboardCollision" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.78, 0)
+shape = SubResource("BoxShape3D_chalkboard")

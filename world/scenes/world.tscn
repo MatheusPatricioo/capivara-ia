@@ -1,6 +1,26 @@
 [gd_scene format=3 uid="uid://bo455egcy3hnf"]
 
-[ext_resource type="Script" uid="uid://dfity88r7mbwf" path="res://scripts/crow.gd" id="1_crow"]
+[ext_resource type="PackedScene" path="res://scenes/crow.tscn" id="1_crow"]
+[ext_resource type="PackedScene" path="res://scenes/props/tree.tscn" id="2_tree"]
+[ext_resource type="PackedScene" path="res://scenes/props/rock.tscn" id="3_rock"]
+[ext_resource type="PackedScene" path="res://scenes/props/desk.tscn" id="4_desk"]
+[ext_resource type="PackedScene" path="res://scenes/props/chalkboard.tscn" id="5_chalkboard"]
+[ext_resource type="PackedScene" uid="uid://t61g1autgtyo" path="res://assets/nature/Models/GLTF format/tree_oak.glb" id="10_tree_oak"]
+[ext_resource type="PackedScene" uid="uid://80bofm65m2fc" path="res://assets/nature/Models/GLTF format/tree_pineRoundA.glb" id="11_tree_pine_round_a"]
+[ext_resource type="PackedScene" uid="uid://b42t4ph5t36qi" path="res://assets/nature/Models/GLTF format/tree_pineRoundC.glb" id="12_tree_pine_round_c"]
+[ext_resource type="PackedScene" uid="uid://bqfg8rxcper2q" path="res://assets/nature/Models/GLTF format/tree_pineTallA.glb" id="13_tree_pine_tall_a"]
+[ext_resource type="PackedScene" uid="uid://dckf436iokcxg" path="res://assets/nature/Models/GLTF format/tree_fat.glb" id="14_tree_fat"]
+[ext_resource type="PackedScene" uid="uid://b3ncx0chod3xa" path="res://assets/nature/Models/GLTF format/rock_largeD.glb" id="21_rock_large_d"]
+[ext_resource type="PackedScene" uid="uid://baatf4xku61qo" path="res://assets/nature/Models/GLTF format/rock_smallC.glb" id="22_rock_small_c"]
+[ext_resource type="PackedScene" uid="uid://btdocrdyf1wgt" path="res://assets/nature/Models/GLTF format/rock_smallFlatA.glb" id="23_rock_small_flat_a"]
+[ext_resource type="PackedScene" uid="uid://ufwc2jmlpgsi" path="res://assets/nature/Models/GLTF format/stone_tallB.glb" id="24_stone_tall_b"]
+[ext_resource type="PackedScene" uid="uid://5p1wlp26ysoy" path="res://assets/nature/Models/GLTF format/stone_smallA.glb" id="25_stone_small_a"]
+[ext_resource type="PackedScene" uid="uid://n8ry41m2ttpv" path="res://assets/nature/Models/GLTF format/flower_redA.glb" id="30_flower_red_a"]
+[ext_resource type="PackedScene" uid="uid://l2a7obtv5a4p" path="res://assets/nature/Models/GLTF format/flower_yellowB.glb" id="31_flower_yellow_b"]
+[ext_resource type="PackedScene" uid="uid://c0f3o1ulotjcu" path="res://assets/nature/Models/GLTF format/flower_purpleC.glb" id="32_flower_purple_c"]
+[ext_resource type="PackedScene" uid="uid://cr2kvv5a0dwce" path="res://assets/nature/Models/GLTF format/plant_bush.glb" id="33_plant_bush"]
+[ext_resource type="PackedScene" uid="uid://dx7psuvg1bj8g" path="res://assets/nature/Models/GLTF format/plant_bushSmall.glb" id="34_plant_bush_small"]
+[ext_resource type="PackedScene" uid="uid://cwo6nfxvoiyun" path="res://assets/nature/Models/GLTF format/grass.glb" id="35_grass"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 
@@ -22,18 +42,6 @@ size = Vector2(20, 20)
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
 size = Vector3(20, 0.2, 20)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_feathers"]
-albedo_color = Color(0.08, 0.08, 0.1, 1)
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_crow"]
-material = SubResource("StandardMaterial3D_feathers")
-radius = 0.4
-height = 1.6
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_crow"]
-radius = 0.4
-height = 1.6
-
 [node name="World" type="Node3D" unique_id=1778038994]
 
 [node name="Environment" type="WorldEnvironment" parent="." unique_id=177501481]
@@ -44,7 +52,7 @@ transform = Transform3D(0.8660254, 0.38302222, -0.32139382, 0, 0.64278764, 0.766
 shadow_enabled = true
 
 [node name="Floor" type="MeshInstance3D" parent="." unique_id=6226552]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7338953, 0.5976453, -0.3410902)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0021317005, -0.04581511, -0.02206707)
 mesh = SubResource("PlaneMesh_floor")
 
 [node name="FloorBody" type="StaticBody3D" parent="Floor" unique_id=1769420020]
@@ -53,15 +61,123 @@ mesh = SubResource("PlaneMesh_floor")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
 shape = SubResource("BoxShape3D_floor")
 
-[node name="Crow" type="CharacterBody3D" parent="." unique_id=1361105452]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
-script = ExtResource("1_crow")
-
-[node name="CrowMesh" type="MeshInstance3D" parent="Crow" unique_id=842881850]
-mesh = SubResource("CapsuleMesh_crow")
-
-[node name="CrowCollision" type="CollisionShape3D" parent="Crow" unique_id=213533260]
-shape = SubResource("CapsuleShape3D_crow")
+[node name="Crow" parent="." unique_id=951207900 instance=ExtResource("1_crow")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Crow" unique_id=1340388870]
-transform = Transform3D(1, 0, 0, 0, 0.70710677, 0.70710677, 0, -0.70710677, 0.70710677, 0, 8, 8)
+transform = Transform3D(1, 0, 0, 0, 0.70710677, 0.70710677, 0, -0.70710677, 0.70710677, 0, 6, 6)
+
+[node name="Nature" type="Node3D" parent="." unique_id=1789617569]
+
+[node name="Trees" type="Node3D" parent="Nature" unique_id=1931640743]
+
+[node name="OakNorthWest" parent="Nature/Trees" unique_id=311312859 instance=ExtResource("2_tree")]
+transform = Transform3D(2.819078, 0, 1.0260603, 0, 3, 0, -1.0260603, 0, 2.819078, -7.5, 0, -6)
+model = ExtResource("10_tree_oak")
+
+[node name="PineWest" parent="Nature/Trees" unique_id=1610569172 instance=ExtResource("2_tree")]
+transform = Transform3D(0.7764572, 0, 2.8977776, 0, 3, 0, -2.8977776, 0, 0.7764572, -8.5, 0, 1)
+model = ExtResource("11_tree_pine_round_a")
+
+[node name="DefaultSouthWest" parent="Nature/Trees" unique_id=1615211860 instance=ExtResource("2_tree")]
+transform = Transform3D(-2.4513423, 0, 2.0569205, 0, 3.2, 0, -2.0569205, 0, -2.4513423, -6, 0, 7.5)
+
+[node name="FatNorth" parent="Nature/Trees" unique_id=1886150634 instance=ExtResource("2_tree")]
+transform = Transform3D(-2.819078, 0, -1.0260605, 0, 3, 0, 1.0260605, 0, -2.819078, 0, 0, -8.5)
+model = ExtResource("14_tree_fat")
+
+[node name="DefaultNorth" parent="Nature/Trees" unique_id=2029804630 instance=ExtResource("2_tree")]
+transform = Transform3D(-0.45148513, 0, -2.5605001, 0, 2.6, 0, 2.5605001, 0, -0.45148513, -2.5, 0, -8)
+
+[node name="PineSouth" parent="Nature/Trees" unique_id=999237540 instance=ExtResource("2_tree")]
+transform = Transform3D(1.4999998, 0, -2.5980763, 0, 3, 0, 2.5980763, 0, 1.4999998, 3, 0, 8.5)
+model = ExtResource("12_tree_pine_round_c")
+
+[node name="OakEast" parent="Nature/Trees" unique_id=1065011441 instance=ExtResource("2_tree")]
+transform = Transform3D(1.9798989, 0, 1.9798989, 0, 2.8, 0, -1.9798989, 0, 1.9798989, 8, 0, 4)
+model = ExtResource("10_tree_oak")
+
+[node name="TallPineEast" parent="Nature/Trees" unique_id=1442803576 instance=ExtResource("2_tree")]
+transform = Transform3D(-1.0260603, 0, 2.819078, 0, 3, 0, -2.819078, 0, -1.0260603, 8.5, 0, -1)
+model = ExtResource("13_tree_pine_tall_a")
+
+[node name="Rocks" type="Node3D" parent="Nature" unique_id=1974376028]
+
+[node name="LargeRockWest" parent="Nature/Rocks" unique_id=1613075372 instance=ExtResource("3_rock")]
+transform = Transform3D(1.7320508, 0, 1, 0, 2, 0, -1, 0, 1.7320508, -5, 0, -3)
+
+[node name="SmallRockSouthEast" parent="Nature/Rocks" unique_id=907821066 instance=ExtResource("3_rock")]
+transform = Transform3D(0.43412057, 0, 2.4620194, 0, 2.5, 0, -2.4620194, 0, 0.43412057, 5, 0, 6)
+model = ExtResource("22_rock_small_c")
+
+[node name="TallStoneWest" parent="Nature/Rocks" unique_id=514630341 instance=ExtResource("3_rock")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -7, 0, 4)
+model = ExtResource("24_stone_tall_b")
+
+[node name="FlatRockNorthEast" parent="Nature/Rocks" unique_id=1561746624 instance=ExtResource("3_rock")]
+transform = Transform3D(-2.598076, 0, 1.5000002, 0, 3, 0, -1.5000002, 0, -2.598076, 4.5, 0, -4)
+model = ExtResource("23_rock_small_flat_a")
+
+[node name="LargeRockNorth" parent="Nature/Rocks" unique_id=1644550563 instance=ExtResource("3_rock")]
+transform = Transform3D(-1.7320508, 0, -0.99999994, 0, 2, 0, 0.99999994, 0, -1.7320508, 2, 0, -6.5)
+model = ExtResource("21_rock_large_d")
+
+[node name="SmallStoneSouthWest" parent="Nature/Rocks" unique_id=1329134210 instance=ExtResource("3_rock")]
+transform = Transform3D(1.0260603, 0, -2.819078, 0, 3, 0, 2.819078, 0, 1.0260603, -4, 0, 6)
+model = ExtResource("25_stone_small_a")
+
+[node name="Flowers" type="Node3D" parent="Nature" unique_id=871569277]
+
+[node name="RedFlowerWestA" parent="Nature/Flowers" unique_id=46581214 instance=ExtResource("30_flower_red_a")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -4.5, 0, 1.5)
+
+[node name="RedFlowerWestB" parent="Nature/Flowers" unique_id=1848976285 instance=ExtResource("30_flower_red_a")]
+transform = Transform3D(0, 0, -2, 0, 2, 0, 2, 0, 0, -5, 0, 2.2)
+
+[node name="RedFlowerEast" parent="Nature/Flowers" unique_id=1663847914 instance=ExtResource("30_flower_red_a")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 5.5, 0, -1.5)
+
+[node name="YellowFlowerSouthEastA" parent="Nature/Flowers" unique_id=1852272041 instance=ExtResource("31_flower_yellow_b")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 3.5, 0, 3.8)
+
+[node name="YellowFlowerSouthEastB" parent="Nature/Flowers" unique_id=882968363 instance=ExtResource("31_flower_yellow_b")]
+transform = Transform3D(0, 0, 2, 0, 2, 0, -2, 0, 0, 4.2, 0, 3.1)
+
+[node name="YellowFlowerWest" parent="Nature/Flowers" unique_id=884729354 instance=ExtResource("31_flower_yellow_b")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -6, 0, -1)
+
+[node name="PurpleFlowerSouthA" parent="Nature/Flowers" unique_id=807929873 instance=ExtResource("32_flower_purple_c")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -2.5, 0, 5)
+
+[node name="PurpleFlowerSouthB" parent="Nature/Flowers" unique_id=783353074 instance=ExtResource("32_flower_purple_c")]
+transform = Transform3D(0, 0, -2, 0, 2, 0, 2, 0, 0, -1.8, 0, 5.6)
+
+[node name="PurpleFlowerNorth" parent="Nature/Flowers" unique_id=622951829 instance=ExtResource("32_flower_purple_c")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 1.5, 0, -5)
+
+[node name="BushNorthWest" parent="Nature/Flowers" unique_id=2067411809 instance=ExtResource("33_plant_bush")]
+transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, -6.5, 0, -4.5)
+
+[node name="BushSouthEast" parent="Nature/Flowers" unique_id=1865379186 instance=ExtResource("33_plant_bush")]
+transform = Transform3D(0, 0, 2.5, 0, 2.5, 0, -2.5, 0, 0, 6.5, 0, 7)
+
+[node name="SmallBushNorth" parent="Nature/Flowers" unique_id=223096519 instance=ExtResource("34_plant_bush_small")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -3, 0, -5.5)
+
+[node name="GrassSouth" parent="Nature/Flowers" unique_id=1335313841 instance=ExtResource("35_grass")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 2.5, 0, 5)
+
+[node name="GrassSouthWest" parent="Nature/Flowers" unique_id=996206963 instance=ExtResource("35_grass")]
+transform = Transform3D(0, 0, -2, 0, 2, 0, 2, 0, 0, -5.5, 0, 5.5)
+
+[node name="GrassEast" parent="Nature/Flowers" unique_id=1708394374 instance=ExtResource("35_grass")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 5, 0, 1.5)
+
+[node name="Workspace" type="Node3D" parent="." unique_id=1589149773]
+transform = Transform3D(0.70710677, 0, -0.70710677, 0, 1, 0, 0.70710677, 0, 0.70710677, 6.5, 0, -6.5)
+
+[node name="Desk" parent="Workspace" unique_id=1418082160 instance=ExtResource("4_desk")]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
+
+[node name="Chalkboard" parent="Workspace" unique_id=2146862181 instance=ExtResource("5_chalkboard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0, 0)
