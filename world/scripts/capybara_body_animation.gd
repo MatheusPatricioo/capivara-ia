@@ -12,9 +12,9 @@ extends Node3D
 ## Speed at which the walk animation reaches full strength, in m/s.
 @export var full_gait_speed: float = 3.0
 ## How high the body rises on each step, in meters.
-@export var step_bob_height: float = 0.035
+@export var step_bob_height: float = 0.06
 ## Side-to-side roll as the weight moves from one side to the other.
-@export var weight_shift_degrees: float = 4.0
+@export var weight_shift_degrees: float = 7.0
 ## Forward tilt at full speed.
 @export var forward_lean_degrees: float = 6.0
 
