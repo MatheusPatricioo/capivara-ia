@@ -1,0 +1,67 @@
+[gd_scene format=3 uid="uid://bo455egcy3hnf"]
+
+[ext_resource type="Script" uid="uid://dfity88r7mbwf" path="res://scripts/crow.gd" id="1_crow"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+
+[sub_resource type="Sky" id="Sky_main"]
+sky_material = SubResource("ProceduralSkyMaterial_sky")
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 2
+sky = SubResource("Sky_main")
+tonemap_mode = 2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_grass"]
+albedo_color = Color(0.36, 0.55, 0.3, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_floor"]
+material = SubResource("StandardMaterial3D_grass")
+size = Vector2(20, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(20, 0.2, 20)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_feathers"]
+albedo_color = Color(0.08, 0.08, 0.1, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_crow"]
+material = SubResource("StandardMaterial3D_feathers")
+radius = 0.4
+height = 1.6
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_crow"]
+radius = 0.4
+height = 1.6
+
+[node name="World" type="Node3D" unique_id=1778038994]
+
+[node name="Environment" type="WorldEnvironment" parent="." unique_id=177501481]
+environment = SubResource("Environment_main")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1058224629]
+transform = Transform3D(0.8660254, 0.38302222, -0.32139382, 0, 0.64278764, 0.76604444, 0.5, -0.66341394, 0.5566704, 0, 0, 0)
+shadow_enabled = true
+
+[node name="Floor" type="MeshInstance3D" parent="." unique_id=6226552]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7338953, 0.5976453, -0.3410902)
+mesh = SubResource("PlaneMesh_floor")
+
+[node name="FloorBody" type="StaticBody3D" parent="Floor" unique_id=1769420020]
+
+[node name="FloorCollision" type="CollisionShape3D" parent="Floor/FloorBody" unique_id=367914465]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+shape = SubResource("BoxShape3D_floor")
+
+[node name="Crow" type="CharacterBody3D" parent="." unique_id=1361105452]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+script = ExtResource("1_crow")
+
+[node name="CrowMesh" type="MeshInstance3D" parent="Crow" unique_id=842881850]
+mesh = SubResource("CapsuleMesh_crow")
+
+[node name="CrowCollision" type="CollisionShape3D" parent="Crow" unique_id=213533260]
+shape = SubResource("CapsuleShape3D_crow")
+
+[node name="Camera3D" type="Camera3D" parent="Crow" unique_id=1340388870]
+transform = Transform3D(1, 0, 0, 0, 0.70710677, 0.70710677, 0, -0.70710677, 0.70710677, 0, 8, 8)
