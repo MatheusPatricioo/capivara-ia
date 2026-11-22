@@ -16,6 +16,7 @@ __pycache__/
 
 # Capybara output (local only)
 discoveries/
+logs/
 
 # Personal notes (local only)
 docs/estudos/

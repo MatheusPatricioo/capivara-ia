@@ -40,10 +40,10 @@ Before deciding what to do next, the capybara queries its memory using RAG (retr
 ### Prerequisites
 
 - [Python 3.12+](https://www.python.org/downloads/)
-- [Ollama](https://ollama.com/download) with the `llama3.1:8b` model:
+- [Ollama](https://ollama.com/download) with the `qwen2.5:7b` model:
 
   ```bash
-  ollama pull llama3.1:8b
+  ollama pull qwen2.5:7b
   ```
 
 ### Setup
