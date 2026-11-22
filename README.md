@@ -91,6 +91,11 @@ ruff check .
 mypy brain/src
 ```
 
+## Credits
+
+- Nature and furniture kits by [Kenney](https://kenney.nl) (CC0)
+- Capybara model generated with TRELLIS (Microsoft, MIT)
+
 ## Status
 
 🚧 Early stage. The project structure and tooling are in place; the agent loop, the 3D world, and memory are under active development.
