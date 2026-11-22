@@ -4,10 +4,12 @@ import httpx
 from ddgs import DDGS
 
 from src.application.conversation import Conversation, StepLimitReachedError
+from src.application.tools.save_discovery_tool import SaveDiscoveryTool
 from src.application.tools.web_search_tool import WebSearchTool
 from src.domain.language_model import LanguageModelError
 from src.infrastructure.duckduckgo_web_searcher import DuckDuckGoWebSearcher
 from src.infrastructure.logging_setup import configure_logging
+from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
 from src.infrastructure.ollama_language_model import OllamaLanguageModel
 from src.infrastructure.prompt_loader import load_prompt
 from src.infrastructure.settings import Settings
@@ -31,10 +33,13 @@ def main() -> None:
         )
         web_searcher = DuckDuckGoWebSearcher(DDGS(), backend=settings.web_search_backend)
         web_search_tool = WebSearchTool(web_searcher)
+        save_discovery_tool = SaveDiscoveryTool(
+            MarkdownDiscoveryRepository(settings.discoveries_dir)
+        )
         conversation = Conversation(
             language_model,
             load_prompt(SYSTEM_PROMPT_NAME),
-            tools=[web_search_tool],
+            tools=[web_search_tool, save_discovery_tool],
             max_steps=settings.max_tool_steps,
             tool_result_reminder=load_prompt(TOOL_RESULT_REMINDER_NAME),
         )
