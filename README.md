@@ -35,6 +35,62 @@ Before deciding what to do next, the crow queries its memory using RAG (retrieva
 - **Memory:** ChromaDB, Markdown
 - **Quality:** pytest, ruff, mypy (strict)
 
+## Getting started
+
+### Prerequisites
+
+- [Python 3.12+](https://www.python.org/downloads/)
+- [Ollama](https://ollama.com/download) with the `llama3.1:8b` model:
+
+  ```bash
+  ollama pull llama3.1:8b
+  ```
+
+### Setup
+
+Create and activate a virtual environment, then install the dependencies (`--group` requires pip 25.1+):
+
+**Windows (PowerShell)**
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install --group dev .
+Copy-Item brain\.env.example brain\.env
+```
+
+**Linux / macOS**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install --group dev .
+cp brain/.env.example brain/.env
+```
+
+### Talk to the crow
+
+Make sure Ollama is running, then (same on all platforms):
+
+```bash
+cd brain
+python -m src.chat_with_crow
+```
+
+Type `sair` to leave the chat.
+
+### Run the tests
+
+From the project root:
+
+```bash
+pytest
+ruff check .
+mypy brain/src
+```
+
 ## Status
 
 🚧 Early stage. The project structure and tooling are in place; the agent loop, the 3D world, and memory are under active development.
