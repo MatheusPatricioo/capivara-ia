@@ -47,6 +47,25 @@ func walk_to(destination: Vector3, speed_scale: float = 1.0) -> void:
 	_is_walking_to_destination = true
 
 
+## Sends the capybara to the interaction point with this id (bed, food_bowl, computer...).
+## Returns false when no point has that id, so the caller can report the mistake.
+func go_to_point(point_id: StringName, speed_scale: float = 1.0) -> bool:
+	var point: InteractionPoint = _find_interaction_point(point_id)
+	if point == null:
+		push_warning("Unknown interaction point: %s" % point_id)
+		return false
+	walk_to(point.global_position, speed_scale)
+	return true
+
+
+func _find_interaction_point(point_id: StringName) -> InteractionPoint:
+	for node: Node in get_tree().get_nodes_in_group(InteractionPoint.GROUP):
+		var point: InteractionPoint = node as InteractionPoint
+		if point != null and point.point_id == point_id:
+			return point
+	return null
+
+
 func _physics_process(delta: float) -> void:
 	_apply_gravity(delta)
 	var desired_velocity: Vector3 = _manual_velocity() if control_mode == ControlMode.MANUAL else _navigation_velocity()

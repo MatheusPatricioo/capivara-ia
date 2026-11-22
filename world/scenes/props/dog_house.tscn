@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/props/prop_model.gd" id="1_prop_model"]
+[ext_resource type="PackedScene" path="res://assets/props/house.glb" id="2_house"]
+[ext_resource type="Script" path="res://scripts/interaction_point.gd" id="3_interaction_point"]
+
+[node name="DogHouse" type="StaticBody3D"]
+script = ExtResource("1_prop_model")
+model = ExtResource("2_house")
+collision_from_model = true
+
+[node name="ArrivalPoint" type="Marker3D" parent="."]
+position = Vector3(0, 0, 1.2)
+script = ExtResource("3_interaction_point")
+point_id = &"dog_house"
