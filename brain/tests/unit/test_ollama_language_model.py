@@ -4,7 +4,13 @@ from collections.abc import Callable
 import httpx
 import pytest
 
-from src.domain.language_model import ChatMessage, LanguageModelError, Role
+from src.domain.language_model import (
+    ChatMessage,
+    LanguageModelError,
+    Role,
+    ToolCall,
+    ToolDefinition,
+)
 from src.infrastructure.ollama_language_model import OllamaLanguageModel
 
 OLLAMA_URL = "http://ollama.test"
@@ -14,6 +20,17 @@ MESSAGES = [
     ChatMessage(Role.USER, "What do you want to research today?"),
 ]
 ASSISTANT_REPLY = "I want to research the stars."
+SEARCH_TOOL = ToolDefinition(
+    name="web_search",
+    description="Searches the web.",
+    parameters={"type": "object", "properties": {"query": {"type": "string"}}},
+)
+SEARCH_CALL = ToolCall(name="web_search", arguments={"query": "stars"})
+MESSAGES_WITH_TOOL_ROUND_TRIP = [
+    *MESSAGES,
+    ChatMessage(Role.ASSISTANT, "", tool_calls=(SEARCH_CALL,)),
+    ChatMessage(Role.TOOL, "Stars are suns.", tool_name="web_search"),
+]
 
 RequestHandler = Callable[[httpx.Request], httpx.Response]
 
@@ -36,6 +53,30 @@ def healthy_ollama(received_requests: list[httpx.Request]) -> OllamaLanguageMode
         return httpx.Response(200, json=body)
 
     return build_language_model(reply_successfully)
+
+
+@pytest.fixture
+def ollama_asking_for_a_tool() -> OllamaLanguageModel:
+    body = {
+        "message": {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [{"function": {"name": "web_search", "arguments": {"query": "stars"}}}],
+        }
+    }
+    return build_language_model(lambda request: httpx.Response(200, json=body))
+
+
+@pytest.fixture
+def ollama_with_malformed_tool_call() -> OllamaLanguageModel:
+    body = {
+        "message": {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [{"function": {"name": "web_search", "arguments": "not an object"}}],
+        }
+    }
+    return build_language_model(lambda request: httpx.Response(200, json=body))
 
 
 @pytest.fixture
@@ -77,6 +118,53 @@ def test_posts_model_and_messages_to_the_chat_endpoint(
         ],
         "stream": False,
     }
+
+
+def test_sends_tool_definitions_in_the_ollama_format(
+    healthy_ollama: OllamaLanguageModel, received_requests: list[httpx.Request]
+) -> None:
+    healthy_ollama.chat(MESSAGES, tools=[SEARCH_TOOL])
+
+    assert json.loads(received_requests[0].content)["tools"] == [
+        {
+            "type": "function",
+            "function": {
+                "name": "web_search",
+                "description": "Searches the web.",
+                "parameters": {"type": "object", "properties": {"query": {"type": "string"}}},
+            },
+        }
+    ]
+
+
+def test_sends_tool_requests_and_results_from_the_history(
+    healthy_ollama: OllamaLanguageModel, received_requests: list[httpx.Request]
+) -> None:
+    healthy_ollama.chat(MESSAGES_WITH_TOOL_ROUND_TRIP)
+
+    assert json.loads(received_requests[0].content)["messages"][-2:] == [
+        {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [{"function": {"name": "web_search", "arguments": {"query": "stars"}}}],
+        },
+        {"role": "tool", "content": "Stars are suns.", "tool_name": "web_search"},
+    ]
+
+
+def test_returns_the_tool_calls_requested_by_the_model(
+    ollama_asking_for_a_tool: OllamaLanguageModel,
+) -> None:
+    reply = ollama_asking_for_a_tool.chat(MESSAGES, tools=[SEARCH_TOOL])
+
+    assert reply == ChatMessage(Role.ASSISTANT, "", tool_calls=(SEARCH_CALL,))
+
+
+def test_raises_language_model_error_when_tool_call_is_malformed(
+    ollama_with_malformed_tool_call: OllamaLanguageModel,
+) -> None:
+    with pytest.raises(LanguageModelError):
+        ollama_with_malformed_tool_call.chat(MESSAGES, tools=[SEARCH_TOOL])
 
 
 def test_raises_language_model_error_when_server_fails(

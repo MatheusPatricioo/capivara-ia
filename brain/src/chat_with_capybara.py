@@ -2,7 +2,7 @@ import sys
 
 import httpx
 
-from src.application.conversation import Conversation
+from src.application.conversation import Conversation, StepLimitReachedError
 from src.domain.language_model import LanguageModelError
 from src.infrastructure.ollama_language_model import OllamaLanguageModel
 from src.infrastructure.settings import Settings
@@ -18,7 +18,11 @@ def main() -> None:
         timeout=settings.ollama_timeout_seconds,
     ) as http_client:
         language_model = OllamaLanguageModel(client=http_client, model=settings.ollama_model)
-        conversation = Conversation(language_model, SYSTEM_PROMPT)
+        conversation = Conversation(
+            language_model,
+            SYSTEM_PROMPT,
+            max_steps=settings.max_tool_steps,
+        )
         print(f'Converse com a capivara. Digite "{EXIT_COMMAND}" para encerrar.')
         while True:
             user_input = input("Você: ").strip()
@@ -28,7 +32,7 @@ def main() -> None:
                 continue
             try:
                 reply = conversation.send(user_input)
-            except LanguageModelError as error:
+            except (LanguageModelError, StepLimitReachedError) as error:
                 print(f"The capybara could not think: {error}", file=sys.stderr)
                 continue
             print(f"Capivara: {reply}")

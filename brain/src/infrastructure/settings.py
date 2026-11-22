@@ -11,4 +11,5 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.1:8b"
     ollama_timeout_seconds: float = 120.0
+    max_tool_steps: int = 5
     discoveries_dir: Path = PROJECT_ROOT / "discoveries"
