@@ -1,11 +1,22 @@
+# Python
 .venv/
 __pycache__/
+*.egg-info/
+
+# Tool caches
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-.env
-discoveries/
+
+# IDE
 .idea/
+
+# Environment variables (secrets)
+.env
+
+# Crow output (local only)
+discoveries/
+
 # Personal notes (local only)
 docs/estudos/
 CLAUDE.md
