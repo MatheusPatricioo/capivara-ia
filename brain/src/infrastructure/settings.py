@@ -12,4 +12,5 @@ class Settings(BaseSettings):
     ollama_model: str = "llama3.1:8b"
     ollama_timeout_seconds: float = 120.0
     max_tool_steps: int = 5
+    web_search_backend: str = "duckduckgo"
     discoveries_dir: Path = PROJECT_ROOT / "discoveries"

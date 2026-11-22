@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Autonomous AI agent with a virtual body: a capybara in a 3D world."
 requires-python = ">=3.12"
 dependencies = [
+    "ddgs",
     "httpx",
     "pydantic-settings",
 ]

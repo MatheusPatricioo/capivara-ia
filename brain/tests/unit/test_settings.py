@@ -18,6 +18,32 @@ def custom_discoveries_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> P
     return tmp_path
 
 
+@pytest.fixture
+def environment_without_web_search_backend(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("WEB_SEARCH_BACKEND", raising=False)
+
+
+@pytest.fixture
+def auto_web_search_backend(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("WEB_SEARCH_BACKEND", "auto")
+
+
+def test_web_search_backend_defaults_to_duckduckgo(
+    environment_without_web_search_backend: None,
+) -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.web_search_backend == "duckduckgo"
+
+
+def test_web_search_backend_comes_from_environment_variable(
+    auto_web_search_backend: None,
+) -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.web_search_backend == "auto"
+
+
 def test_discoveries_dir_defaults_to_discoveries_folder_in_project_root(
     environment_without_discoveries_dir: None,
 ) -> None:
