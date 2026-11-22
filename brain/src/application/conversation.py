@@ -14,5 +14,5 @@ class Conversation:
         user_chat_message = ChatMessage(role=Role.USER, content=user_message)
         reply = self._language_model.chat([*self._history, user_chat_message])
         self._history.append(user_chat_message)
-        self._history.append(ChatMessage(role=Role.ASSISTANT, content=reply))
-        return reply
+        self._history.append(reply)
+        return reply.content

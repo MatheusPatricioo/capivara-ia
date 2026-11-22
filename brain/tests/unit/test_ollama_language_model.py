@@ -56,10 +56,10 @@ def ollama_with_unexpected_response() -> OllamaLanguageModel:
     return build_language_model(lambda request: httpx.Response(200, json={"unexpected": "body"}))
 
 
-def test_returns_the_assistant_message_content(healthy_ollama: OllamaLanguageModel) -> None:
+def test_returns_the_assistant_message(healthy_ollama: OllamaLanguageModel) -> None:
     reply = healthy_ollama.chat(MESSAGES)
 
-    assert reply == ASSISTANT_REPLY
+    assert reply == ChatMessage(Role.ASSISTANT, ASSISTANT_REPLY)
 
 
 def test_posts_model_and_messages_to_the_chat_endpoint(

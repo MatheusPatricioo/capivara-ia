@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Protocol
@@ -7,12 +8,28 @@ class Role(StrEnum):
     SYSTEM = "system"
     USER = "user"
     ASSISTANT = "assistant"
+    TOOL = "tool"
+
+
+@dataclass(frozen=True)
+class ToolCall:
+    name: str
+    arguments: dict[str, object]
+
+
+@dataclass(frozen=True)
+class ToolDefinition:
+    name: str
+    description: str
+    parameters: dict[str, object]
 
 
 @dataclass(frozen=True)
 class ChatMessage:
     role: Role
     content: str
+    tool_calls: tuple[ToolCall, ...] = ()
+    tool_name: str | None = None
 
 
 class LanguageModelError(Exception):
@@ -20,4 +37,8 @@ class LanguageModelError(Exception):
 
 
 class LanguageModel(Protocol):
-    def chat(self, messages: list[ChatMessage]) -> str: ...
+    def chat(
+        self,
+        messages: list[ChatMessage],
+        tools: Sequence[ToolDefinition] = (),
+    ) -> ChatMessage: ...

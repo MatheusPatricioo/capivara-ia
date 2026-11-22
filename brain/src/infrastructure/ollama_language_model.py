@@ -1,6 +1,8 @@
+from collections.abc import Sequence
+
 import httpx
 
-from src.domain.language_model import ChatMessage, LanguageModelError
+from src.domain.language_model import ChatMessage, LanguageModelError, Role, ToolDefinition
 
 
 class OllamaLanguageModel:
@@ -8,7 +10,11 @@ class OllamaLanguageModel:
         self._client = client
         self._model = model
 
-    def chat(self, messages: list[ChatMessage]) -> str:
+    def chat(
+        self,
+        messages: list[ChatMessage],
+        tools: Sequence[ToolDefinition] = (),
+    ) -> ChatMessage:
         payload = {
             "model": self._model,
             "messages": [
@@ -21,7 +27,7 @@ class OllamaLanguageModel:
             response.raise_for_status()
         except httpx.HTTPError as error:
             raise LanguageModelError(f"Could not get a reply from Ollama: {error}") from error
-        return self._extract_content(response)
+        return ChatMessage(role=Role.ASSISTANT, content=self._extract_content(response))
 
     @staticmethod
     def _extract_content(response: httpx.Response) -> str:

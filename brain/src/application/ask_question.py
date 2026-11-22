@@ -10,4 +10,4 @@ class AskQuestion:
             ChatMessage(role=Role.SYSTEM, content=system_prompt),
             ChatMessage(role=Role.USER, content=question),
         ]
-        return self._language_model.chat(messages)
+        return self._language_model.chat(messages).content

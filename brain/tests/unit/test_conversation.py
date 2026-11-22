@@ -1,7 +1,9 @@
+from collections.abc import Sequence
+
 import pytest
 
 from src.application.conversation import Conversation
-from src.domain.language_model import ChatMessage, LanguageModelError, Role
+from src.domain.language_model import ChatMessage, LanguageModelError, Role, ToolDefinition
 
 SYSTEM_PROMPT = "You are a curious crow."
 FIRST_QUESTION = "What do you want to research today?"
@@ -15,13 +17,21 @@ class RecordingLanguageModel:
         self._replies = iter(replies)
         self.received_histories: list[list[ChatMessage]] = []
 
-    def chat(self, messages: list[ChatMessage]) -> str:
+    def chat(
+        self,
+        messages: list[ChatMessage],
+        tools: Sequence[ToolDefinition] = (),
+    ) -> ChatMessage:
         self.received_histories.append(messages)
-        return next(self._replies)
+        return ChatMessage(Role.ASSISTANT, next(self._replies))
 
 
 class OfflineLanguageModel:
-    def chat(self, messages: list[ChatMessage]) -> str:
+    def chat(
+        self,
+        messages: list[ChatMessage],
+        tools: Sequence[ToolDefinition] = (),
+    ) -> ChatMessage:
         raise LanguageModelError("model is offline")
 
 
