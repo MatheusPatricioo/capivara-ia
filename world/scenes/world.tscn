@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://scenes/props/chalkboard.tscn" id="5_chalkboard"]
 [ext_resource type="PackedScene" path="res://scenes/boundary.tscn" id="6_boundary"]
 [ext_resource type="PackedScene" path="res://scenes/props/bush.tscn" id="7_bush"]
+[ext_resource type="Script" path="res://scripts/navigation/world_navigation.gd" id="8_world_navigation"]
 [ext_resource type="PackedScene" uid="uid://t61g1autgtyo" path="res://assets/nature/Models/GLTF format/tree_oak.glb" id="10_tree_oak"]
 [ext_resource type="PackedScene" uid="uid://80bofm65m2fc" path="res://assets/nature/Models/GLTF format/tree_pineRoundA.glb" id="11_tree_pine_round_a"]
 [ext_resource type="PackedScene" uid="uid://b42t4ph5t36qi" path="res://assets/nature/Models/GLTF format/tree_pineRoundC.glb" id="12_tree_pine_round_c"]
@@ -43,6 +44,14 @@ size = Vector2(32, 32)
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
 size = Vector3(32, 0.2, 32)
 
+[sub_resource type="NavigationMesh" id="NavigationMesh_walkable_area"]
+geometry_parsed_geometry_type = 1
+geometry_source_geometry_mode = 1
+geometry_source_group_name = &"navigation_source"
+agent_radius = 0.3
+agent_height = 0.8
+filter_baking_aabb = AABB(-9, -1, -9, 18, 4, 18)
+
 [node name="World" type="Node3D" unique_id=1778038994]
 
 [node name="Environment" type="WorldEnvironment" parent="." unique_id=177501481]
@@ -52,7 +61,7 @@ environment = SubResource("Environment_main")
 transform = Transform3D(0.8660254, 0.38302222, -0.32139382, 0, 0.64278764, 0.76604444, 0.5, -0.66341394, 0.5566704, 0, 0, 0)
 shadow_enabled = true
 
-[node name="Floor" type="MeshInstance3D" parent="." unique_id=6226552]
+[node name="Floor" type="MeshInstance3D" parent="." unique_id=6226552 groups=["navigation_source"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0021317005, -0.04581511, -0.02206707)
 mesh = SubResource("PlaneMesh_floor")
 
@@ -68,7 +77,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 [node name="Camera3D" type="Camera3D" parent="Crow" unique_id=1340388870]
 transform = Transform3D(1, 0, 0, 0, 0.70710677, 0.70710677, 0, -0.70710677, 0.70710677, 0, 6, 6)
 
-[node name="Nature" type="Node3D" parent="." unique_id=1789617569]
+[node name="Nature" type="Node3D" parent="." unique_id=1789617569 groups=["navigation_source"]]
 
 [node name="Trees" type="Node3D" parent="Nature" unique_id=1931640743]
 
@@ -176,9 +185,9 @@ transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, -6.5, 0, -4.5)
 [node name="BushSouthEast" parent="Nature/Bushes" unique_id=1865379186 instance=ExtResource("7_bush")]
 transform = Transform3D(0, 0, 2.5, 0, 2.5, 0, -2.5, 0, 0, 6.5, 0, 7)
 
-[node name="Boundary" parent="." instance=ExtResource("6_boundary")]
+[node name="Boundary" parent="." groups=["navigation_source"] instance=ExtResource("6_boundary")]
 
-[node name="Workspace" type="Node3D" parent="." unique_id=1589149773]
+[node name="Workspace" type="Node3D" parent="." unique_id=1589149773 groups=["navigation_source"]]
 transform = Transform3D(0.70710677, 0, -0.70710677, 0, 1, 0, 0.70710677, 0, 0.70710677, 6.5, 0, -6.5)
 
 [node name="Desk" parent="Workspace" unique_id=1418082160 instance=ExtResource("4_desk")]
@@ -186,3 +195,7 @@ transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
 
 [node name="Chalkboard" parent="Workspace" unique_id=2146862181 instance=ExtResource("5_chalkboard")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 0, 0)
+
+[node name="NavigationRegion" type="NavigationRegion3D" parent="."]
+navigation_mesh = SubResource("NavigationMesh_walkable_area")
+script = ExtResource("8_world_navigation")

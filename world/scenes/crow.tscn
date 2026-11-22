@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" uid="uid://dfity88r7mbwf" path="res://scripts/crow.gd" id="1_crow"]
+[ext_resource type="Script" path="res://scripts/crow_wander.gd" id="2_crow_wander"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_feathers"]
 albedo_color = Color(0.08, 0.08, 0.11, 1)
@@ -83,6 +84,15 @@ script = ExtResource("1_crow")
 [node name="CrowCollision" type="CollisionShape3D" parent="."]
 position = Vector3(0, 0.4, 0)
 shape = SubResource("CapsuleShape3D_crow")
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+path_desired_distance = 0.5
+target_desired_distance = 0.4
+radius = 0.3
+height = 0.8
+
+[node name="Wander" type="Node" parent="."]
+script = ExtResource("2_crow_wander")
 
 [node name="Body" type="Node3D" parent="."]
 
