@@ -4,6 +4,7 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .env
+discoveries/
 .idea/
 # Personal notes (local only)
 docs/estudos/
