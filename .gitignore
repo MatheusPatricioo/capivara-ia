@@ -6,5 +6,5 @@ __pycache__/
 .env
 .idea/
 # Personal notes (local only)
-docs/aprendizados.md
+docs/estudos/
 CLAUDE.md
