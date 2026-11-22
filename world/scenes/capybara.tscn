@@ -29,4 +29,6 @@ script = ExtResource("2_capybara_wander")
 script = ExtResource("3_capybara_body_animation")
 
 [node name="Model" parent="Body" instance=ExtResource("4_capybara_model")]
-transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, 0.4, 0)
+position = Vector3(0, 0.4, 0)
+rotation = Vector3(0, 1.5707964, 0)
+scale = Vector3(0.8, 0.8, 0.8)
