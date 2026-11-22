@@ -10,7 +10,7 @@ from src.infrastructure.ollama_language_model import OllamaLanguageModel
 OLLAMA_URL = "http://ollama.test"
 MODEL_NAME = "llama3.1:8b"
 MESSAGES = [
-    ChatMessage(Role.SYSTEM, "You are a curious crow."),
+    ChatMessage(Role.SYSTEM, "You are a curious capybara."),
     ChatMessage(Role.USER, "What do you want to research today?"),
 ]
 ASSISTANT_REPLY = "I want to research the stars."
@@ -72,7 +72,7 @@ def test_posts_model_and_messages_to_the_chat_endpoint(
     assert json.loads(request.content) == {
         "model": MODEL_NAME,
         "messages": [
-            {"role": "system", "content": "You are a curious crow."},
+            {"role": "system", "content": "You are a curious capybara."},
             {"role": "user", "content": "What do you want to research today?"},
         ],
         "stream": False,

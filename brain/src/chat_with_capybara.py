@@ -7,7 +7,7 @@ from src.domain.language_model import LanguageModelError
 from src.infrastructure.ollama_language_model import OllamaLanguageModel
 from src.infrastructure.settings import Settings
 
-SYSTEM_PROMPT = "Você é um corvo curioso"
+SYSTEM_PROMPT = "Você é uma capivara curiosa"
 EXIT_COMMAND = "sair"
 
 
@@ -19,7 +19,7 @@ def main() -> None:
     ) as http_client:
         language_model = OllamaLanguageModel(client=http_client, model=settings.ollama_model)
         conversation = Conversation(language_model, SYSTEM_PROMPT)
-        print(f'Converse com o corvo. Digite "{EXIT_COMMAND}" para encerrar.')
+        print(f'Converse com a capivara. Digite "{EXIT_COMMAND}" para encerrar.')
         while True:
             user_input = input("Você: ").strip()
             if user_input.lower() == EXIT_COMMAND:
@@ -29,9 +29,9 @@ def main() -> None:
             try:
                 reply = conversation.send(user_input)
             except LanguageModelError as error:
-                print(f"The crow could not think: {error}", file=sys.stderr)
+                print(f"The capybara could not think: {error}", file=sys.stderr)
                 continue
-            print(f"Corvo: {reply}")
+            print(f"Capivara: {reply}")
 
 
 if __name__ == "__main__":

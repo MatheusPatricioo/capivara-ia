@@ -5,7 +5,7 @@ import pytest
 from src.application.ask_question import AskQuestion
 from src.domain.language_model import ChatMessage, LanguageModelError, Role, ToolDefinition
 
-SYSTEM_PROMPT = "You are a curious crow."
+SYSTEM_PROMPT = "You are a curious capybara."
 QUESTION = "What do you want to research today?"
 MODEL_REPLY = "I want to research the stars."
 

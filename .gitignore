@@ -14,7 +14,7 @@ __pycache__/
 # Environment variables (secrets)
 .env
 
-# Crow output (local only)
+# Capybara output (local only)
 discoveries/
 
 # Personal notes (local only)

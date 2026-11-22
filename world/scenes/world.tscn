@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bo455egcy3hnf"]
 
-[ext_resource type="PackedScene" path="res://scenes/crow.tscn" id="1_crow"]
+[ext_resource type="PackedScene" path="res://scenes/capybara.tscn" id="1_capybara"]
 [ext_resource type="PackedScene" path="res://scenes/props/tree.tscn" id="2_tree"]
 [ext_resource type="PackedScene" path="res://scenes/props/rock.tscn" id="3_rock"]
 [ext_resource type="PackedScene" path="res://scenes/props/desk.tscn" id="4_desk"]
@@ -48,7 +48,7 @@ size = Vector3(32, 0.2, 32)
 geometry_parsed_geometry_type = 1
 geometry_source_geometry_mode = 1
 geometry_source_group_name = &"navigation_source"
-agent_radius = 0.3
+agent_radius = 0.4
 agent_height = 0.8
 filter_baking_aabb = AABB(-9, -1, -9, 18, 4, 18)
 
@@ -71,10 +71,10 @@ mesh = SubResource("PlaneMesh_floor")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
 shape = SubResource("BoxShape3D_floor")
 
-[node name="Crow" parent="." unique_id=951207900 instance=ExtResource("1_crow")]
+[node name="Capybara" parent="." unique_id=951207900 instance=ExtResource("1_capybara")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 
-[node name="Camera3D" type="Camera3D" parent="Crow" unique_id=1340388870]
+[node name="Camera3D" type="Camera3D" parent="Capybara" unique_id=1340388870]
 transform = Transform3D(1, 0, 0, 0, 0.70710677, 0.70710677, 0, -0.70710677, 0.70710677, 0, 6, 6)
 
 [node name="Nature" type="Node3D" parent="." unique_id=1789617569 groups=["navigation_source"]]

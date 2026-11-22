@@ -5,7 +5,7 @@ import pytest
 from src.application.conversation import Conversation
 from src.domain.language_model import ChatMessage, LanguageModelError, Role, ToolDefinition
 
-SYSTEM_PROMPT = "You are a curious crow."
+SYSTEM_PROMPT = "You are a curious capybara."
 FIRST_QUESTION = "What do you want to research today?"
 FIRST_REPLY = "The stars."
 SECOND_QUESTION = "Why the stars?"

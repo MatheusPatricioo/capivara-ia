@@ -1,7 +1,7 @@
-class_name Crow
+class_name Capybara
 extends CharacterBody3D
 
-## Emitted when the crow arrives at the point given to walk_to().
+## Emitted when the capybara arrives at the point given to walk_to().
 signal destination_reached
 
 enum ControlMode { AUTONOMOUS, MANUAL }
@@ -10,11 +10,11 @@ enum ControlMode { AUTONOMOUS, MANUAL }
 @export var manual_speed: float = 5.0
 ## Base walking speed when following a navigation path, in meters per second.
 @export var navigation_speed: float = 3.2
-## How quickly the crow speeds up, in m/s². Lower feels softer, like a cat starting to walk.
+## How quickly the capybara speeds up, in m/s². Lower feels softer, like a cat starting to walk.
 @export var acceleration: float = 7.0
-## How quickly the crow slows down, in m/s².
+## How quickly the capybara slows down, in m/s².
 @export var deceleration: float = 9.0
-## Distance from the destination where the crow starts slowing down, in meters.
+## Distance from the destination where the capybara starts slowing down, in meters.
 @export var arrival_slowdown_distance: float = 1.2
 ## Slowest fraction of the speed kept while arriving, so it never crawls.
 @export var arrival_min_speed_ratio: float = 0.3
@@ -38,7 +38,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_toggle_control_mode()
 
 
-## Sends the crow to a point in the world. It finds a path around obstacles and emits
+## Sends the capybara to a point in the world. It finds a path around obstacles and emits
 ## destination_reached on arrival. Unreachable points lead to the closest reachable one.
 ## speed_scale multiplies navigation_speed: 1.0 is a calm walk, higher is a trot.
 func walk_to(destination: Vector3, speed_scale: float = 1.0) -> void:
@@ -99,10 +99,10 @@ func _toggle_control_mode() -> void:
 	else:
 		control_mode = ControlMode.AUTONOMOUS
 		_recalculate_path()
-	print("Crow control mode: %s" % ControlMode.keys()[control_mode])
+	print("Capybara control mode: %s" % ControlMode.keys()[control_mode])
 
 
-## While in manual mode the crow may have been moved far from the old path.
+## While in manual mode the capybara may have been moved far from the old path.
 ## Assigning the target again forces the agent to plan a fresh path.
 func _recalculate_path() -> void:
 	if _is_walking_to_destination:

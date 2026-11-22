@@ -7,7 +7,7 @@ from src.domain.language_model import LanguageModelError
 from src.infrastructure.ollama_language_model import OllamaLanguageModel
 from src.infrastructure.settings import Settings
 
-SYSTEM_PROMPT = "Você é um corvo curioso"
+SYSTEM_PROMPT = "Você é uma capivara curiosa"
 QUESTION = "O que você quer pesquisar hoje?"
 
 
@@ -22,7 +22,7 @@ def main() -> None:
         try:
             reply = ask_question.execute(system_prompt=SYSTEM_PROMPT, question=QUESTION)
         except LanguageModelError as error:
-            print(f"The crow could not think: {error}", file=sys.stderr)
+            print(f"The capybara could not think: {error}", file=sys.stderr)
             raise SystemExit(1) from error
     print(reply)
 

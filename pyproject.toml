@@ -1,7 +1,7 @@
 [project]
-name = "corvo-ia"
+name = "capivara-ia"
 version = "0.1.0"
-description = "Autonomous AI agent with a virtual body: a crow in a 3D world."
+description = "Autonomous AI agent with a virtual body: a capybara in a 3D world."
 requires-python = ">=3.12"
 dependencies = [
     "httpx",

@@ -1,0 +1,200 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://dfity88r7mbwf" path="res://scripts/capybara.gd" id="1_capybara"]
+[ext_resource type="Script" uid="uid://2laypg7mjgh0" path="res://scripts/capybara_wander.gd" id="2_capybara_wander"]
+[ext_resource type="Script" uid="uid://2y24cmfmdof" path="res://scripts/capybara_body_animation.gd" id="3_capybara_body_animation"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_fur"]
+albedo_color = Color(0.62, 0.42, 0.25, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dark_fur"]
+albedo_color = Color(0.4, 0.26, 0.16, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_snout"]
+albedo_color = Color(0.3, 0.2, 0.13, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_eye"]
+albedo_color = Color(0.02, 0.02, 0.02, 1)
+metallic_specular = 1.0
+roughness = 0.1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_eye_highlight"]
+albedo_color = Color(1, 1, 1, 1)
+shading_mode = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cheek"]
+albedo_color = Color(1, 0.6, 0.6, 1)
+roughness = 0.9
+
+[sub_resource type="SphereMesh" id="SphereMesh_torso"]
+material = SubResource("StandardMaterial3D_fur")
+radius = 0.26
+height = 0.52
+radial_segments = 8
+rings = 4
+
+[sub_resource type="BoxMesh" id="BoxMesh_head"]
+material = SubResource("StandardMaterial3D_fur")
+size = Vector3(0.28, 0.26, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_snout"]
+material = SubResource("StandardMaterial3D_snout")
+size = Vector3(0.24, 0.17, 0.1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_nostril"]
+material = SubResource("StandardMaterial3D_eye")
+radius = 0.018
+height = 0.036
+radial_segments = 6
+rings = 3
+
+[sub_resource type="SphereMesh" id="SphereMesh_eye"]
+material = SubResource("StandardMaterial3D_eye")
+radius = 0.035
+height = 0.07
+radial_segments = 8
+rings = 4
+
+[sub_resource type="SphereMesh" id="SphereMesh_eye_highlight"]
+material = SubResource("StandardMaterial3D_eye_highlight")
+radius = 0.011
+height = 0.022
+radial_segments = 6
+rings = 3
+
+[sub_resource type="SphereMesh" id="SphereMesh_ear"]
+material = SubResource("StandardMaterial3D_dark_fur")
+radius = 0.05
+height = 0.07
+radial_segments = 8
+rings = 4
+
+[sub_resource type="SphereMesh" id="SphereMesh_cheek"]
+material = SubResource("StandardMaterial3D_cheek")
+radius = 0.035
+height = 0.05
+radial_segments = 8
+rings = 4
+
+[sub_resource type="SphereMesh" id="SphereMesh_tail"]
+material = SubResource("StandardMaterial3D_dark_fur")
+radius = 0.035
+height = 0.07
+radial_segments = 6
+rings = 3
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_leg"]
+material = SubResource("StandardMaterial3D_dark_fur")
+top_radius = 0.05
+bottom_radius = 0.05
+height = 0.16
+radial_segments = 6
+rings = 1
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_capybara"]
+radius = 0.4
+height = 0.8
+
+[node name="Capybara" type="CharacterBody3D"]
+script = ExtResource("1_capybara")
+
+[node name="CapybaraCollision" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.4, 0)
+shape = SubResource("CapsuleShape3D_capybara")
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+path_desired_distance = 0.5
+target_desired_distance = 0.4
+radius = 0.4
+height = 0.8
+
+[node name="Wander" type="Node" parent="."]
+script = ExtResource("2_capybara_wander")
+
+[node name="Body" type="Node3D" parent="."]
+script = ExtResource("3_capybara_body_animation")
+
+[node name="Torso" type="MeshInstance3D" parent="Body"]
+position = Vector3(0, 0.36, 0.08)
+scale = Vector3(1, 0.9, 1.35)
+mesh = SubResource("SphereMesh_torso")
+
+[node name="FrontLegLeft" type="MeshInstance3D" parent="Body"]
+position = Vector3(-0.13, 0.08, -0.12)
+mesh = SubResource("CylinderMesh_leg")
+
+[node name="FrontLegRight" type="MeshInstance3D" parent="Body"]
+position = Vector3(0.13, 0.08, -0.12)
+mesh = SubResource("CylinderMesh_leg")
+
+[node name="BackLegLeft" type="MeshInstance3D" parent="Body"]
+position = Vector3(-0.13, 0.08, 0.28)
+mesh = SubResource("CylinderMesh_leg")
+
+[node name="BackLegRight" type="MeshInstance3D" parent="Body"]
+position = Vector3(0.13, 0.08, 0.28)
+mesh = SubResource("CylinderMesh_leg")
+
+[node name="TailPivot" type="Node3D" parent="Body"]
+position = Vector3(0, 0.4, 0.42)
+
+[node name="Tail" type="MeshInstance3D" parent="Body/TailPivot"]
+position = Vector3(0, 0, 0.02)
+mesh = SubResource("SphereMesh_tail")
+
+[node name="Head" type="Node3D" parent="Body"]
+position = Vector3(0, 0.54, -0.22)
+
+[node name="HeadMesh" type="MeshInstance3D" parent="Body/Head"]
+mesh = SubResource("BoxMesh_head")
+
+[node name="Snout" type="MeshInstance3D" parent="Body/Head"]
+position = Vector3(0, -0.04, -0.19)
+mesh = SubResource("BoxMesh_snout")
+
+[node name="NostrilLeft" type="MeshInstance3D" parent="Body/Head/Snout"]
+position = Vector3(-0.05, 0.03, -0.05)
+mesh = SubResource("SphereMesh_nostril")
+
+[node name="NostrilRight" type="MeshInstance3D" parent="Body/Head/Snout"]
+position = Vector3(0.05, 0.03, -0.05)
+mesh = SubResource("SphereMesh_nostril")
+
+[node name="EyeLeft" type="MeshInstance3D" parent="Body/Head"]
+position = Vector3(-0.135, 0.05, -0.06)
+mesh = SubResource("SphereMesh_eye")
+
+[node name="EyeHighlightLeft" type="MeshInstance3D" parent="Body/Head/EyeLeft"]
+position = Vector3(-0.02, 0.015, -0.02)
+mesh = SubResource("SphereMesh_eye_highlight")
+
+[node name="EyeRight" type="MeshInstance3D" parent="Body/Head"]
+position = Vector3(0.135, 0.05, -0.06)
+mesh = SubResource("SphereMesh_eye")
+
+[node name="EyeHighlightRight" type="MeshInstance3D" parent="Body/Head/EyeRight"]
+position = Vector3(0.02, 0.015, -0.02)
+mesh = SubResource("SphereMesh_eye_highlight")
+
+[node name="EarLeft" type="MeshInstance3D" parent="Body/Head"]
+position = Vector3(-0.1, 0.14, 0.09)
+scale = Vector3(1, 1, 0.6)
+mesh = SubResource("SphereMesh_ear")
+
+[node name="EarRight" type="MeshInstance3D" parent="Body/Head"]
+position = Vector3(0.1, 0.14, 0.09)
+scale = Vector3(1, 1, 0.6)
+mesh = SubResource("SphereMesh_ear")
+
+[node name="CheekLeft" type="MeshInstance3D" parent="Body/Head"]
+position = Vector3(-0.13, -0.05, -0.13)
+scale = Vector3(0.5, 1, 1)
+mesh = SubResource("SphereMesh_cheek")
+
+[node name="CheekRight" type="MeshInstance3D" parent="Body/Head"]
+position = Vector3(0.13, -0.05, -0.13)
+scale = Vector3(0.5, 1, 1)
+mesh = SubResource("SphereMesh_cheek")

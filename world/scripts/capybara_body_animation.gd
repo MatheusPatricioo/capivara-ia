@@ -1,18 +1,19 @@
-class_name CrowBodyAnimation
+class_name CapybaraBodyAnimation
 extends Node3D
 
-## Procedural cat-like gait for the crow body, driven by the crow's walking speed.
-## Walking: each step bobs the body, weight shifts side to side, legs alternate and the
-## tail swings. Standing: slow breathing, a lazy tail swish and the head looks around.
+## Procedural four-legged gait for the capybara body, driven by its walking speed.
+## Walking: legs move in diagonal pairs, each step bobs the body, weight shifts side to
+## side and the little tail wiggles. Standing: slow breathing, a lazy tail wiggle and the
+## head looks around.
 
 @export_group("Walk")
-## Distance covered by one full step cycle (left and right foot), in meters.
+## Distance covered by one full step cycle (both diagonal pairs), in meters.
 @export var stride_length: float = 0.45
 ## Speed at which the walk animation reaches full strength, in m/s.
 @export var full_gait_speed: float = 3.0
 ## How high the body rises on each step, in meters.
 @export var step_bob_height: float = 0.035
-## Side-to-side roll as the weight moves from one foot to the other.
+## Side-to-side roll as the weight moves from one diagonal pair to the other.
 @export var weight_shift_degrees: float = 4.0
 ## Forward tilt at full speed.
 @export var forward_lean_degrees: float = 6.0
@@ -28,9 +29,9 @@ extends Node3D
 @export var breathing_speed: float = 2.2
 ## How much the torso grows on each breath, as a fraction of its size.
 @export var breathing_amount: float = 0.02
-## Speed of the lazy tail swish while standing.
+## Speed of the lazy tail wiggle while standing.
 @export var idle_tail_swish_speed: float = 1.3
-## Tail swish while standing.
+## Tail wiggle while standing.
 @export var idle_tail_swish_degrees: float = 12.0
 ## Largest head turn while looking around.
 @export var head_look_max_degrees: float = 45.0
@@ -47,28 +48,29 @@ var _head_look_angle: float = 0.0
 var _seconds_until_next_look: float = 0.0
 var _body_base_position: Vector3
 var _head_base_position: Vector3
-var _left_leg_base_position: Vector3
-var _right_leg_base_position: Vector3
 var _torso_base_scale: Vector3
+var _leg_base_positions: Dictionary[Node3D, Vector3] = {}
 
-@onready var _crow: CharacterBody3D = get_parent() as CharacterBody3D
+@onready var _capybara: CharacterBody3D = get_parent() as CharacterBody3D
 @onready var _torso: Node3D = $Torso
 @onready var _head: Node3D = $Head
-@onready var _left_leg: Node3D = $LegLeft
-@onready var _right_leg: Node3D = $LegRight
+@onready var _front_left_leg: Node3D = $FrontLegLeft
+@onready var _front_right_leg: Node3D = $FrontLegRight
+@onready var _back_left_leg: Node3D = $BackLegLeft
+@onready var _back_right_leg: Node3D = $BackLegRight
 @onready var _tail_pivot: Node3D = $TailPivot
 
 
 func _ready() -> void:
 	_body_base_position = position
 	_head_base_position = _head.position
-	_left_leg_base_position = _left_leg.position
-	_right_leg_base_position = _right_leg.position
 	_torso_base_scale = _torso.scale
+	for leg: Node3D in [_front_left_leg, _front_right_leg, _back_left_leg, _back_right_leg]:
+		_leg_base_positions[leg] = leg.position
 
 
 func _process(delta: float) -> void:
-	var speed: float = Vector2(_crow.velocity.x, _crow.velocity.z).length()
+	var speed: float = Vector2(_capybara.velocity.x, _capybara.velocity.z).length()
 	var gait_strength: float = clampf(speed / full_gait_speed, 0.0, 1.0)
 	_step_phase = fmod(_step_phase + speed / stride_length * TAU * delta, TAU)
 	_idle_time += delta
@@ -79,25 +81,33 @@ func _process(delta: float) -> void:
 	_animate_head(gait_strength, delta)
 
 
-## abs(sin) gives two bumps per cycle: one for each foot touching the ground.
+## abs(sin) gives two bumps per cycle: one for each diagonal pair touching the ground.
 func _animate_body(gait_strength: float) -> void:
 	position.y = _body_base_position.y + _step_bounce() * step_bob_height * gait_strength
 	rotation.z = deg_to_rad(weight_shift_degrees) * sin(_step_phase) * gait_strength
 	rotation.x = -deg_to_rad(forward_lean_degrees) * gait_strength
 
 
-## The legs run half a cycle apart. A leg lifts only while it moves forward (cos > 0).
+## Diagonal gait, like a trotting dog: front-left moves with back-right, and front-right
+## with back-left. The two pairs run half a cycle apart, so the body always rests on two
+## opposite corners and stays balanced.
 func _animate_legs(gait_strength: float) -> void:
-	_place_leg(_left_leg, _left_leg_base_position, _step_phase, gait_strength)
-	_place_leg(_right_leg, _right_leg_base_position, _step_phase + PI, gait_strength)
+	var first_pair_phase: float = _step_phase
+	var second_pair_phase: float = _step_phase + PI
+	_place_leg(_front_left_leg, first_pair_phase, gait_strength)
+	_place_leg(_back_right_leg, first_pair_phase, gait_strength)
+	_place_leg(_front_right_leg, second_pair_phase, gait_strength)
+	_place_leg(_back_left_leg, second_pair_phase, gait_strength)
 
 
-func _place_leg(leg: Node3D, base_position: Vector3, leg_phase: float, gait_strength: float) -> void:
+## A leg lifts only while it moves forward (cos > 0).
+func _place_leg(leg: Node3D, leg_phase: float, gait_strength: float) -> void:
+	var base_position: Vector3 = _leg_base_positions[leg]
 	leg.position.z = base_position.z - sin(leg_phase) * leg_swing_distance * gait_strength
 	leg.position.y = base_position.y + maxf(cos(leg_phase), 0.0) * leg_lift_height * gait_strength
 
 
-## Walking swing and idle swish blend by gait strength, so the tail never stops abruptly.
+## Walking swing and idle wiggle blend by gait strength, so the tail never stops abruptly.
 func _animate_tail(gait_strength: float) -> void:
 	var walk_swing: float = deg_to_rad(walk_tail_swing_degrees) * sin(_step_phase) * gait_strength
 	var idle_swish: float = deg_to_rad(idle_tail_swish_degrees) * sin(_idle_time * idle_tail_swish_speed)
@@ -109,7 +119,7 @@ func _animate_breathing(gait_strength: float) -> void:
 	_torso.scale = _torso_base_scale * Vector3(1.0, 1.0 + breath, 1.0)
 
 
-## Like a cat, the head stays steadier than the body: it cancels part of the step bounce.
+## The head stays steadier than the body: it cancels part of the step bounce.
 ## Standing still, it looks around now and then; walking, it faces forward.
 func _animate_head(gait_strength: float, delta: float) -> void:
 	_head.position.y = _head_base_position.y - _step_bounce() * step_bob_height * gait_strength * 0.5
