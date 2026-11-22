@@ -3,6 +3,7 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.env
 .idea/
 # Personal notes (local only)
 docs/aprendizados.md

@@ -3,7 +3,10 @@ name = "corvo-ia"
 version = "0.1.0"
 description = "Autonomous AI agent with a virtual body: a crow in a 3D world."
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "httpx",
+    "pydantic-settings",
+]
 
 [dependency-groups]
 dev = [
@@ -22,6 +25,9 @@ line-length = 100
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
 
 [tool.mypy]
 python_version = "3.12"
