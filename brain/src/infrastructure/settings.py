@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     max_tool_steps: int = 5
     web_search_backend: str = "duckduckgo"
     discoveries_dir: Path = PROJECT_ROOT / "discoveries"
+    chalkboard_capacity: int = Field(default=3, gt=0)
     log_level: LogLevel = "INFO"
     log_file: Path = PROJECT_ROOT / "logs" / "capybara.log"
 

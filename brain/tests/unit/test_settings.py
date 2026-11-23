@@ -129,5 +129,41 @@ def test_discoveries_dir_comes_from_environment_variable(custom_discoveries_dir:
     assert settings.discoveries_dir == custom_discoveries_dir
 
 
+@pytest.fixture
+def environment_without_chalkboard_capacity(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("CHALKBOARD_CAPACITY", raising=False)
+
+
+@pytest.fixture
+def custom_chalkboard_capacity(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CHALKBOARD_CAPACITY", "5")
+
+
+@pytest.fixture
+def zero_chalkboard_capacity(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CHALKBOARD_CAPACITY", "0")
+
+
+def test_chalkboard_capacity_defaults_to_three(
+    environment_without_chalkboard_capacity: None,
+) -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.chalkboard_capacity == 3
+
+
+def test_chalkboard_capacity_comes_from_environment_variable(
+    custom_chalkboard_capacity: None,
+) -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.chalkboard_capacity == 5
+
+
+def test_rejects_a_chalkboard_capacity_of_zero(zero_chalkboard_capacity: None) -> None:
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None)
+
+
 def test_env_file_points_to_the_brain_folder_regardless_of_working_directory() -> None:
     assert Settings.model_config["env_file"] == PROJECT_ROOT / "brain" / ".env"
