@@ -127,3 +127,7 @@ def test_discoveries_dir_comes_from_environment_variable(custom_discoveries_dir:
     settings = Settings(_env_file=None)
 
     assert settings.discoveries_dir == custom_discoveries_dir
+
+
+def test_env_file_points_to_the_brain_folder_regardless_of_working_directory() -> None:
+    assert Settings.model_config["env_file"] == PROJECT_ROOT / "brain" / ".env"
