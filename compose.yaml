@@ -1,0 +1,27 @@
+# Long-term memory of the capybara: PostgreSQL with the pgvector extension.
+# Start:  docker compose --env-file brain/.env up -d
+# Stop:   docker compose --env-file brain/.env down   (the data stays in the volume)
+services:
+  memory-db:
+    image: pgvector/pgvector:pg17
+    container_name: capybara-memory-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${MEMORY_DB_NAME:-capybara_memory}
+      POSTGRES_USER: ${MEMORY_DB_USER:-capybara}
+      POSTGRES_PASSWORD: ${MEMORY_DB_PASSWORD:?set MEMORY_DB_PASSWORD in brain/.env}
+    ports:
+      # Bound to 127.0.0.1 only: the database is reachable from this machine, not the network.
+      - "127.0.0.1:${MEMORY_DB_PORT:-5432}:5432"
+    volumes:
+      - memory-db-data:/var/lib/postgresql/data
+      # Scripts here run once, when the volume is still empty (first start).
+      - ./brain/database/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  memory-db-data:

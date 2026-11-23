@@ -208,3 +208,43 @@ def test_rejects_a_token_limit_of_zero(zero_max_tokens_per_hour: None) -> None:
 
 def test_env_file_points_to_the_brain_folder_regardless_of_working_directory() -> None:
     assert Settings.model_config["env_file"] == PROJECT_ROOT / "brain" / ".env"
+
+
+@pytest.fixture
+def environment_without_memory_db(monkeypatch: pytest.MonkeyPatch) -> None:
+    for name in ("HOST", "PORT", "NAME", "USER", "PASSWORD"):
+        monkeypatch.delenv(f"MEMORY_DB_{name}", raising=False)
+
+
+@pytest.fixture
+def memory_db_password(monkeypatch: pytest.MonkeyPatch) -> str:
+    password = "secret-capybara"
+    monkeypatch.setenv("MEMORY_DB_PASSWORD", password)
+    return password
+
+
+def test_memory_db_defaults_to_local_postgres_from_compose(
+    environment_without_memory_db: None,
+) -> None:
+    settings = Settings(_env_file=None)
+
+    assert (
+        settings.memory_db_host,
+        settings.memory_db_port,
+        settings.memory_db_name,
+        settings.memory_db_user,
+    ) == ("127.0.0.1", 5432, "capybara_memory", "capybara")
+
+
+def test_memory_db_password_comes_from_environment_variable(memory_db_password: str) -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.memory_db_password.get_secret_value() == memory_db_password
+
+
+def test_memory_db_password_is_hidden_when_settings_are_printed(
+    memory_db_password: str,
+) -> None:
+    settings = Settings(_env_file=None)
+
+    assert memory_db_password not in repr(settings)

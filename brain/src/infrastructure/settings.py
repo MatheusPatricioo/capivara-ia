@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from src.infrastructure.ollama_language_model import OllamaGenerationOptions
@@ -35,6 +35,13 @@ class Settings(BaseSettings):
     max_remembered_discoveries: int = Field(default=20, gt=0)
     attention_capacity: int = Field(default=5, gt=0)
     attention_rest_minutes: float = Field(default=30.0, ge=0)
+    # Long-term memory: PostgreSQL + pgvector from compose.yaml. No default password:
+    # it lives only in brain/.env.
+    memory_db_host: str = "127.0.0.1"
+    memory_db_port: int = Field(default=5432, gt=0, lt=65536)
+    memory_db_name: str = "capybara_memory"
+    memory_db_user: str = "capybara"
+    memory_db_password: SecretStr = SecretStr("")
     log_level: LogLevel = "INFO"
     log_file: Path = PROJECT_ROOT / "logs" / "capybara.log"
 
