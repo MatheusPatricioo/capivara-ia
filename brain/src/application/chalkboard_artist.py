@@ -23,8 +23,6 @@ class PinnedDrawing:
 class ChalkboardArtist:
     """Puts a finished drawing in the world: walks to the board, saves the image, pins it
     and shows it on the body.
-
-    Shared by the draw tool and by the automatic drawing of saved discoveries.
     """
 
     def __init__(
