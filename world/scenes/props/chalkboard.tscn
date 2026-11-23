@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/interaction_point.gd" id="1_interaction_point"]
 [ext_resource type="Script" path="res://scripts/props/chalkboard_display.gd" id="2_chalkboard_display"]
+[ext_resource type="Script" path="res://scripts/props/clickable_area.gd" id="3_clickable_area"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood"]
 albedo_color = Color(0.55, 0.36, 0.2, 1)
@@ -25,6 +26,9 @@ size = Vector3(0.06, 1.56, 0.06)
 [sub_resource type="BoxMesh" id="BoxMesh_foot"]
 material = SubResource("StandardMaterial3D_wood")
 size = Vector3(0.06, 0.04, 0.4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_chalkboard_click"]
+size = Vector3(1.72, 1.1, 0.12)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_chalkboard"]
 size = Vector3(1.72, 1.56, 0.4)
@@ -73,3 +77,10 @@ shape = SubResource("BoxShape3D_chalkboard")
 position = Vector3(0, 0, 1.1)
 script = ExtResource("1_interaction_point")
 point_id = &"chalkboard"
+
+[node name="ClickArea" type="Area3D" parent="."]
+script = ExtResource("3_clickable_area")
+
+[node name="ClickShape" type="CollisionShape3D" parent="ClickArea"]
+position = Vector3(0, 1, 0.04)
+shape = SubResource("BoxShape3D_chalkboard_click")

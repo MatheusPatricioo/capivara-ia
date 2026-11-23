@@ -27,7 +27,7 @@ position = Vector3(0, 0.125, 0)
 shape = SubResource("BoxShape3D_crate")
 
 [node name="ArrivalPoint" type="Marker3D" parent="."]
-position = Vector3(0, 0, 0.5)
+position = Vector3(0, 0, 0.42)
 script = ExtResource("4_interaction_point")
 point_id = &"computer"
 

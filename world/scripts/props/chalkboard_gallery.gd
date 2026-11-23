@@ -11,8 +11,6 @@ const CHALK_COLOR: Color = Color8(240, 240, 235)
 const FRAME_WIDTH: float = 3.0
 const TITLE_FONT_SIZE: int = 22
 const TITLE_GAP: float = 6.0
-## The brain saves file names as "2026-11-23-title.png"; the date is not shown on the board.
-const DATE_PREFIX_LENGTH: int = 11
 
 ## How many drawings fit on the board.
 @export var drawing_count: int = 3
@@ -24,8 +22,7 @@ const DATE_PREFIX_LENGTH: int = 11
 
 var _discoveries_path: String = ""
 var _shown_signature: String = ""
-var _drawings: Array[ImageTexture] = []
-var _titles: PackedStringArray = PackedStringArray()
+var _drawings: Array[Dictionary] = []
 var _font: Font = ThemeDB.fallback_font
 
 
@@ -46,7 +43,7 @@ func refresh() -> void:
 	if signature == _shown_signature:
 		return
 	_shown_signature = signature
-	_load(newest_names)
+	_drawings = DiscoveryFiles.load_newest_drawings(_discoveries_path, newest_names.size())
 	queue_redraw()
 
 
@@ -63,28 +60,11 @@ func _signature(file_names: PackedStringArray) -> String:
 	return "|".join(parts)
 
 
-func _load(file_names: PackedStringArray) -> void:
-	_drawings.clear()
-	_titles.clear()
-	for file_name: String in file_names:
-		var drawing: ImageTexture = DiscoveryFiles.load_drawing(_discoveries_path, file_name)
-		if drawing != null:
-			_drawings.append(drawing)
-			_titles.append(_title_from(file_name))
-
-
-static func _title_from(file_name: String) -> String:
-	var title: String = file_name.get_basename()
-	if title.length() > DATE_PREFIX_LENGTH and title[4] == "-" and title[7] == "-":
-		title = title.substr(DATE_PREFIX_LENGTH)
-	return title.replace("-", " ")
-
-
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), BOARD_COLOR)
 	for drawing_index: int in _drawings.size():
 		var panel: Rect2 = Rect2(panel_positions[drawing_index], panel_size)
-		draw_texture_rect(_drawings[drawing_index], panel, false)
+		draw_texture_rect(_drawings[drawing_index]["texture"] as Texture2D, panel, false)
 		draw_rect(panel, CHALK_COLOR, false, FRAME_WIDTH)
 		var title_position: Vector2 = panel.position + Vector2(0, panel.size.y + TITLE_FONT_SIZE + TITLE_GAP)
-		draw_string(_font, title_position, _titles[drawing_index], HORIZONTAL_ALIGNMENT_CENTER, panel.size.x, TITLE_FONT_SIZE, CHALK_COLOR)
+		draw_string(_font, title_position, _drawings[drawing_index]["title"] as String, HORIZONTAL_ALIGNMENT_CENTER, panel.size.x, TITLE_FONT_SIZE, CHALK_COLOR)

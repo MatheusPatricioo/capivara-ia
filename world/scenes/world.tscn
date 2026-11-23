@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://scenes/props/food_bowl.tscn" id="41_food_bowl"]
 [ext_resource type="PackedScene" path="res://scenes/props/pond.tscn" id="43_pond"]
 [ext_resource type="PackedScene" path="res://scenes/ui/computer_screen.tscn" id="50_computer_screen"]
+[ext_resource type="PackedScene" path="res://scenes/ui/chalkboard_viewer.tscn" id="51_chalkboard_viewer"]
 [ext_resource type="Script" path="res://scripts/props/observable.gd" id="observable"]
 [ext_resource type="PackedScene" path="res://scenes/props/tree.tscn" id="2_tree"]
 [ext_resource type="PackedScene" path="res://scenes/props/round_prop.tscn" id="round_prop"]
@@ -1016,6 +1017,8 @@ script = ExtResource("8_world_navigation")
 
 [node name="ComputerScreen" parent="." unique_id=719916942 instance=ExtResource("50_computer_screen")]
 
+[node name="ChalkboardViewer" parent="." instance=ExtResource("51_chalkboard_viewer")]
+
 [node name="Observables" type="Node3D" parent="."]
 
 [node name="WaterLilies" type="Area3D" parent="Observables"]
@@ -1075,3 +1078,4 @@ description = "uma clareira lá fora, depois da cerca, com pedras em roda e luzi
 notice_radius = 1.5
 
 [connection signal="clicked" from="Workspace/Desk/ClickArea" to="ComputerScreen" method="open"]
+[connection signal="clicked" from="Workspace/Chalkboard/ClickArea" to="ChalkboardViewer" method="open"]

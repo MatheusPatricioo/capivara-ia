@@ -20,10 +20,24 @@ enum ControlMode { AUTONOMOUS, MANUAL }
 @export var arrival_min_speed_ratio: float = 0.3
 ## How fast the body turns towards the walking direction. Higher is snappier.
 @export var turn_speed: float = 7.0
+## Speed of the last small step from the end of the path to an interaction point, in m/s.
+## The path keeps half a meter away from objects; this step brings her right up to them.
+@export var final_step_speed: float = 0.6
+## The final step gives up after this many seconds, for example when something is in the way.
+@export var final_step_max_seconds: float = 1.5
+## Close enough to the interaction point to stop the final step, in meters.
+@export var final_step_tolerance: float = 0.05
 
 var control_mode: ControlMode = ControlMode.AUTONOMOUS
 var _is_walking_to_destination: bool = false
 var _current_speed_scale: float = 1.0
+## Set while she goes to an interaction point: where to stand and what to face on arrival.
+var _point_position: Vector3 = Vector3.ZERO
+var _look_target: Vector3 = Vector3.ZERO
+var _is_going_to_point: bool = false
+var _is_taking_final_step: bool = false
+var _final_step_seconds_left: float = 0.0
+var _is_facing_look_target: bool = false
 
 @onready var _body: Node3D = $Body
 @onready var _navigation_agent: NavigationAgent3D = $NavigationAgent3D
@@ -45,6 +59,9 @@ func walk_to(destination: Vector3, speed_scale: float = 1.0) -> void:
 	_navigation_agent.target_position = destination
 	_current_speed_scale = speed_scale
 	_is_walking_to_destination = true
+	_is_going_to_point = false
+	_is_taking_final_step = false
+	_is_facing_look_target = false
 
 
 ## Sends the capybara to the interaction point with this id (bed, food_bowl, computer...).
@@ -55,6 +72,9 @@ func go_to_point(point_id: StringName, speed_scale: float = 1.0) -> bool:
 		push_warning("Unknown interaction point: %s" % point_id)
 		return false
 	walk_to(point.global_position, speed_scale)
+	_point_position = point.global_position
+	_look_target = point.look_target()
+	_is_going_to_point = true
 	return true
 
 
@@ -70,8 +90,12 @@ func _physics_process(delta: float) -> void:
 	_apply_gravity(delta)
 	var desired_velocity: Vector3 = _manual_velocity() if control_mode == ControlMode.MANUAL else _navigation_velocity()
 	_accelerate_towards(desired_velocity, delta)
-	_turn_body_towards_movement(delta)
+	if _is_facing_look_target:
+		_turn_body_towards(_look_target - global_position, delta)
+	else:
+		_turn_body_towards_movement(delta)
 	move_and_slide()
+	_update_final_step(delta)
 
 
 func _apply_gravity(delta: float) -> void:
@@ -98,6 +122,8 @@ func _manual_velocity() -> Vector3:
 
 
 func _navigation_velocity() -> Vector3:
+	if _is_taking_final_step:
+		return _flat_direction_to(_point_position) * final_step_speed
 	if not _is_walking_to_destination or _navigation_agent.is_navigation_finished():
 		return Vector3.ZERO
 	var next_path_position: Vector3 = _navigation_agent.get_next_path_position()
@@ -132,13 +158,49 @@ func _on_navigation_finished() -> void:
 	if not _is_walking_to_destination:
 		return
 	_is_walking_to_destination = false
+	if _is_going_to_point:
+		_is_taking_final_step = true
+		_final_step_seconds_left = final_step_max_seconds
+		return
 	destination_reached.emit()
+
+
+## The last small, straight step to the interaction point. It ends when she is there,
+## or when time runs out because her body bumped into the object.
+func _update_final_step(delta: float) -> void:
+	if not _is_taking_final_step:
+		return
+	_final_step_seconds_left -= delta
+	var distance_left: float = _flat_distance_to(_point_position)
+	if distance_left > final_step_tolerance and _final_step_seconds_left > 0.0:
+		return
+	_is_taking_final_step = false
+	_is_going_to_point = false
+	_is_facing_look_target = true
+	destination_reached.emit()
+
+
+func _flat_direction_to(target: Vector3) -> Vector3:
+	var direction: Vector3 = target - global_position
+	direction.y = 0.0
+	return direction.normalized()
+
+
+func _flat_distance_to(target: Vector3) -> float:
+	return Vector2(target.x - global_position.x, target.z - global_position.z).length()
 
 
 func _turn_body_towards_movement(delta: float) -> void:
 	var horizontal_velocity: Vector2 = Vector2(velocity.x, velocity.z)
 	if horizontal_velocity.length() < 0.1:
 		return
-	var target_angle: float = atan2(-velocity.x, -velocity.z)
+	_turn_body_towards(velocity, delta)
+
+
+## Turns the body smoothly so its front (-Z) points along the given direction.
+func _turn_body_towards(direction: Vector3, delta: float) -> void:
+	if Vector2(direction.x, direction.z).length() < 0.01:
+		return
+	var target_angle: float = atan2(-direction.x, -direction.z)
 	var turn_weight: float = minf(turn_speed * delta, 1.0)
 	_body.rotation.y = lerp_angle(_body.rotation.y, target_angle, turn_weight)

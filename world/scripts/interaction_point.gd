@@ -12,3 +12,9 @@ const GROUP: StringName = &"interaction_points"
 
 func _ready() -> void:
 	add_to_group(GROUP)
+
+
+## Where the capybara looks while using the point: the object the marker belongs to.
+func look_target() -> Vector3:
+	var owner_object: Node3D = get_parent() as Node3D
+	return owner_object.global_position if owner_object != null else global_position
