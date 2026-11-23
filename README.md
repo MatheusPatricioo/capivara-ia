@@ -87,6 +87,16 @@ Digite `sair` para encerrar o chat.
 
 No modo vivo ninguém fala com a capivara: a cada poucos minutos ela decide sozinha o que fazer (pesquisar algo, salvar uma descoberta, desenhar na lousa ou só descansar), e o corpo dela acompanha no mundo 3D.
 
+No Windows, um comando liga tudo: o Ollama (se ainda não estiver rodando), o cérebro numa janela própria do PowerShell, com os logs visíveis, e o mundo no Godot:
+
+```powershell
+setx GODOT_PATH "C:\caminho\para\Godot_v4.x-stable_win64.exe"   # só na primeira vez; abra um terminal novo depois
+.\start.ps1           # roda o jogo
+.\start.ps1 -Editor   # abre o editor do Godot em vez do jogo
+```
+
+Para ligar cada parte à mão:
+
 1. Com o Ollama rodando, inicie o cérebro:
 
    ```bash
