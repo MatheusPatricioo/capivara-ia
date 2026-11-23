@@ -27,6 +27,10 @@ A memória tem duas camadas:
 
 Antes de decidir o que fazer, a capivara consulta a memória usando RAG (geração aumentada por recuperação), para que cada nova pesquisa aproveite o que ela já sabe.
 
+### Desenhos na lousa
+
+Toda descoberta salva vira um rascunho de giz de alguma coisa dela. O cérebro transforma o título e o resumo da descoberta num embedding e compara com rótulos em português das 345 categorias do Quick, Draw!. Se uma categoria se destaca claramente das outras (`DOODLE_MIN_MARGIN` no `.env`), a capivara desenha um rabisco real, feito por uma pessoa, dessa categoria. Se nada da descoberta é desenhável, a lousa fica como está. Os traços ficam guardados como pontos, não como imagem.
+
 ## Stack
 
 - **Mundo:** Godot 4, GDScript
@@ -40,10 +44,11 @@ Antes de decidir o que fazer, a capivara consulta a memória usando RAG (geraç�
 ### Pré-requisitos
 
 - [Python 3.12+](https://www.python.org/downloads/)
-- [Ollama](https://ollama.com/download) com o modelo `qwen2.5:7b`:
+- [Ollama](https://ollama.com/download) com o modelo de conversa `qwen2.5:7b` e o modelo de embedding `nomic-embed-text` (que escolhe o rabisco da lousa):
 
   ```bash
   ollama pull qwen2.5:7b
+  ollama pull nomic-embed-text
   ```
 
 - [Godot 4](https://godotengine.org/download) (só para ver o mundo 3D)
@@ -132,5 +137,5 @@ mypy brain/src
 
 🚧 Em desenvolvimento ativo.
 
-- **Funcionando:** chat e modo vivo autônomo, pesquisa na web, descobertas salvas em Markdown, desenhos na lousa, mundo 3D conectado ao cérebro por WebSocket e limite de tokens por hora.
+- **Funcionando:** chat e modo vivo autônomo, pesquisa na web, descobertas salvas em Markdown, rascunhos na lousa escolhidos por embeddings, mundo 3D conectado ao cérebro por WebSocket e limite de tokens por hora.
 - **Próximo passo:** memória de longo prazo (ChromaDB + RAG), para que cada novo ciclo aproveite o que ela já sabe.
