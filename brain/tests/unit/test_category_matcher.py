@@ -2,7 +2,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from src.application.category_matcher import CategoryMatch, CategoryMatcher
+from src.application.category_matcher import CategoryCandidate, CategoryMatch, CategoryMatcher
 from src.domain.text_embedding import Embedding, EmbeddingError
 
 # Fake 2D "meanings": the x axis is "animal", the y axis is "sky".
@@ -11,8 +11,10 @@ FAKE_EMBEDDINGS: dict[str, Embedding] = {
     "estrela": (0.0, 1.0),
     "Gatos dormem muito": (0.9, 0.1),
     "Meio a meio": (1.0, 1.0),
+    "lua": (0.0, -1.0),
 }
 CATEGORY_LABELS = {"cat": "gato", "star": "estrela"}
+THREE_CATEGORY_LABELS = {"cat": "gato", "star": "estrela", "moon": "lua"}
 
 
 class FakeEmbedder:
@@ -122,3 +124,37 @@ def test_needs_at_least_two_categories(
 ) -> None:
     with pytest.raises(ValueError):
         CategoryMatcher(embedder, {"cat": "gato"}, cache)
+
+
+@pytest.fixture
+def matcher_of_three(embedder: FakeEmbedder, cache: InMemoryEmbeddingCache) -> CategoryMatcher:
+    return CategoryMatcher(embedder, THREE_CATEGORY_LABELS, cache)
+
+
+def test_lists_the_candidates_most_similar_first(matcher_of_three: CategoryMatcher) -> None:
+    candidates = matcher_of_three.candidates("Gatos dormem muito", count=3)
+
+    assert [candidate.category for candidate in candidates] == ["cat", "star", "moon"]
+
+
+def test_returns_only_as_many_candidates_as_asked(matcher_of_three: CategoryMatcher) -> None:
+    assert len(matcher_of_three.candidates("Gatos dormem muito", count=2)) == 2
+
+
+def test_a_candidate_carries_its_label_and_similarity(matcher_of_three: CategoryMatcher) -> None:
+    best = matcher_of_three.candidates("Gatos dormem muito", count=1)[0]
+
+    assert best == CategoryCandidate(
+        category="cat", label="gato", similarity=pytest.approx(0.9939, abs=1e-4)
+    )
+
+
+def test_asking_for_more_candidates_than_categories_returns_them_all(
+    matcher_of_three: CategoryMatcher,
+) -> None:
+    assert len(matcher_of_three.candidates("Gatos dormem muito", count=10)) == 3
+
+
+def test_rejects_asking_for_no_candidates(matcher_of_three: CategoryMatcher) -> None:
+    with pytest.raises(ValueError):
+        matcher_of_three.candidates("Gatos dormem muito", count=0)

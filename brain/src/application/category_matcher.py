@@ -13,6 +13,15 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
+class CategoryCandidate:
+    """One category found by the embeddings, with the label the comparison used."""
+
+    category: str
+    label: str
+    similarity: float
+
+
+@dataclass(frozen=True)
 class CategoryMatch:
     category: str
     similarity: float
@@ -42,22 +51,36 @@ class CategoryMatcher:
         self._cache = cache
         self._label_embeddings: dict[str, Embedding] | None = None
 
-    def closest(self, text: str) -> CategoryMatch:
-        """Raises EmbeddingError when the embedding model cannot be reached."""
+    def candidates(self, text: str, count: int) -> tuple[CategoryCandidate, ...]:
+        """The count categories closest to the text, most similar first (the "retrieve").
+
+        Raises EmbeddingError when the embedding model cannot be reached.
+        """
+        if count < 1:
+            raise ValueError("ask for at least one candidate")
         (text_embedding,) = self._embedder.embed([text])
         label_embeddings = self._embeddings_of_labels()
         ranked = sorted(
             (
-                (cosine_similarity(text_embedding, label_embeddings[label]), category)
+                CategoryCandidate(
+                    category=category,
+                    label=label,
+                    similarity=cosine_similarity(text_embedding, label_embeddings[label]),
+                )
                 for category, label in self._category_labels.items()
             ),
+            key=lambda candidate: candidate.similarity,
             reverse=True,
         )
-        (best_similarity, best_category), (second_similarity, _) = ranked[0], ranked[1]
+        return tuple(ranked[:count])
+
+    def closest(self, text: str) -> CategoryMatch:
+        """Raises EmbeddingError when the embedding model cannot be reached."""
+        best, second = self.candidates(text, count=2)
         return CategoryMatch(
-            category=best_category,
-            similarity=best_similarity,
-            margin=best_similarity - second_similarity,
+            category=best.category,
+            similarity=best.similarity,
+            margin=best.similarity - second.similarity,
         )
 
     def _embeddings_of_labels(self) -> dict[str, Embedding]:
