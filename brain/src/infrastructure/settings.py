@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     web_search_backend: str = "duckduckgo"
     discoveries_dir: Path = PROJECT_ROOT / "discoveries"
     chalkboard_capacity: int = Field(default=3, gt=0)
+    world_server_host: str = "127.0.0.1"
+    world_server_port: int = Field(default=8765, gt=0, lt=65536)
     log_level: LogLevel = "INFO"
     log_file: Path = PROJECT_ROOT / "logs" / "capybara.log"
 

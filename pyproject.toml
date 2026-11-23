@@ -7,7 +7,9 @@ dependencies = [
     "ddgs",
     "httpx",
     "pillow",
+    "pydantic",
     "pydantic-settings",
+    "websockets",
 ]
 
 [dependency-groups]

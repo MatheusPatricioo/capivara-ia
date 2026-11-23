@@ -165,5 +165,19 @@ def test_rejects_a_chalkboard_capacity_of_zero(zero_chalkboard_capacity: None) -
         Settings(_env_file=None)
 
 
+@pytest.fixture
+def environment_without_world_server(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("WORLD_SERVER_HOST", raising=False)
+    monkeypatch.delenv("WORLD_SERVER_PORT", raising=False)
+
+
+def test_world_server_listens_on_local_port_8765_by_default(
+    environment_without_world_server: None,
+) -> None:
+    settings = Settings(_env_file=None)
+
+    assert (settings.world_server_host, settings.world_server_port) == ("127.0.0.1", 8765)
+
+
 def test_env_file_points_to_the_brain_folder_regardless_of_working_directory() -> None:
     assert Settings.model_config["env_file"] == PROJECT_ROOT / "brain" / ".env"
