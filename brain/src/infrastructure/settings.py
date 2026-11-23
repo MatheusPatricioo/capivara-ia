@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     autonomous_cycle_interval_seconds: float = Field(default=120.0, gt=0)
     max_tokens_per_hour: int = Field(default=60000, gt=0)
     max_remembered_discoveries: int = Field(default=20, gt=0)
+    attention_capacity: int = Field(default=5, gt=0)
+    attention_rest_minutes: float = Field(default=30.0, ge=0)
     log_level: LogLevel = "INFO"
     log_file: Path = PROJECT_ROOT / "logs" / "capybara.log"
 

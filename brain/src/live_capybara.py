@@ -1,15 +1,18 @@
 """Autonomous mode: the capybara lives on her own and her body follows in the Godot world."""
 
 import logging
+from collections.abc import Callable
 
 import httpx
 
+from src.application.attention_inbox import AttentionInbox
 from src.application.autonomous_loop import AutonomousLoop
 from src.application.conversation import Conversation
 from src.application.inner_voice import InnerVoice
 from src.application.metered_language_model import MeteredLanguageModel
 from src.application.token_budget import HourlyTokenBudget
 from src.capybara_tools import TOOL_RESULT_REMINDER_OVERRIDES, build_capybara_tools
+from src.domain.attention import Attention
 from src.domain.chalkboard import Chalkboard
 from src.infrastructure.logging_setup import configure_logging
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
@@ -32,9 +35,19 @@ def print_thought(thought: str) -> None:
     print(f"Capivara (pensando): {thought}\n", flush=True)
 
 
-def log_noticed_thing(event: NoticedMessage) -> None:
-    # For now she only notices; the attention list comes in the next step.
-    logger.info("Capybara noticed %s: %s", event.thing, event.description)
+SECONDS_PER_MINUTE = 60.0
+
+
+def attention_listener(inbox: AttentionInbox) -> Callable[[NoticedMessage], None]:
+    """Turns what the world reports into points of attention for her next cycles."""
+
+    def notice(event: NoticedMessage) -> None:
+        if inbox.notice(event.thing, event.description):
+            logger.info("New point of attention: %s (%s)", event.thing, event.description)
+        else:
+            logger.debug("Already waiting or resting: %s", event.thing)
+
+    return notice
 
 
 def main() -> None:
@@ -42,6 +55,12 @@ def main() -> None:
     configure_logging(settings.log_file, settings.log_level)
     budget = HourlyTokenBudget(settings.max_tokens_per_hour)
     chalkboard = Chalkboard(settings.chalkboard_capacity)
+    attention_inbox = AttentionInbox(
+        Attention(
+            settings.attention_capacity,
+            rest_seconds=settings.attention_rest_minutes * SECONDS_PER_MINUTE,
+        )
+    )
     system_prompt = load_prompt(SYSTEM_PROMPT_NAME)
     tool_result_reminder = load_prompt(TOOL_RESULT_REMINDER_NAME)
     inner_voice = InnerVoice(
@@ -52,7 +71,9 @@ def main() -> None:
     )
     with (
         WorldServer(
-            settings.world_server_host, settings.world_server_port, on_event=log_noticed_thing
+            settings.world_server_host,
+            settings.world_server_port,
+            on_event=attention_listener(attention_inbox),
         ) as world_server,
         httpx.Client(
             base_url=settings.ollama_base_url, timeout=settings.ollama_timeout_seconds
