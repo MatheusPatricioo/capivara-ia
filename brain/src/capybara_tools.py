@@ -11,6 +11,7 @@ from src.application.tools.save_discovery_tool import SaveDiscoveryTool
 from src.application.tools.seen_sources import SeenSources
 from src.application.tools.web_search_tool import WebSearchTool
 from src.domain.body import Body, Place
+from src.domain.capybara_hand import CapybaraHand
 from src.domain.chalkboard import Chalkboard
 from src.domain.tool import Tool
 from src.infrastructure.duckduckgo_web_searcher import DuckDuckGoWebSearcher
@@ -63,6 +64,7 @@ def build_capybara_tools(
     illustrator = IllustrateDiscovery(
         _build_category_matcher(settings, http_client),
         load_doodle_library(),
+        CapybaraHand(),
         ChalkboardArtist(PngDrawingRepository(settings.discoveries_dir), chalkboard, body=body),
         min_margin=settings.doodle_min_margin,
     )

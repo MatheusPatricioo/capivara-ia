@@ -11,6 +11,7 @@ from src.application.illustrate_discovery import IllustrateDiscovery
 from src.application.tools.save_discovery_tool import SaveDiscoveryTool
 from src.application.tools.seen_sources import SeenSources
 from src.application.tools.web_search_tool import WebSearchTool
+from src.domain.capybara_hand import STILL_HAND, CapybaraHand
 from src.domain.chalkboard import Chalkboard
 from src.domain.doodle import Doodle, DoodleLibrary
 from src.domain.language_model import (
@@ -98,6 +99,7 @@ def conversation(
     illustrator = IllustrateDiscovery(
         OceanFinder(),
         DoodleLibrary({"ocean": [WAVES_DOODLE]}),
+        CapybaraHand(STILL_HAND),
         ChalkboardArtist(PngDrawingRepository(tmp_path), chalkboard, today=lambda: TODAY),
         min_margin=0.02,
     )

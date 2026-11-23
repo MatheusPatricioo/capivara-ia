@@ -25,7 +25,8 @@ SUN_DISCOVERY = Discovery(
     sources=("https://example.com/sol",),
     discovered_on=TODAY,
 )
-SUN_DRAWING = Drawing(title="O Sol", strokes=SUN_DOODLE.on_the_board())
+SUN_IN_HER_HAND = Doodle(category="sun", strokes=(((0, 120), (255, 140)),))
+SUN_DRAWING = Drawing(title="O Sol", strokes=SUN_IN_HER_HAND.on_the_board())
 CLEARLY_THE_SUN = CategoryMatch(category="sun", similarity=0.81, margin=0.12)
 TORN_ABOUT_THE_SUN = CategoryMatch(category="sun", similarity=0.61, margin=0.005)
 A_CATEGORY_WITHOUT_DOODLES = CategoryMatch(category="volcano", similarity=0.8, margin=0.1)
@@ -41,6 +42,17 @@ class ScriptedCategoryFinder:
     def closest(self, text: str) -> CategoryMatch:
         self.received_texts.append(text)
         return self._match
+
+
+class RecordingHand:
+    """Redraws every reference as SUN_IN_HER_HAND and remembers the references."""
+
+    def __init__(self) -> None:
+        self.references: list[Doodle] = []
+
+    def redraw(self, reference: Doodle) -> Doodle:
+        self.references.append(reference)
+        return SUN_IN_HER_HAND
 
 
 class OfflineCategoryFinder:
@@ -73,22 +85,37 @@ def artist(repository: InMemoryDrawingRepository) -> ChalkboardArtist:
 
 
 @pytest.fixture
+def hand() -> RecordingHand:
+    return RecordingHand()
+
+
+@pytest.fixture
 def finder_sure_of_the_sun() -> ScriptedCategoryFinder:
     return ScriptedCategoryFinder(CLEARLY_THE_SUN)
 
 
 @pytest.fixture
 def illustrator(
-    finder_sure_of_the_sun: ScriptedCategoryFinder, artist: ChalkboardArtist
+    finder_sure_of_the_sun: ScriptedCategoryFinder, hand: RecordingHand, artist: ChalkboardArtist
 ) -> IllustrateDiscovery:
-    return IllustrateDiscovery(finder_sure_of_the_sun, DOODLE_LIBRARY, artist, MIN_MARGIN)
+    return IllustrateDiscovery(finder_sure_of_the_sun, DOODLE_LIBRARY, hand, artist, MIN_MARGIN)
 
 
 def illustrator_finding(match: CategoryMatch, artist: ChalkboardArtist) -> IllustrateDiscovery:
-    return IllustrateDiscovery(ScriptedCategoryFinder(match), DOODLE_LIBRARY, artist, MIN_MARGIN)
+    return IllustrateDiscovery(
+        ScriptedCategoryFinder(match), DOODLE_LIBRARY, RecordingHand(), artist, MIN_MARGIN
+    )
 
 
-def test_draws_a_doodle_of_the_closest_category(
+def test_her_hand_redraws_a_doodle_of_the_closest_category(
+    illustrator: IllustrateDiscovery, hand: RecordingHand
+) -> None:
+    illustrator.illustrate(SUN_DISCOVERY)
+
+    assert hand.references == [SUN_DOODLE]
+
+
+def test_draws_what_her_hand_redrew(
     illustrator: IllustrateDiscovery, repository: InMemoryDrawingRepository
 ) -> None:
     illustrator.illustrate(SUN_DISCOVERY)
@@ -137,7 +164,9 @@ def test_draws_nothing_for_a_category_without_doodles(
 
 
 def test_returns_none_when_the_embedding_model_is_offline(artist: ChalkboardArtist) -> None:
-    illustrator = IllustrateDiscovery(OfflineCategoryFinder(), DOODLE_LIBRARY, artist, MIN_MARGIN)
+    illustrator = IllustrateDiscovery(
+        OfflineCategoryFinder(), DOODLE_LIBRARY, RecordingHand(), artist, MIN_MARGIN
+    )
 
     assert illustrator.illustrate(SUN_DISCOVERY) is None
 
@@ -176,7 +205,9 @@ def test_logs_why_the_drawing_failed(
     artist: ChalkboardArtist, caplog: pytest.LogCaptureFixture
 ) -> None:
     caplog.set_level(logging.WARNING, logger=ILLUSTRATE_LOGGER)
-    illustrator = IllustrateDiscovery(OfflineCategoryFinder(), DOODLE_LIBRARY, artist, MIN_MARGIN)
+    illustrator = IllustrateDiscovery(
+        OfflineCategoryFinder(), DOODLE_LIBRARY, RecordingHand(), artist, MIN_MARGIN
+    )
 
     illustrator.illustrate(SUN_DISCOVERY)
 

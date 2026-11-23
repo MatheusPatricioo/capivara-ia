@@ -29,7 +29,9 @@ Antes de decidir o que fazer, a capivara consulta a memória usando RAG (geraç�
 
 ### Desenhos na lousa
 
-Toda descoberta salva vira um rascunho de giz de alguma coisa dela. O cérebro transforma o título e o resumo da descoberta num embedding e compara com rótulos em português das 345 categorias do Quick, Draw!. Se uma categoria se destaca claramente das outras (`DOODLE_MIN_MARGIN` no `.env`), a capivara desenha um rabisco real, feito por uma pessoa, dessa categoria. Se nada da descoberta é desenhável, a lousa fica como está. Os traços ficam guardados como pontos, não como imagem.
+Toda descoberta salva vira um rascunho de giz de alguma coisa dela. O cérebro transforma o título e o resumo da descoberta num embedding e compara com rótulos em português das 345 categorias do Quick, Draw!. Se uma categoria se destaca claramente das outras (`DOODLE_MIN_MARGIN` no `.env`), a capivara pega um rabisco real, feito por uma pessoa, como referência e **redesenha com a mão dela**: o desenho sai um pouco inclinado, com outras proporções, os traços fora do lugar e uma linha levemente ondulada, então nenhum desenho sai igual a outro. Se nada da descoberta é desenhável, a lousa fica como está. Cada desenho é salvo como PNG em estilo Paint (traço preto sobre fundo branco) na pasta de descobertas.
+
+**Próxima etapa planejada:** hoje ela reinterpreta um rabisco que já existe. O plano é ela criar desenhos inéditos com o [Sketch-RNN](https://magenta.tensorflow.org/sketch-rnn-demo) (Google Magenta), uma rede neural pequena treinada no Quick, Draw! que desenha traço por traço e pode partir de um rabisco existente para criar uma variação. Ela vai rodar localmente e de graça, como o resto do projeto.
 
 ## Stack
 
