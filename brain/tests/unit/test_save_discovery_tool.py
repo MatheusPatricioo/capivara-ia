@@ -94,7 +94,15 @@ def test_saves_the_discovery_with_todays_date(
 
 
 def test_tells_the_model_the_saved_file_name(save_discovery_tool: SaveDiscoveryTool) -> None:
-    assert save_discovery_tool.run(VALID_ARGUMENTS) == f"Saved as {SAVED_FILE_NAME}"
+    assert save_discovery_tool.run(VALID_ARGUMENTS).startswith(f"Saved as {SAVED_FILE_NAME}.")
+
+
+def test_invites_the_drawing_with_the_exact_saved_title(
+    save_discovery_tool: SaveDiscoveryTool,
+) -> None:
+    result = save_discovery_tool.run(VALID_ARGUMENTS)
+
+    assert "call draw now with discovery_title 'Capivaras nadam'" in result
 
 
 def test_rejects_an_empty_source_list(save_discovery_tool: SaveDiscoveryTool) -> None:

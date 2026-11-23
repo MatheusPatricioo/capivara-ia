@@ -69,7 +69,20 @@ class SaveDiscoveryTool:
             raise ToolError(f"could not save the discovery: {error}") from error
         self._saved_discoveries.remember(discovery.title, file_name)
         logger.info("Discovery saved: %s (sources: %s)", file_name, ", ".join(discovery.sources))
-        return f"Saved as {file_name}"
+        return self._result_message(file_name, discovery.title)
+
+    @staticmethod
+    def _result_message(file_name: str, title: str) -> str:
+        """Invites the drawing right away, with the exact title the draw tool expects.
+
+        Small models often announce "now I'll draw it" and never call the tool, or mix the
+        title with the file name; the last thing they read is the best place to prevent both.
+        """
+        return (
+            f"Saved as {file_name}. If this discovery deserves a drawing, call draw now with "
+            f"discovery_title '{title}', without announcing it first: saying you will draw "
+            "does not draw anything."
+        )
 
     @staticmethod
     def _required_text(arguments: dict[str, object], name: str) -> str:

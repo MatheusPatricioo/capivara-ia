@@ -94,9 +94,8 @@ def test_tells_the_model_where_the_discovery_was_saved(
     conversation.send(USER_MESSAGE)
 
     tool_result = language_model.received_histories[2][-1]
-    assert tool_result == ChatMessage(
-        Role.TOOL, f"Saved as {EXPECTED_FILE_NAME}", tool_name="save_discovery"
-    )
+    assert tool_result.tool_name == "save_discovery"
+    assert tool_result.content.startswith(f"Saved as {EXPECTED_FILE_NAME}.")
 
 
 def test_returns_the_final_answer_after_saving(conversation: Conversation) -> None:
