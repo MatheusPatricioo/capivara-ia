@@ -53,11 +53,19 @@ script = ExtResource("1_fence_line")
 piece_model = ExtResource("2_fence_simple")
 length = 12.0
 
-[node name="FenceWest" type="Node3D" parent="Fences"]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -6, 0, 0)
+[node name="FenceWestNorth" type="Node3D" parent="Fences"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -6, 0, -2)
 script = ExtResource("1_fence_line")
 piece_model = ExtResource("2_fence_simple")
-length = 12.0
+length = 8.0
+
+; No fence from z 2 to 4: the stream from the waterfall passes there into the pond.
+
+[node name="FenceWestSouth" type="Node3D" parent="Fences"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -6, 0, 5)
+script = ExtResource("1_fence_line")
+piece_model = ExtResource("2_fence_simple")
+length = 2.0
 
 [node name="FenceSouthWest" type="Node3D" parent="Fences"]
 position = Vector3(-3, 0, 6)

@@ -2,7 +2,7 @@
 class_name SteppingStones
 extends Node3D
 
-## Small, flat stones in an earth tone laid along a path, drawn as one MultiMesh.
+## Small, flat, light stones laid along a path, drawn as one MultiMesh.
 ## Decoration only: there is no collision, so the capybara walks right over them.
 ## The path goes through path_points in order; a stone is placed every spacing meters.
 
@@ -38,7 +38,7 @@ const COLOR_JITTER: float = 0.08
 		side_jitter = maxf(value, 0.0)
 		_rebuild()
 
-@export var color: Color = Color(0.3, 0.2, 0.12):
+@export var color: Color = Color(0.7, 0.63, 0.53):
 	set(value):
 		color = value
 		_rebuild()

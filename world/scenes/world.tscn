@@ -375,28 +375,6 @@ scale = Vector3(1, 1, 1)
 [node name="GardenFireflies" parent="Nature/Inside/Garden" instance=ExtResource("fireflies")]
 position = Vector3(3.1, 0.9, 3.5)
 
-[node name="CenterBeds" type="Node3D" parent="Nature/Inside"]
-
-[node name="PinkAndYellowBed" type="Node3D" parent="Nature/Inside/CenterBeds"]
-position = Vector3(-1, 0, -2.2)
-rotation_degrees = Vector3(0, -30, 0)
-script = ExtResource("flower_bed")
-size = Vector2(0.7, 1.2)
-rows = 2
-flowers_per_row = 4
-flower_models = Array[PackedScene]([ExtResource("kit_flower_redA"), ExtResource("kit_flower_redB"), ExtResource("kit_flower_redC"), ExtResource("kit_flower_yellowA"), ExtResource("kit_flower_yellowB"), ExtResource("kit_flower_yellowC")])
-random_seed = 34
-
-[node name="PurpleBedByThePath" type="Node3D" parent="Nature/Inside/CenterBeds"]
-position = Vector3(1.6, 0, 1.1)
-rotation_degrees = Vector3(0, -30, 0)
-script = ExtResource("flower_bed")
-size = Vector2(0.7, 1.2)
-rows = 2
-flowers_per_row = 4
-flower_models = Array[PackedScene]([ExtResource("kit_flower_purpleA"), ExtResource("kit_flower_purpleB"), ExtResource("kit_flower_purpleC")])
-random_seed = 35
-
 [node name="Patches" type="Node3D" parent="Nature/Inside"]
 
 [node name="EdgeGrass" type="Node3D" parent="Nature/Inside/Patches"]
