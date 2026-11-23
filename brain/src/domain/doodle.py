@@ -15,7 +15,7 @@ from src.domain.drawing import (
 DOODLE_BOX_SIZE = 255
 """Doodles come drawn inside a 255x255 box (the Quick, Draw! format), then fit the board."""
 BOARD_MARGIN = 30
-"""Empty space kept between the doodle and the top and bottom of the board, in pixels."""
+"""Empty space always kept between the doodle and the edges of the board, in pixels."""
 
 DoodlePoint = tuple[int, int]
 DoodleStroke = tuple[DoodlePoint, ...]
@@ -51,10 +51,20 @@ class Doodle:
             self._ensure_valid_stroke(stroke)
 
     def on_the_board(self) -> tuple[Stroke, ...]:
-        """The doodle enlarged and centered on the chalkboard, ready to be drawn."""
-        scale = (CANVAS_HEIGHT - 2 * BOARD_MARGIN) / DOODLE_BOX_SIZE
-        left = (CANVAS_WIDTH - DOODLE_BOX_SIZE * scale) / 2
-        top = float(BOARD_MARGIN)
+        """The doodle enlarged as much as the margins allow and centered on the board.
+
+        Quick, Draw! doodles sit in the top-left corner of their box (a wide cat fills only
+        the top half), so the doodle's own bounding box is what gets fitted and centered.
+        """
+        xs = [x for stroke in self.strokes for x, _ in stroke]
+        ys = [y for stroke in self.strokes for _, y in stroke]
+        width, height = max(xs) - min(xs), max(ys) - min(ys)
+        scale = min(
+            (CANVAS_WIDTH - 2 * BOARD_MARGIN) / max(width, 1),
+            (CANVAS_HEIGHT - 2 * BOARD_MARGIN) / max(height, 1),
+        )
+        left = (CANVAS_WIDTH - width * scale) / 2 - min(xs) * scale
+        top = (CANVAS_HEIGHT - height * scale) / 2 - min(ys) * scale
         return tuple(
             Stroke(
                 points=tuple(

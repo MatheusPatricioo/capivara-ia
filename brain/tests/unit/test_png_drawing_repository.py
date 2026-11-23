@@ -13,8 +13,8 @@ from src.domain.drawing import (
     Stroke,
 )
 from src.infrastructure.png_drawing_repository import (
-    BOARD_COLOR,
-    CHALK_COLOR,
+    CANVAS_COLOR,
+    PEN_COLOR,
     PngDrawingRepository,
 )
 
@@ -58,24 +58,24 @@ def test_image_has_the_size_of_the_chalkboard(saved_image: Image.Image) -> None:
     assert saved_image.size == (CANVAS_WIDTH, CANVAS_HEIGHT)
 
 
-def test_empty_area_keeps_the_board_color(saved_image: Image.Image) -> None:
-    assert saved_image.getpixel((300, 100)) == BOARD_COLOR
+def test_empty_area_keeps_the_white_canvas(saved_image: Image.Image) -> None:
+    assert saved_image.getpixel((300, 100)) == CANVAS_COLOR
 
 
-def test_draws_a_straight_stroke_with_the_chalk(saved_image: Image.Image) -> None:
-    assert saved_image.getpixel((300, 250)) == CHALK_COLOR
+def test_draws_a_straight_stroke_with_the_black_pen(saved_image: Image.Image) -> None:
+    assert saved_image.getpixel((300, 250)) == PEN_COLOR
 
 
 def test_draws_a_stroke_through_its_middle_point(saved_image: Image.Image) -> None:
-    assert saved_image.getpixel((110, 201)) == CHALK_COLOR
+    assert saved_image.getpixel((110, 201)) == PEN_COLOR
 
 
-def test_uses_only_the_board_and_the_chalk_colors(saved_image: Image.Image) -> None:
-    """A single brush: no other color appears, apart from the soft chalk edges."""
+def test_uses_only_the_canvas_and_the_pen_colors(saved_image: Image.Image) -> None:
+    """A single brush: no other color appears."""
     pixel_count = saved_image.width * saved_image.height
     colors = {color for _, color in saved_image.getcolors(maxcolors=pixel_count) or []}
 
-    assert colors <= {BOARD_COLOR, CHALK_COLOR}
+    assert colors <= {CANVAS_COLOR, PEN_COLOR}
 
 
 def test_raises_a_storage_error_when_the_folder_cannot_be_created(tmp_path: Path) -> None:

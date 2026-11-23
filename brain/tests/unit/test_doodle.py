@@ -36,6 +36,23 @@ def test_fits_the_doodle_box_to_the_board_height_without_the_margins(cat: Doodle
     assert diagonal.points == (Point(80, 30), Point(320, 270))
 
 
+def test_centers_a_doodle_drawn_in_the_top_of_its_box() -> None:
+    """Quick, Draw! keeps wide doodles at the top; on the board they sit in the middle."""
+    wide_doodle = Doodle(category="snake", strokes=(((0, 0), (255, 100)),))
+
+    (stroke,) = wide_doodle.on_the_board()
+
+    assert stroke.points == (Point(30, 83), Point(370, 217))
+
+
+def test_centers_a_doodle_drawn_in_the_left_of_its_box() -> None:
+    tall_doodle = Doodle(category="candle", strokes=(((0, 0), (51, 255)),))
+
+    (stroke,) = tall_doodle.on_the_board()
+
+    assert stroke.points == (Point(176, 30), Point(224, 270))
+
+
 def test_keeps_every_stroke_of_the_doodle() -> None:
     doodle = Doodle(category="cross", strokes=(DIAGONAL, ((255, 0), (0, 255))))
 
