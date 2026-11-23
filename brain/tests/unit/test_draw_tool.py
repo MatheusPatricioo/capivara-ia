@@ -1,4 +1,3 @@
-import logging
 from datetime import date
 
 import pytest
@@ -12,7 +11,6 @@ from src.domain.tool import ToolError
 
 TODAY = date(2026, 11, 23)
 SAVED_FILE_NAME = "2026-11-23-o-sol.png"
-DRAW_TOOL_LOGGER = "src.application.tools.draw_tool"
 SUN_SHAPE: dict[str, object] = {
     "type": "circle",
     "x": 200,
@@ -206,11 +204,3 @@ def test_does_not_show_the_chalkboard_when_the_drawing_is_invalid(
         tool.run(arguments_with(shapes=[]))
 
     assert body.shown_chalkboards == []
-
-
-def test_logs_the_saved_drawing(draw_tool: DrawTool, caplog: pytest.LogCaptureFixture) -> None:
-    caplog.set_level(logging.INFO, logger=DRAW_TOOL_LOGGER)
-
-    draw_tool.run(VALID_ARGUMENTS)
-
-    assert caplog.messages == [f"Drawing saved: {SAVED_FILE_NAME} (1 shape(s))"]

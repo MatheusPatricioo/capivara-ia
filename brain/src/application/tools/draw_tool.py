@@ -1,7 +1,7 @@
-import logging
 from collections.abc import Callable
 from datetime import date
 
+from src.application.chalkboard_artist import ChalkboardArtist, PinnedDrawing
 from src.application.tools.saved_discoveries import SavedDiscoveries
 from src.application.tools.shape_arguments import SHAPE_TYPES, parse_shapes
 from src.domain.body import Body
@@ -19,8 +19,6 @@ from src.domain.drawing import (
 from src.domain.language_model import ToolDefinition
 from src.domain.tool import ToolError
 
-logger = logging.getLogger(__name__)
-
 NUMBER_FIELD = {"type": "number"}
 
 
@@ -33,11 +31,8 @@ class DrawTool:
         today: Callable[[], date] = date.today,
         body: Body | None = None,
     ) -> None:
-        self._repository = repository
-        self._chalkboard = chalkboard
+        self._artist = ChalkboardArtist(repository, chalkboard, today=today, body=body)
         self._saved_discoveries = saved_discoveries
-        self._today = today
-        self._body = body
 
     @property
     def definition(self) -> ToolDefinition:
@@ -90,15 +85,11 @@ class DrawTool:
         except InvalidDrawingError as error:
             raise ToolError(f"invalid drawing: {error}") from error
         try:
-            file_name = self._repository.save(drawing, self._today())
+            pinned_drawing = self._artist.draw(drawing)
         except DrawingStorageError as error:
             raise ToolError(f"could not save the drawing: {error}") from error
-        erased = self._chalkboard.pin(drawing)
         self._saved_discoveries.mark_drawn(title)
-        if self._body is not None:
-            self._body.show_chalkboard(self._chalkboard.drawings)
-        logger.info("Drawing saved: %s (%d shape(s))", file_name, len(drawing.shapes))
-        return self._result_message(file_name, erased)
+        return self._result_message(pinned_drawing)
 
     @staticmethod
     def _required_title(arguments: dict[str, object]) -> str:
@@ -120,8 +111,9 @@ class DrawTool:
         return title
 
     @staticmethod
-    def _result_message(file_name: str, erased: Drawing | None) -> str:
-        message = f"Drawn as {file_name} and pinned on your chalkboard."
-        if erased is None:
+    def _result_message(pinned_drawing: PinnedDrawing) -> str:
+        message = f"Drawn as {pinned_drawing.file_name} and pinned on your chalkboard."
+        if pinned_drawing.erased is None:
             return message
-        return f"{message} To make room, you erased the old drawing '{erased.title}'."
+        erased_title = pinned_drawing.erased.title
+        return f"{message} To make room, you erased the old drawing '{erased_title}'."
