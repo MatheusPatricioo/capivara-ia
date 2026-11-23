@@ -34,6 +34,7 @@ size = Vector3(1.72, 1.1, 0.12)
 size = Vector3(1.72, 1.56, 0.4)
 
 [node name="Chalkboard" type="StaticBody3D"]
+input_ray_pickable = false
 
 [node name="Surface" type="MeshInstance3D" parent="."]
 position = Vector3(0, 1, 0)

@@ -13,6 +13,7 @@ size = Vector3(0.4, 0.25, 0.3)
 size = Vector3(0.36, 0.32, 0.4)
 
 [node name="Desk" type="StaticBody3D"]
+input_ray_pickable = false
 
 [node name="Crate" parent="." instance=ExtResource("1_cardboard_box")]
 
