@@ -8,6 +8,7 @@ from src.domain.language_model import (
     ChatMessage,
     LanguageModelError,
     Role,
+    StructuredReply,
     ToolCall,
     ToolDefinition,
 )
@@ -265,3 +266,67 @@ def test_keeps_a_plain_answer_when_tools_were_offered(
     reply = healthy_ollama.chat(MESSAGES, tools=[SEARCH_TOOL])
 
     assert reply == ChatMessage(Role.ASSISTANT, ASSISTANT_REPLY)
+
+
+DRAWING_SCHEMA: dict[str, object] = {
+    "type": "object",
+    "properties": {"wants_to_draw": {"type": "boolean"}},
+    "required": ["wants_to_draw"],
+}
+
+
+def ollama_answering_with(content: str, **extra_fields: int) -> OllamaLanguageModel:
+    body = {"message": {"role": "assistant", "content": content}, **extra_fields}
+    return build_language_model(lambda request: httpx.Response(200, json=body))
+
+
+def test_sends_the_schema_as_the_ollama_format(
+    received_requests: list[httpx.Request],
+) -> None:
+    def reply_with_json(request: httpx.Request) -> httpx.Response:
+        received_requests.append(request)
+        body = {"message": {"role": "assistant", "content": '{"wants_to_draw": true}'}}
+        return httpx.Response(200, json=body)
+
+    build_language_model(reply_with_json).complete_json(MESSAGES, DRAWING_SCHEMA)
+
+    assert json.loads(received_requests[0].content)["format"] == DRAWING_SCHEMA
+
+
+def test_returns_the_parsed_json_object() -> None:
+    language_model = ollama_answering_with('{"wants_to_draw": true}')
+
+    reply = language_model.complete_json(MESSAGES, DRAWING_SCHEMA)
+
+    assert reply == StructuredReply(data={"wants_to_draw": True})
+
+
+def test_reports_the_tokens_of_the_structured_reply() -> None:
+    language_model = ollama_answering_with(
+        '{"wants_to_draw": false}', prompt_eval_count=300, eval_count=20
+    )
+
+    reply = language_model.complete_json(MESSAGES, DRAWING_SCHEMA)
+
+    assert reply.token_count == 320
+
+
+def test_raises_language_model_error_when_the_json_is_invalid() -> None:
+    language_model = ollama_answering_with('{"wants_to_draw": tr')
+
+    with pytest.raises(LanguageModelError):
+        language_model.complete_json(MESSAGES, DRAWING_SCHEMA)
+
+
+def test_raises_language_model_error_when_the_json_is_not_an_object() -> None:
+    language_model = ollama_answering_with("[true]")
+
+    with pytest.raises(LanguageModelError):
+        language_model.complete_json(MESSAGES, DRAWING_SCHEMA)
+
+
+def test_raises_language_model_error_when_the_structured_call_fails(
+    ollama_with_server_error: OllamaLanguageModel,
+) -> None:
+    with pytest.raises(LanguageModelError):
+        ollama_with_server_error.complete_json(MESSAGES, DRAWING_SCHEMA)

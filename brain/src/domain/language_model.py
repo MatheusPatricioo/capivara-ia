@@ -44,3 +44,20 @@ class LanguageModel(Protocol):
         messages: list[ChatMessage],
         tools: Sequence[ToolDefinition] = (),
     ) -> ChatMessage: ...
+
+
+@dataclass(frozen=True)
+class StructuredReply:
+    """A reply forced into the JSON shape of a schema, already parsed."""
+
+    data: dict[str, object]
+    token_count: int = 0
+    """Tokens the model read and wrote to produce this reply (0 when unknown)."""
+
+
+class StructuredLanguageModel(Protocol):
+    def complete_json(
+        self, messages: list[ChatMessage], schema: dict[str, object]
+    ) -> StructuredReply:
+        """Answers with a JSON object that follows the given JSON Schema."""
+        ...
