@@ -1,11 +1,12 @@
 import logging
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 
 from src.application.tools.seen_sources import SeenSources
 from src.application.tools.web_search_tool import WebSearchTool
 from src.domain.search_history import SearchHistoryError
+from src.domain.search_log import FoundPage, SearchLogError, SearchRecord
 from src.domain.tool import ToolError
 from src.domain.web_search import SearchResult, WebSearchError
 
@@ -278,3 +279,109 @@ def test_logs_a_warning_when_the_history_is_broken(
         "Could not check the search history: disk unplugged",
         "Could not record the search: disk unplugged",
     ]
+
+
+SEARCH_MOMENT = datetime(2026, 11, 23, 10, 15, 2, tzinfo=timezone(timedelta(hours=-3)))
+
+
+class InMemorySearchLog:
+    def __init__(self) -> None:
+        self.records: list[SearchRecord] = []
+
+    def append(self, record: SearchRecord) -> None:
+        self.records.append(record)
+
+
+class BrokenSearchLog:
+    def append(self, record: SearchRecord) -> None:
+        raise SearchLogError("disk unplugged")
+
+
+@pytest.fixture
+def search_log() -> InMemorySearchLog:
+    return InMemorySearchLog()
+
+
+def build_tool_with_log(
+    web_searcher: FakeWebSearcher | OfflineWebSearcher,
+    search_log: InMemorySearchLog | BrokenSearchLog,
+    search_history: InMemorySearchHistory | None = None,
+) -> WebSearchTool:
+    return WebSearchTool(
+        web_searcher,
+        max_results=MAX_RESULTS,
+        search_history=search_history,
+        today=lambda: SEARCH_DAY,
+        search_log=search_log,
+        now=lambda: SEARCH_MOMENT,
+    )
+
+
+def test_logs_the_search_with_its_moment_query_and_pages(
+    search_log: InMemorySearchLog,
+) -> None:
+    tool = build_tool_with_log(FakeWebSearcher([GRASS_RESULT, WATER_RESULT]), search_log)
+
+    tool.run({"query": QUERY})
+
+    assert search_log.records == [
+        SearchRecord(
+            searched_at=SEARCH_MOMENT,
+            query=QUERY,
+            results=(
+                FoundPage(title="What capybaras eat", url="https://example.com/diet"),
+                FoundPage(title="Capybaras and water", url="https://example.com/water"),
+            ),
+        )
+    ]
+
+
+def test_logs_only_the_pages_shown_to_the_model(search_log: InMemorySearchLog) -> None:
+    tool = build_tool_with_log(
+        FakeWebSearcher([GRASS_RESULT, WATER_RESULT, EXTRA_RESULT]), search_log
+    )
+
+    tool.run({"query": QUERY})
+
+    assert len(search_log.records[0].results) == MAX_RESULTS
+
+
+def test_logs_a_search_that_found_nothing(search_log: InMemorySearchLog) -> None:
+    build_tool_with_log(FakeWebSearcher([]), search_log).run({"query": QUERY})
+
+    assert search_log.records == [SearchRecord(SEARCH_MOMENT, QUERY, results=())]
+
+
+def test_does_not_log_a_search_skipped_because_it_was_already_done(
+    web_searcher: FakeWebSearcher,
+    search_log: InMemorySearchLog,
+    search_history: InMemorySearchHistory,
+) -> None:
+    search_history.record(QUERY, SEARCH_DAY)
+
+    build_tool_with_log(web_searcher, search_log, search_history).run({"query": QUERY})
+
+    assert search_log.records == []
+
+
+def test_does_not_log_a_search_that_failed(search_log: InMemorySearchLog) -> None:
+    with pytest.raises(ToolError):
+        build_tool_with_log(OfflineWebSearcher(), search_log).run({"query": QUERY})
+
+    assert search_log.records == []
+
+
+def test_still_returns_the_results_when_the_log_is_broken(web_searcher: FakeWebSearcher) -> None:
+    output = build_tool_with_log(web_searcher, BrokenSearchLog()).run({"query": QUERY})
+
+    assert output.startswith("1. What capybaras eat")
+
+
+def test_warns_when_the_search_cannot_be_logged(
+    web_searcher: FakeWebSearcher, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.WARNING, logger=WEB_SEARCH_TOOL_LOGGER)
+
+    build_tool_with_log(web_searcher, BrokenSearchLog()).run({"query": QUERY})
+
+    assert caplog.messages == ["Could not write the search to the log: disk unplugged"]

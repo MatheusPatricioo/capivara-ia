@@ -1,10 +1,11 @@
 import logging
 from collections.abc import Callable
-from datetime import date
+from datetime import date, datetime
 
 from src.application.tools.seen_sources import SeenSources
 from src.domain.language_model import ToolDefinition
 from src.domain.search_history import SearchHistory, SearchHistoryError
+from src.domain.search_log import FoundPage, SearchLog, SearchLogError, SearchRecord
 from src.domain.tool import ToolError
 from src.domain.web_search import SearchResult, WebSearcher, WebSearchError
 
@@ -24,6 +25,10 @@ ALREADY_SEARCHED_MESSAGE = (
 logger = logging.getLogger(__name__)
 
 
+def _local_now() -> datetime:
+    return datetime.now().astimezone()
+
+
 class WebSearchTool:
     def __init__(
         self,
@@ -33,6 +38,8 @@ class WebSearchTool:
         seen_sources: SeenSources | None = None,
         search_history: SearchHistory | None = None,
         today: Callable[[], date] = date.today,
+        search_log: SearchLog | None = None,
+        now: Callable[[], datetime] = _local_now,
     ) -> None:
         self._web_searcher = web_searcher
         self._max_results = max_results
@@ -40,6 +47,8 @@ class WebSearchTool:
         self._seen_sources = seen_sources if seen_sources is not None else SeenSources()
         self._search_history = search_history
         self._today = today
+        self._search_log = search_log
+        self._now = now
 
     @property
     def definition(self) -> ToolDefinition:
@@ -71,6 +80,7 @@ class WebSearchTool:
         limited_results = results[: self._max_results]
         self._seen_sources.remember(result.url for result in limited_results)
         logger.info("web_search returned %d result(s)", len(limited_results))
+        self._log_search(query, limited_results)
         if not limited_results:
             return NO_RESULTS_MESSAGE
         self._remember_search(query)
@@ -97,6 +107,20 @@ class WebSearchTool:
             self._search_history.record(query, self._today())
         except SearchHistoryError as error:
             logger.warning("Could not record the search: %s", error)
+
+    def _log_search(self, query: str, results: list[SearchResult]) -> None:
+        """Every search that ran goes to the log, even an empty one; a failure is only logged."""
+        if self._search_log is None:
+            return
+        record = SearchRecord(
+            searched_at=self._now(),
+            query=query,
+            results=tuple(FoundPage(title=result.title, url=result.url) for result in results),
+        )
+        try:
+            self._search_log.append(record)
+        except SearchLogError as error:
+            logger.warning("Could not write the search to the log: %s", error)
 
     def _format_result(self, position: int, result: SearchResult) -> str:
         return f"{position}. {result.title}\n{result.url}\n{self._shorten(result.snippet)}"

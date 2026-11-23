@@ -14,12 +14,15 @@ from src.domain.language_model import StructuredLanguageModel
 from src.domain.tool import Tool
 from src.infrastructure.duckduckgo_web_searcher import DuckDuckGoWebSearcher
 from src.infrastructure.json_search_history import JsonSearchHistory
+from src.infrastructure.jsonl_search_log import JsonlSearchLog
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
 from src.infrastructure.png_drawing_repository import PngDrawingRepository
 from src.infrastructure.prompt_loader import load_prompt
 from src.infrastructure.settings import Settings
 
 SEARCH_HISTORY_FILE_NAME = "search-history.json"
+# Every search with its results, one JSON per line; read by the computer screen in Godot.
+SEARCH_LOG_RELATIVE_PATH = "history/searches.jsonl"
 ILLUSTRATE_DISCOVERY_PROMPT_NAME = "illustrate_discovery"
 # Tools whose results skip the general reminder. After save_discovery, the reminder ("call
 # save_discovery now... then tell Matheus") buried what had just happened and made her narrate
@@ -43,6 +46,7 @@ def build_capybara_tools(
         DuckDuckGoWebSearcher(DDGS(), backend=settings.web_search_backend),
         seen_sources=seen_sources,
         search_history=JsonSearchHistory(settings.discoveries_dir / SEARCH_HISTORY_FILE_NAME),
+        search_log=JsonlSearchLog(settings.discoveries_dir / SEARCH_LOG_RELATIVE_PATH),
     )
     illustrator = IllustrateDiscovery(
         language_model,
