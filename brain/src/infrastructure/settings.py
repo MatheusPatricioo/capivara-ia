@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     ollama_structured_num_predict: int = Field(default=800, gt=0)
     ollama_temperature: float = Field(default=0.8, ge=0.0, le=2.0)
     ollama_repeat_penalty: float = Field(default=1.1, gt=0.0)
+    ollama_embedding_model: str = "nomic-embed-text"
     max_tool_steps: int = 5
     web_search_backend: str = "duckduckgo"
     # DuckDuckGo region code; "br-pt" brings Brazilian pages first.

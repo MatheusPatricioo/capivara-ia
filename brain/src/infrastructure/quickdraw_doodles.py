@@ -21,8 +21,14 @@ QUICKDRAW_SIMPLIFIED_URL = (
 )
 DOODLES_DIR = Path(__file__).resolve().parents[2] / "doodles"
 DEFAULT_SAMPLE_FILE = DOODLES_DIR / "quickdraw_sample.json"
+# Portuguese labels for the English category names: the embedding model only compares
+# texts well within the same language, and the discoveries are in Portuguese.
+DEFAULT_CATEGORY_NAMES_FILE = DOODLES_DIR / "category_names_pt.json"
+# Derived from the labels by the embedding model; rebuilt when missing, so not versioned.
+DEFAULT_EMBEDDING_CACHE_FILE = DOODLES_DIR / "category_embeddings.cache.json"
 
 _SAMPLE_FILE_CONTENT = TypeAdapter(dict[str, list[list[list[tuple[int, int]]]]])
+_CATEGORY_NAMES_CONTENT = TypeAdapter(dict[str, str])
 
 
 def doodle_from_quickdraw_line(category: str, line: str) -> Doodle | None:
@@ -85,6 +91,16 @@ def load_doodle_library(file_path: Path = DEFAULT_SAMPLE_FILE) -> DoodleLibrary:
             for category, doodles in content.items()
         }
     )
+
+
+def load_category_labels(file_path: Path = DEFAULT_CATEGORY_NAMES_FILE) -> dict[str, str]:
+    """Category name -> Portuguese label, like "cat" -> "gato, gatos, felino"."""
+    try:
+        return _CATEGORY_NAMES_CONTENT.validate_json(file_path.read_bytes())
+    except (OSError, ValidationError) as error:
+        raise InvalidDoodleError(
+            f"could not read the category names {file_path}: {error}"
+        ) from error
 
 
 def _strokes_as_pairs(drawing: object) -> tuple[DoodleStroke, ...] | None:

@@ -21,3 +21,5 @@ logs/
 # Personal notes (local only)
 docs/estudos/
 CLAUDE.md
+# Doodle sample: embedding cache (rebuilt from the labels when missing)
+/brain/doodles/*.cache.json
