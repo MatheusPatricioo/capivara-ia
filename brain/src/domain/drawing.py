@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from datetime import date
+from typing import Protocol
 
 CANVAS_WIDTH = 400
 CANVAS_HEIGHT = 300
@@ -86,6 +88,16 @@ class Drawing:
             raise InvalidDrawingError("a drawing needs at least one shape")
         if len(self.shapes) > MAX_SHAPES_PER_DRAWING:
             raise InvalidDrawingError(f"a drawing can have at most {MAX_SHAPES_PER_DRAWING} shapes")
+
+
+class DrawingStorageError(Exception):
+    """Raised when a drawing cannot be stored (disk failure, unsafe location...)."""
+
+
+class DrawingRepository(Protocol):
+    def save(self, drawing: Drawing, drawn_on: date) -> str:
+        """Stores the drawing as an image and returns the name it was saved under."""
+        ...
 
 
 def _ensure_chalk_color(color: str) -> None:
