@@ -1,45 +1,29 @@
 from datetime import date
 from pathlib import Path
-from typing import assert_never
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 from src.domain.drawing import (
     CANVAS_HEIGHT,
     CANVAS_WIDTH,
-    Circle,
     Drawing,
     DrawingStorageError,
-    Line,
-    Rectangle,
-    Shape,
-    Text,
+    Stroke,
 )
 from src.infrastructure.markdown_discovery_repository import slugify
 
 FILE_EXTENSION = ".png"
 BOARD_COLOR = (47, 79, 58)
-CHALK_RGB = {
-    "white": (240, 240, 235),
-    "yellow": (245, 225, 120),
-    "pink": (240, 160, 190),
-    "blue": (140, 190, 240),
-    "green": (160, 220, 150),
-}
+# Her single brush: white chalk, always the same width.
+CHALK_COLOR = (240, 240, 235)
 STROKE_WIDTH = 3
-FONT_SIZE = 22
-# A free (OFL) handwriting font shipped with the project: Pillow's default font has no
-# accented letters, so 'corações' came out as 'cora□□es'.
-FONTS_DIR = Path(__file__).resolve().parents[2] / "assets" / "fonts"
-DEFAULT_FONT_FILE = FONTS_DIR / "PatrickHand-Regular.ttf"
 
 
 class PngDrawingRepository:
     """Renders each drawing as a chalkboard-style PNG inside the discoveries folder."""
 
-    def __init__(self, discoveries_dir: Path, font_file: Path = DEFAULT_FONT_FILE) -> None:
+    def __init__(self, discoveries_dir: Path) -> None:
         self._discoveries_dir = discoveries_dir.resolve()
-        self._font = ImageFont.truetype(font_file, FONT_SIZE)
 
     def save(self, drawing: Drawing, drawn_on: date) -> str:
         try:
@@ -54,34 +38,15 @@ class PngDrawingRepository:
     def _render(self, drawing: Drawing) -> Image.Image:
         image = Image.new("RGB", (CANVAS_WIDTH, CANVAS_HEIGHT), BOARD_COLOR)
         pen = ImageDraw.Draw(image)
-        for shape in drawing.shapes:
-            self._draw_shape(pen, shape)
+        for stroke in drawing.strokes:
+            self._draw_stroke(pen, stroke)
         return image
 
-    def _draw_shape(self, pen: ImageDraw.ImageDraw, shape: Shape) -> None:
-        match shape:
-            case Line(start=start, end=end, color=color):
-                pen.line(
-                    [(start.x, start.y), (end.x, end.y)], fill=CHALK_RGB[color], width=STROKE_WIDTH
-                )
-            case Circle(center=center, radius=radius, color=color):
-                bounding_box = (
-                    center.x - radius,
-                    center.y - radius,
-                    center.x + radius,
-                    center.y + radius,
-                )
-                pen.ellipse(bounding_box, outline=CHALK_RGB[color], width=STROKE_WIDTH)
-            case Rectangle(top_left=top_left, bottom_right=bottom_right, color=color):
-                pen.rectangle(
-                    (top_left.x, top_left.y, bottom_right.x, bottom_right.y),
-                    outline=CHALK_RGB[color],
-                    width=STROKE_WIDTH,
-                )
-            case Text(position=position, content=content, color=color):
-                pen.text((position.x, position.y), content, fill=CHALK_RGB[color], font=self._font)
-            case _:
-                assert_never(shape)
+    @staticmethod
+    def _draw_stroke(pen: ImageDraw.ImageDraw, stroke: Stroke) -> None:
+        """Rounded joints keep the corners of a stroke soft, like real chalk."""
+        points = [(point.x, point.y) for point in stroke.points]
+        pen.line(points, fill=CHALK_COLOR, width=STROKE_WIDTH, joint="curve")
 
     def _free_file_path(self, drawing: Drawing, drawn_on: date) -> Path:
         """Builds date + slug, adding -2, -3... so an existing file is never overwritten."""

@@ -1,8 +1,12 @@
 import logging
 
 from src.application.chalkboard_artist import ChalkboardArtist, PinnedDrawing
-from src.application.drawing_schema import DRAWING_DECISION_SCHEMA, MAX_SUGGESTED_SHAPES
-from src.application.tools.shape_arguments import parse_shapes
+from src.application.drawing_schema import (
+    DRAWING_DECISION_SCHEMA,
+    MAX_SUGGESTED_POINTS_PER_STROKE,
+    MAX_SUGGESTED_STROKES,
+)
+from src.application.tools.stroke_arguments import parse_strokes
 from src.domain.discovery import Discovery
 from src.domain.drawing import (
     CANVAS_HEIGHT,
@@ -39,7 +43,8 @@ class IllustrateDiscovery:
         self._language_model = language_model
         self._artist = artist
         self._instructions = (
-            instructions_template.replace("{max_shapes}", str(MAX_SUGGESTED_SHAPES))
+            instructions_template.replace("{max_strokes}", str(MAX_SUGGESTED_STROKES))
+            .replace("{max_points}", str(MAX_SUGGESTED_POINTS_PER_STROKE))
             .replace("{width}", str(CANVAS_WIDTH))
             .replace("{height}", str(CANVAS_HEIGHT))
         )
@@ -56,7 +61,8 @@ class IllustrateDiscovery:
             if reply.data.get("wants_to_draw") is not True:
                 logger.info("Chose not to draw: %s", discovery.title)
                 return None
-            drawing = Drawing(title=discovery.title, shapes=parse_shapes(reply.data.get("shapes")))
+            strokes = parse_strokes(reply.data.get("strokes"))
+            drawing = Drawing(title=discovery.title, strokes=strokes)
             return self._artist.draw(drawing)
         except (LanguageModelError, ToolError, InvalidDrawingError, DrawingStorageError) as error:
             logger.warning("Could not draw '%s': %s", discovery.title, error)

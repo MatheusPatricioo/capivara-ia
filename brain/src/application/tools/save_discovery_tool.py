@@ -5,7 +5,6 @@ from datetime import date
 from src.application.chalkboard_artist import PinnedDrawing
 from src.application.tools.seen_sources import SeenSources
 from src.domain.discovery import Discovery, DiscoveryRepository, DiscoveryStorageError
-from src.domain.drawing import Text
 from src.domain.language_model import ToolDefinition
 from src.domain.tool import ToolError
 
@@ -130,13 +129,10 @@ class SaveDiscoveryTool:
 
 def _describe_drawing(pinned_drawing: PinnedDrawing) -> str:
     drawing = pinned_drawing.drawing
-    words = [f"'{shape.content}'" for shape in drawing.shapes if isinstance(shape, Text)]
     description = (
-        f"Then you walked to your chalkboard and drew it with {len(drawing.shapes)} chalk "
-        f"shape(s), saved as {pinned_drawing.file_name}."
+        f"Then you walked to your chalkboard and drew it with {len(drawing.strokes)} chalk "
+        f"stroke(s), saved as {pinned_drawing.file_name}."
     )
-    if words:
-        description += f" You wrote {', '.join(words)} on it."
     if pinned_drawing.erased is not None:
         description += f" To make room, you erased the old drawing '{pinned_drawing.erased.title}'."
     return description

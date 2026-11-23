@@ -43,9 +43,9 @@ SAVE_REQUEST = ToolCall(
 DRAWING_DECISION = StructuredReply(
     data={
         "wants_to_draw": True,
-        "shapes": [
-            {"type": "line", "x1": 0, "y1": 200, "x2": 400, "y2": 200, "color": "blue"},
-            {"type": "circle", "x": 200, "y": 180, "radius": 30, "color": "pink"},
+        "strokes": [
+            [[0, 200], [400, 200]],
+            [[170, 180], [200, 150], [230, 180]],
         ],
     }
 )
@@ -143,7 +143,7 @@ def test_tells_the_model_the_discovery_was_saved_and_drawn(
     assert tool_result == ChatMessage(
         Role.TOOL,
         f"Saved as {EXPECTED_DISCOVERY_FILE}. Then you walked to your chalkboard and drew it "
-        f"with 2 chalk shape(s), saved as {EXPECTED_DRAWING_FILE}.",
+        f"with 2 chalk stroke(s), saved as {EXPECTED_DRAWING_FILE}.",
         tool_name="save_discovery",
     )
 

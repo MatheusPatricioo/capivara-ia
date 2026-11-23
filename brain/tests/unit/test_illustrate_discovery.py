@@ -8,7 +8,7 @@ from src.application.drawing_schema import DRAWING_DECISION_SCHEMA
 from src.application.illustrate_discovery import IllustrateDiscovery
 from src.domain.chalkboard import Chalkboard
 from src.domain.discovery import Discovery
-from src.domain.drawing import Circle, Drawing, DrawingStorageError, Point
+from src.domain.drawing import Drawing, DrawingStorageError, Point, Stroke
 from src.domain.language_model import (
     ChatMessage,
     LanguageModelError,
@@ -19,7 +19,7 @@ from src.domain.language_model import (
 TODAY = date(2026, 11, 23)
 SAVED_FILE_NAME = "2026-11-23-o-sol.png"
 ILLUSTRATE_LOGGER = "src.application.illustrate_discovery"
-INSTRUCTIONS_TEMPLATE = "Lousa {width}x{height}, no máximo {max_shapes} formas."
+INSTRUCTIONS_TEMPLATE = "Lousa {width}x{height}, até {max_strokes} traços de {max_points} pontos."
 SUN_DISCOVERY = Discovery(
     title="O Sol",
     topic="estrelas",
@@ -27,23 +27,15 @@ SUN_DISCOVERY = Discovery(
     sources=("https://example.com/sol",),
     discovered_on=TODAY,
 )
-SUN_SHAPE: dict[str, object] = {
-    "type": "circle",
-    "x": 200,
-    "y": 150,
-    "radius": 40,
-    "color": "yellow",
-}
-SUN_DRAWING = Drawing(
-    title="O Sol", shapes=(Circle(center=Point(200, 150), radius=40, color="yellow"),)
+SUN_STROKE = [[160, 150], [240, 150]]
+SUN_DRAWING = Drawing(title="O Sol", strokes=(Stroke(points=(Point(160, 150), Point(240, 150))),))
+WANTS_TO_DRAW_THE_SUN = StructuredReply(data={"wants_to_draw": True, "strokes": [SUN_STROKE]})
+DOES_NOT_WANT_TO_DRAW = StructuredReply(data={"wants_to_draw": False, "strokes": []})
+STROKE_OUTSIDE_THE_BOARD = StructuredReply(
+    data={"wants_to_draw": True, "strokes": [[[999, 0], [10, 10]]]}
 )
-WANTS_TO_DRAW_THE_SUN = StructuredReply(data={"wants_to_draw": True, "shapes": [SUN_SHAPE]})
-DOES_NOT_WANT_TO_DRAW = StructuredReply(data={"wants_to_draw": False, "shapes": []})
-SHAPE_OUTSIDE_THE_BOARD = StructuredReply(
-    data={"wants_to_draw": True, "shapes": [{**SUN_SHAPE, "x": 999}]}
-)
-SHAPE_WITHOUT_ITS_CENTER = StructuredReply(
-    data={"wants_to_draw": True, "shapes": [{"type": "circle", "radius": 40}]}
+STROKE_WITHOUT_POINTS = StructuredReply(
+    data={"wants_to_draw": True, "strokes": [{"type": "text", "text": "Sol"}]}
 )
 
 
@@ -112,7 +104,7 @@ def illustrator_wanting_to_draw(
     return IllustrateDiscovery(language_model_wanting_to_draw, artist, INSTRUCTIONS_TEMPLATE)
 
 
-def test_draws_the_shapes_she_chose(
+def test_draws_the_strokes_she_chose(
     illustrator_wanting_to_draw: IllustrateDiscovery, repository: InMemoryDrawingRepository
 ) -> None:
     illustrator_wanting_to_draw.illustrate(SUN_DISCOVERY)
@@ -143,7 +135,7 @@ def test_sends_only_the_instructions_and_the_saved_discovery(
 
     assert language_model_wanting_to_draw.received_messages == [
         [
-            ChatMessage(Role.SYSTEM, "Lousa 400x300, no máximo 12 formas."),
+            ChatMessage(Role.SYSTEM, "Lousa 400x300, até 6 traços de 10 pontos."),
             ChatMessage(
                 Role.USER,
                 "Título: O Sol\nTema: estrelas\nResumo: O Sol é uma estrela gigante.",
@@ -166,18 +158,18 @@ def test_draws_nothing_when_she_does_not_want_to(
     assert repository.saved == []
 
 
-def test_draws_nothing_when_a_shape_is_outside_the_board(
+def test_draws_nothing_when_a_stroke_is_outside_the_board(
     artist: ChalkboardArtist, repository: InMemoryDrawingRepository
 ) -> None:
-    result = illustrator_answering(SHAPE_OUTSIDE_THE_BOARD, artist).illustrate(SUN_DISCOVERY)
+    result = illustrator_answering(STROKE_OUTSIDE_THE_BOARD, artist).illustrate(SUN_DISCOVERY)
 
     assert (result, repository.saved) == (None, [])
 
 
-def test_draws_nothing_when_a_shape_misses_a_field(
+def test_draws_nothing_when_a_stroke_has_no_points(
     artist: ChalkboardArtist, repository: InMemoryDrawingRepository
 ) -> None:
-    result = illustrator_answering(SHAPE_WITHOUT_ITS_CENTER, artist).illustrate(SUN_DISCOVERY)
+    result = illustrator_answering(STROKE_WITHOUT_POINTS, artist).illustrate(SUN_DISCOVERY)
 
     assert (result, repository.saved) == (None, [])
 

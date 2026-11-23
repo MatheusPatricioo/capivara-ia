@@ -45,5 +45,5 @@ class ChalkboardArtist:
         erased = self._chalkboard.pin(drawing)
         if self._body is not None:
             self._body.show_chalkboard(self._chalkboard.drawings)
-        logger.info("Drawing saved: %s (%d shape(s))", file_name, len(drawing.shapes))
+        logger.info("Drawing saved: %s (%d stroke(s))", file_name, len(drawing.strokes))
         return PinnedDrawing(drawing=drawing, file_name=file_name, erased=erased)

@@ -1,7 +1,7 @@
 import pytest
 
 from src.domain.chalkboard import Chalkboard
-from src.domain.drawing import Circle, Drawing, InvalidDrawingError, Point
+from src.domain.drawing import Drawing, InvalidDrawingError, Point, Stroke
 
 CAPACITY = 3
 
@@ -9,7 +9,7 @@ CAPACITY = 3
 def make_drawing(title: str) -> Drawing:
     return Drawing(
         title=title,
-        shapes=(Circle(center=Point(200, 150), radius=40, color="yellow"),),
+        strokes=(Stroke(points=(Point(160, 150), Point(240, 150))),),
     )
 
 

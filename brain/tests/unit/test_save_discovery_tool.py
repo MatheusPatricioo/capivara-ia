@@ -7,7 +7,7 @@ from src.application.chalkboard_artist import PinnedDrawing
 from src.application.tools.save_discovery_tool import SaveDiscoveryTool
 from src.application.tools.seen_sources import SeenSources
 from src.domain.discovery import Discovery, DiscoveryStorageError
-from src.domain.drawing import Circle, Drawing, Point, Text
+from src.domain.drawing import Drawing, Point, Stroke
 from src.domain.tool import ToolError
 
 TODAY = date(2026, 11, 22)
@@ -196,14 +196,12 @@ def test_turns_storage_failures_into_tool_errors(seen_sources: SeenSources) -> N
 DRAWING_FILE_NAME = "2026-11-22-capivaras-nadam.png"
 SWIMMING_DRAWING = Drawing(
     title="Capivaras nadam",
-    shapes=(
-        Circle(center=Point(200, 150), radius=40, color="blue"),
-        Text(position=Point(150, 250), content="Splash!", color="white"),
+    strokes=(
+        Stroke(points=(Point(100, 200), Point(200, 180), Point(300, 200))),
+        Stroke(points=(Point(180, 150), Point(220, 150))),
     ),
 )
-OLD_DRAWING = Drawing(
-    title="O Sol", shapes=(Circle(center=Point(100, 100), radius=30, color="yellow"),)
-)
+OLD_DRAWING = Drawing(title="O Sol", strokes=(Stroke(points=(Point(100, 100), Point(130, 130))),))
 
 
 class RecordingIllustrator:
@@ -254,7 +252,7 @@ def test_tells_her_what_she_already_drew(
 
     assert tool.run(VALID_ARGUMENTS) == (
         f"Saved as {SAVED_FILE_NAME}. Then you walked to your chalkboard and drew it with "
-        f"2 chalk shape(s), saved as {DRAWING_FILE_NAME}. You wrote 'Splash!' on it."
+        f"2 chalk stroke(s), saved as {DRAWING_FILE_NAME}."
     )
 
 

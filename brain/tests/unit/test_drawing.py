@@ -3,26 +3,28 @@ import pytest
 from src.domain.drawing import (
     CANVAS_HEIGHT,
     CANVAS_WIDTH,
-    MAX_SHAPES_PER_DRAWING,
-    MAX_TEXT_LENGTH,
-    Circle,
+    MAX_POINTS_PER_STROKE,
+    MAX_STROKES_PER_DRAWING,
     Drawing,
     InvalidDrawingError,
-    Line,
     Point,
-    Rectangle,
-    Text,
+    Stroke,
 )
 
 
 @pytest.fixture
-def center() -> Point:
-    return Point(CANVAS_WIDTH // 2, CANVAS_HEIGHT // 2)
-
-
-@pytest.fixture
-def sun(center: Point) -> Circle:
-    return Circle(center=center, radius=40, color="yellow")
+def star() -> Stroke:
+    """A five-pointed star drawn without lifting the chalk, ending where it began."""
+    return Stroke(
+        points=(
+            Point(200, 60),
+            Point(250, 220),
+            Point(120, 120),
+            Point(280, 120),
+            Point(150, 220),
+            Point(200, 60),
+        )
+    )
 
 
 def test_accepts_a_point_on_the_board_corner() -> None:
@@ -41,49 +43,38 @@ def test_rejects_a_point_with_negative_coordinate() -> None:
         Point(0, -1)
 
 
-def test_rejects_an_unknown_chalk_color(center: Point) -> None:
-    with pytest.raises(InvalidDrawingError, match="unknown chalk color"):
-        Line(start=Point(0, 0), end=center, color="purple")
+def test_accepts_a_stroke_with_two_points() -> None:
+    line = Stroke(points=(Point(0, 0), Point(10, 10)))
+
+    assert len(line.points) == 2
 
 
-def test_rejects_a_circle_with_zero_radius(center: Point) -> None:
+def test_rejects_a_stroke_with_a_single_point() -> None:
+    with pytest.raises(InvalidDrawingError, match="a stroke needs"):
+        Stroke(points=(Point(10, 10),))
+
+
+def test_rejects_a_stroke_with_too_many_points() -> None:
+    with pytest.raises(InvalidDrawingError, match="a stroke needs"):
+        Stroke(points=(Point(10, 10),) * (MAX_POINTS_PER_STROKE + 1))
+
+
+def test_creates_a_drawing_made_of_strokes(star: Stroke) -> None:
+    drawing = Drawing(title="Constelações", strokes=(star,))
+
+    assert drawing.strokes == (star,)
+
+
+def test_rejects_a_drawing_without_strokes() -> None:
     with pytest.raises(InvalidDrawingError):
-        Circle(center=center, radius=0, color="white")
+        Drawing(title="Nada", strokes=())
 
 
-def test_rejects_a_rectangle_with_corners_swapped() -> None:
+def test_rejects_a_drawing_with_too_many_strokes(star: Stroke) -> None:
     with pytest.raises(InvalidDrawingError):
-        Rectangle(top_left=Point(100, 100), bottom_right=Point(10, 10), color="white")
+        Drawing(title="Muitas estrelas", strokes=(star,) * (MAX_STROKES_PER_DRAWING + 1))
 
 
-def test_rejects_an_empty_text(center: Point) -> None:
+def test_rejects_a_drawing_without_title(star: Stroke) -> None:
     with pytest.raises(InvalidDrawingError):
-        Text(position=center, content="   ", color="white")
-
-
-def test_rejects_a_text_longer_than_the_limit(center: Point) -> None:
-    with pytest.raises(InvalidDrawingError):
-        Text(position=center, content="a" * (MAX_TEXT_LENGTH + 1), color="white")
-
-
-def test_creates_a_drawing_with_different_shapes(sun: Circle, center: Point) -> None:
-    label = Text(position=Point(10, 10), content="sol", color="white")
-
-    drawing = Drawing(title="O sol", shapes=(sun, label))
-
-    assert drawing.shapes == (sun, label)
-
-
-def test_rejects_a_drawing_without_shapes() -> None:
-    with pytest.raises(InvalidDrawingError):
-        Drawing(title="Nada", shapes=())
-
-
-def test_rejects_a_drawing_with_too_many_shapes(sun: Circle) -> None:
-    with pytest.raises(InvalidDrawingError):
-        Drawing(title="Muitos sóis", shapes=(sun,) * (MAX_SHAPES_PER_DRAWING + 1))
-
-
-def test_rejects_a_drawing_without_title(sun: Circle) -> None:
-    with pytest.raises(InvalidDrawingError):
-        Drawing(title=" ", shapes=(sun,))
+        Drawing(title=" ", strokes=(star,))

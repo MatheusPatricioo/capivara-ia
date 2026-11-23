@@ -6,17 +6,13 @@ import pytest
 from src.application.chalkboard_artist import ChalkboardArtist, PinnedDrawing
 from src.domain.body import Place
 from src.domain.chalkboard import Chalkboard
-from src.domain.drawing import Circle, Drawing, DrawingStorageError, Point
+from src.domain.drawing import Drawing, DrawingStorageError, Point, Stroke
 
 TODAY = date(2026, 11, 23)
 SAVED_FILE_NAME = "2026-11-23-o-sol.png"
 ARTIST_LOGGER = "src.application.chalkboard_artist"
-SUN_DRAWING = Drawing(
-    title="O Sol", shapes=(Circle(center=Point(200, 150), radius=40, color="yellow"),)
-)
-MOON_DRAWING = Drawing(
-    title="A Lua", shapes=(Circle(center=Point(100, 100), radius=30, color="white"),)
-)
+SUN_DRAWING = Drawing(title="O Sol", strokes=(Stroke(points=(Point(160, 150), Point(240, 150))),))
+MOON_DRAWING = Drawing(title="A Lua", strokes=(Stroke(points=(Point(100, 100), Point(130, 130))),))
 
 
 class InMemoryDrawingRepository:
@@ -117,7 +113,7 @@ def test_logs_the_saved_drawing(artist: ChalkboardArtist, caplog: pytest.LogCapt
 
     artist.draw(SUN_DRAWING)
 
-    assert caplog.messages == [f"Drawing saved: {SAVED_FILE_NAME} (1 shape(s))"]
+    assert caplog.messages == [f"Drawing saved: {SAVED_FILE_NAME} (1 stroke(s))"]
 
 
 def test_walks_to_the_chalkboard_before_drawing(

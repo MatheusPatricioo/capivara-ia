@@ -1,13 +1,11 @@
 import pytest
 
 from src.domain.body import Place
-from src.domain.drawing import Circle, Drawing, Point
+from src.domain.drawing import Drawing, Point, Stroke
 from src.infrastructure.websocket_body import WebSocketBody
 from src.infrastructure.world_messages import GoToMessage, WorldMessage, chalkboard_message
 
-SUN_DRAWING = Drawing(
-    title="O sol", shapes=(Circle(center=Point(200, 150), radius=40, color="yellow"),)
-)
+SUN_DRAWING = Drawing(title="O sol", strokes=(Stroke(points=(Point(160, 150), Point(240, 150))),))
 
 
 class RecordingBroadcaster:
