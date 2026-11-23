@@ -2,13 +2,16 @@ import logging
 
 import pytest
 
+from src.application.attention_inbox import AttentionInbox
 from src.application.inner_voice import InnerVoice
+from src.domain.attention import Attention
 from src.domain.discovery import DiscoveryHeadline, DiscoveryStorageError
 
 INVITATION = "(Você está sozinha. O que quer fazer?)"
 MEMORY_TEMPLATE = "(Você já guardou:\n{discoveries}\nNão repita.)"
 MAX_REMEMBERED_DISCOVERIES = 2
 INNER_VOICE_LOGGER = "src.application.inner_voice"
+NOTICED_TEMPLATE = "(Você reparou em:\n{noticed}\nPesquise se quiser.)"
 
 
 class FakeCatalog:
@@ -80,3 +83,109 @@ def test_logs_a_warning_when_the_discoveries_cannot_be_read(
     build_inner_voice(BrokenCatalog()).compose()
 
     assert caplog.messages == ["Could not remember the saved discoveries: disk unplugged"]
+
+
+@pytest.fixture
+def attention() -> AttentionInbox:
+    return AttentionInbox(Attention(capacity=5, rest_seconds=600.0))
+
+
+@pytest.fixture
+def attentive_inner_voice(attention: AttentionInbox) -> InnerVoice:
+    return InnerVoice(
+        INVITATION,
+        FakeCatalog([]),
+        MEMORY_TEMPLATE,
+        MAX_REMEMBERED_DISCOVERIES,
+        attention=attention,
+        noticed_template=NOTICED_TEMPLATE,
+    )
+
+
+def test_lists_what_she_noticed_before_the_invitation(
+    attentive_inner_voice: InnerVoice, attention: AttentionInbox
+) -> None:
+    attention.notice("water_lilies", "vitórias-régias no laguinho")
+    attention.notice("mushrooms", "cogumelos vermelhos")
+
+    assert attentive_inner_voice.compose() == (
+        "(Você reparou em:\n"
+        "- cogumelos vermelhos\n"
+        "- vitórias-régias no laguinho\n"
+        "Pesquise se quiser.)\n\n"
+        f"{INVITATION}"
+    )
+
+
+def test_puts_the_memory_before_what_she_noticed(
+    catalog_with_discoveries: FakeCatalog, attention: AttentionInbox
+) -> None:
+    inner_voice = InnerVoice(
+        INVITATION,
+        catalog_with_discoveries,
+        MEMORY_TEMPLATE,
+        MAX_REMEMBERED_DISCOVERIES,
+        attention=attention,
+        noticed_template=NOTICED_TEMPLATE,
+    )
+    attention.notice("mushrooms", "cogumelos vermelhos")
+
+    composed = inner_voice.compose()
+
+    assert composed.index("Você já guardou") < composed.index("Você reparou em")
+
+
+def test_is_just_the_invitation_when_she_noticed_nothing(
+    attentive_inner_voice: InnerVoice,
+) -> None:
+    assert attentive_inner_voice.compose() == INVITATION
+
+
+def test_releasing_lets_go_of_what_was_offered(
+    attentive_inner_voice: InnerVoice, attention: AttentionInbox
+) -> None:
+    attention.notice("mushrooms", "cogumelos vermelhos")
+    attentive_inner_voice.compose()
+
+    attentive_inner_voice.release_offered()
+
+    assert attention.pending() == ()
+
+
+def test_releasing_keeps_what_she_noticed_after_the_inner_voice_was_composed(
+    attentive_inner_voice: InnerVoice, attention: AttentionInbox
+) -> None:
+    attention.notice("mushrooms", "cogumelos vermelhos")
+    attentive_inner_voice.compose()
+    attention.notice("big_oak", "um carvalho enorme")
+
+    attentive_inner_voice.release_offered()
+
+    assert [point.thing_id for point in attention.pending()] == ["big_oak"]
+
+
+def test_releasing_twice_does_not_let_go_of_anything_new(
+    attentive_inner_voice: InnerVoice, attention: AttentionInbox
+) -> None:
+    attention.notice("mushrooms", "cogumelos vermelhos")
+    attentive_inner_voice.compose()
+    attentive_inner_voice.release_offered()
+    attention.notice("big_oak", "um carvalho enorme")
+
+    attentive_inner_voice.release_offered()
+
+    assert [point.thing_id for point in attention.pending()] == ["big_oak"]
+
+
+def test_releasing_logs_what_she_thought_about(
+    attentive_inner_voice: InnerVoice,
+    attention: AttentionInbox,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    caplog.set_level(logging.INFO, logger=INNER_VOICE_LOGGER)
+    attention.notice("mushrooms", "cogumelos vermelhos")
+    attentive_inner_voice.compose()
+
+    attentive_inner_voice.release_offered()
+
+    assert caplog.messages == ["She thought about what she noticed: mushrooms"]

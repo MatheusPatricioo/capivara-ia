@@ -27,6 +27,7 @@ SYSTEM_PROMPT_NAME = "capybara"
 TOOL_RESULT_REMINDER_NAME = "tool_result_reminder"
 INNER_VOICE_NAME = "autonomous_cycle"
 MEMORY_TEMPLATE_NAME = "known_discoveries"
+NOTICED_TEMPLATE_NAME = "noticed_things"
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +69,8 @@ def main() -> None:
         catalog=MarkdownDiscoveryRepository(settings.discoveries_dir),
         memory_template=load_prompt(MEMORY_TEMPLATE_NAME),
         max_remembered_discoveries=settings.max_remembered_discoveries,
+        attention=attention_inbox,
+        noticed_template=load_prompt(NOTICED_TEMPLATE_NAME),
     )
     with (
         WorldServer(
@@ -107,6 +110,7 @@ def main() -> None:
             inner_voice.compose,
             settings.autonomous_cycle_interval_seconds,
             on_thought=print_thought,
+            on_cycle_finished=inner_voice.release_offered,
         )
         print(
             f"A capivara está viva. Abra o mundo no Godot (ws://{settings.world_server_host}:"

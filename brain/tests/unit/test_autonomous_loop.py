@@ -161,3 +161,49 @@ def test_composes_the_inner_voice_again_for_every_cycle(
 
     sent_messages = [messages[-1].content for messages in language_model.received_messages]
     assert sent_messages == ["(primeiro ciclo)", "(segundo ciclo)"]
+
+
+def build_loop_counting_finished_cycles(
+    language_model: ThinkingLanguageModel | OfflineLanguageModel,
+    budget: HourlyTokenBudget,
+    finished_cycles: list[None],
+) -> AutonomousLoop:
+    return AutonomousLoop(
+        lambda: Conversation(language_model, "You are a capybara."),
+        budget,
+        lambda: INNER_VOICE,
+        INTERVAL_SECONDS,
+        on_cycle_finished=lambda: finished_cycles.append(None),
+    )
+
+
+def test_tells_when_a_cycle_finished(
+    language_model: ThinkingLanguageModel, budget: HourlyTokenBudget
+) -> None:
+    finished_cycles: list[None] = []
+    loop = build_loop_counting_finished_cycles(language_model, budget, finished_cycles)
+
+    loop.run_cycle()
+
+    assert len(finished_cycles) == 1
+
+
+def test_a_skipped_cycle_is_not_a_finished_cycle(
+    language_model: ThinkingLanguageModel, budget: HourlyTokenBudget
+) -> None:
+    finished_cycles: list[None] = []
+    loop = build_loop_counting_finished_cycles(language_model, budget, finished_cycles)
+    budget.record(MAX_TOKENS_PER_HOUR)
+
+    loop.run_cycle()
+
+    assert finished_cycles == []
+
+
+def test_a_failed_cycle_is_not_a_finished_cycle(budget: HourlyTokenBudget) -> None:
+    finished_cycles: list[None] = []
+    loop = build_loop_counting_finished_cycles(OfflineLanguageModel(), budget, finished_cycles)
+
+    loop.run_cycle()
+
+    assert finished_cycles == []

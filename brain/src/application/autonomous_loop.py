@@ -13,12 +13,17 @@ def _ignore_thought(thought: str) -> None:
     pass
 
 
+def _do_nothing() -> None:
+    pass
+
+
 class AutonomousLoop:
     """Wakes the capybara up from time to time so she decides on her own what to do.
 
     Each cycle starts a fresh conversation, so the history never grows without limit,
     and is skipped while the hourly token budget is spent. The inner voice is composed
     again every cycle, so it can carry what she learned in the previous ones.
+    on_cycle_finished runs only after a cycle that really happened (not skipped, not failed).
     """
 
     def __init__(
@@ -28,6 +33,7 @@ class AutonomousLoop:
         compose_inner_voice: Callable[[], str],
         interval_seconds: float,
         on_thought: Callable[[str], None] = _ignore_thought,
+        on_cycle_finished: Callable[[], None] = _do_nothing,
         sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         self._start_conversation = start_conversation
@@ -35,6 +41,7 @@ class AutonomousLoop:
         self._compose_inner_voice = compose_inner_voice
         self._interval_seconds = interval_seconds
         self._on_thought = on_thought
+        self._on_cycle_finished = on_cycle_finished
         self._sleep = sleep
 
     def run(self, cycles: int | None = None) -> None:
@@ -62,5 +69,6 @@ class AutonomousLoop:
         logger.info(
             "Cycle finished (%d tokens in the last hour)", self._budget.tokens_used_in_the_last_hour
         )
+        self._on_cycle_finished()
         self._on_thought(thought)
         return thought
