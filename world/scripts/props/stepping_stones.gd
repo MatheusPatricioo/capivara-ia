@@ -67,6 +67,8 @@ func _rebuild() -> void:
 	_stones = MultiMeshInstance3D.new()
 	_stones.name = "Stones"
 	_stones.multimesh = _create_multimesh(stone_spots)
+	# Flat stones on the ground cast no visible shadow.
+	_stones.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_stones)
 
 

@@ -64,6 +64,13 @@ const MAX_ATTEMPTS_PER_COPY: int = 20
 		keep_out_areas = value
 		_rebuild()
 
+## Off for small plants: their shadow is barely visible but costs a draw call per
+## shadow split, and with the local model sharing the GPU every draw call counts.
+@export var casts_shadows: bool = true:
+	set(value):
+		casts_shadows = value
+		_rebuild()
+
 var _drawers: Array[MultiMeshInstance3D] = []
 
 
@@ -94,6 +101,9 @@ func _rebuild() -> void:
 		copies_per_model[model_index].append(Transform3D(copy_basis, copy_position))
 	for model_index: int in usable_models.size():
 		_drawers.append_array(MultiMeshCopies.add_to(self, usable_models[model_index], copies_per_model[model_index]))
+	if not casts_shadows:
+		for drawer: MultiMeshInstance3D in _drawers:
+			drawer.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 func _pick_positions(random: RandomNumberGenerator) -> Array[Vector3]:

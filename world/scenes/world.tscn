@@ -142,6 +142,8 @@ environment = SubResource("Environment_main")
 [node name="Sun" type="DirectionalLight3D" parent="." unique_id=1058224629]
 transform = Transform3D(0.8660254, 0.38302222, -0.32139382, 0, 0.64278764, 0.76604444, 0.5, -0.66341394, 0.5566704, -0.033693314, 0.02701664, -0.011414051)
 shadow_enabled = true
+directional_shadow_mode = 1
+directional_shadow_max_distance = 30.0
 
 [node name="Floor" type="CSGCombiner3D" parent="." unique_id=6226552 groups=["navigation_source"]]
 
@@ -388,6 +390,7 @@ min_scale = 0.7
 max_scale = 1.1
 random_seed = 11
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 inner_ratio = 0.78
 
 [node name="HouseDoorFlowers" type="Node3D" parent="Nature/Inside/Patches"]
@@ -400,6 +403,7 @@ min_scale = 0.8
 max_scale = 1.2
 random_seed = 13
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="WorkspaceBackFlowers" type="Node3D" parent="Nature/Inside/Patches"]
 position = Vector3(1.4, 0, -5.55)
@@ -411,6 +415,7 @@ min_scale = 0.8
 max_scale = 1.2
 random_seed = 14
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="CenterGrassTuft1" type="Node3D" parent="Nature/Inside/Patches"]
 position = Vector3(-2.1, 0, -1.4)
@@ -422,6 +427,7 @@ min_scale = 0.8
 max_scale = 1.1
 random_seed = 60
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="CenterGrassTuft2" type="Node3D" parent="Nature/Inside/Patches"]
 position = Vector3(2.6, 0, 0.2)
@@ -433,6 +439,7 @@ min_scale = 0.8
 max_scale = 1.1
 random_seed = 61
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="CenterGrassTuft3" type="Node3D" parent="Nature/Inside/Patches"]
 position = Vector3(0.2, 0, 2.4)
@@ -444,6 +451,7 @@ min_scale = 0.8
 max_scale = 1.1
 random_seed = 62
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="CenterGrassTuft4" type="Node3D" parent="Nature/Inside/Patches"]
 position = Vector3(-0.6, 0, 4.4)
@@ -455,6 +463,7 @@ min_scale = 0.8
 max_scale = 1.1
 random_seed = 63
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="CenterGrassTuft5" type="Node3D" parent="Nature/Inside/Patches"]
 position = Vector3(-0.2, 0, -3.2)
@@ -466,6 +475,7 @@ min_scale = 0.8
 max_scale = 1.1
 random_seed = 64
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="WorkspaceFlowers" type="Node3D" parent="Nature/Inside/Patches"]
 position = Vector3(-3.2, 0, -5.3)
@@ -477,6 +487,7 @@ min_scale = 0.8
 max_scale = 1.2
 random_seed = 18
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="PondFlowerRing" type="Node3D" parent="Nature/Inside/Patches"]
 position = Vector3(-3.6, 0, 3.4)
@@ -488,6 +499,7 @@ min_scale = 0.8
 max_scale = 1.2
 random_seed = 19
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 inner_ratio = 0.82
 
 [node name="PondGrassRing" type="Node3D" parent="Nature/Inside/Patches"]
@@ -500,6 +512,7 @@ min_scale = 0.8
 max_scale = 1.2
 random_seed = 20
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 inner_ratio = 0.78
 
 [node name="PondPebbles" type="Node3D" parent="Nature/Inside/Patches"]
@@ -512,6 +525,7 @@ min_scale = 0.8
 max_scale = 1.3
 random_seed = 21
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 inner_ratio = 0.8
 
 [node name="MushroomsWest" type="Node3D" parent="Nature/Inside/Patches"]
@@ -524,6 +538,7 @@ min_scale = 0.8
 max_scale = 1.2
 random_seed = 25
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="MushroomsEast" type="Node3D" parent="Nature/Inside/Patches"]
 position = Vector3(4.6, 0, 0.9)
@@ -535,6 +550,7 @@ min_scale = 0.8
 max_scale = 1.2
 random_seed = 26
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="MushroomsNorthWest" type="Node3D" parent="Nature/Inside/Patches"]
 position = Vector3(-4.6, 0, -5.1)
@@ -546,6 +562,7 @@ min_scale = 0.8
 max_scale = 1.2
 random_seed = 27
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="PondFireflies" parent="Nature/Inside/Patches" instance=ExtResource("fireflies")]
 position = Vector3(-3.6, 0.9, 3.4)
@@ -650,6 +667,7 @@ min_scale = 1.6
 max_scale = 2.4
 random_seed = 201
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 min_distance = 1.2
 
 [node name="NorthRocks" type="Node3D" parent="Nature/Outside/Undergrowth"]
@@ -662,6 +680,7 @@ min_scale = 0.9
 max_scale = 1.5
 random_seed = 202
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 min_distance = 2
 
 [node name="NorthLogs" type="Node3D" parent="Nature/Outside/Undergrowth"]
@@ -674,6 +693,7 @@ min_scale = 1
 max_scale = 1.4
 random_seed = 203
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 min_distance = 3
 
 [node name="NorthFlowers" type="Node3D" parent="Nature/Outside/Undergrowth"]
@@ -686,6 +706,7 @@ min_scale = 0.8
 max_scale = 1.2
 random_seed = 204
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="NorthGrass" type="Node3D" parent="Nature/Outside/Undergrowth"]
 position = Vector3(0, 0, -7.6)
@@ -697,6 +718,7 @@ min_scale = 0.8
 max_scale = 1.3
 random_seed = 205
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="NorthMushrooms" type="Node3D" parent="Nature/Outside/Undergrowth"]
 position = Vector3(0, 0, -7.6)
@@ -708,6 +730,7 @@ min_scale = 0.8
 max_scale = 1.2
 random_seed = 206
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="WestBushes" type="Node3D" parent="Nature/Outside/Undergrowth"]
 position = Vector3(-8.3, 0, 0)
@@ -719,6 +742,7 @@ min_scale = 1.6
 max_scale = 2.4
 random_seed = 211
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 min_distance = 1.2
 
 [node name="WestRocks" type="Node3D" parent="Nature/Outside/Undergrowth"]
@@ -731,6 +755,7 @@ min_scale = 0.9
 max_scale = 1.5
 random_seed = 212
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 min_distance = 2
 
 [node name="WestLogs" type="Node3D" parent="Nature/Outside/Undergrowth"]
@@ -743,6 +768,7 @@ min_scale = 1
 max_scale = 1.4
 random_seed = 213
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 min_distance = 3
 
 [node name="WestFlowers" type="Node3D" parent="Nature/Outside/Undergrowth"]
@@ -755,6 +781,7 @@ min_scale = 0.8
 max_scale = 1.2
 random_seed = 214
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="WestGrass" type="Node3D" parent="Nature/Outside/Undergrowth"]
 position = Vector3(-8.3, 0, 0)
@@ -766,6 +793,7 @@ min_scale = 0.8
 max_scale = 1.3
 random_seed = 215
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="WestMushrooms" type="Node3D" parent="Nature/Outside/Undergrowth"]
 position = Vector3(-8.3, 0, 0)
@@ -777,6 +805,7 @@ min_scale = 0.8
 max_scale = 1.2
 random_seed = 216
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="EastBushes" type="Node3D" parent="Nature/Outside/Undergrowth"]
 position = Vector3(8.3, 0, 0)
@@ -788,6 +817,7 @@ min_scale = 1.6
 max_scale = 2.4
 random_seed = 221
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 min_distance = 1.2
 
 [node name="EastRocks" type="Node3D" parent="Nature/Outside/Undergrowth"]
@@ -800,6 +830,7 @@ min_scale = 0.9
 max_scale = 1.5
 random_seed = 222
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 min_distance = 2
 
 [node name="EastLogs" type="Node3D" parent="Nature/Outside/Undergrowth"]
@@ -812,6 +843,7 @@ min_scale = 1
 max_scale = 1.4
 random_seed = 223
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 min_distance = 3
 
 [node name="EastFlowers" type="Node3D" parent="Nature/Outside/Undergrowth"]
@@ -824,6 +856,7 @@ min_scale = 0.8
 max_scale = 1.2
 random_seed = 224
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="EastGrass" type="Node3D" parent="Nature/Outside/Undergrowth"]
 position = Vector3(8.3, 0, 0)
@@ -835,6 +868,7 @@ min_scale = 0.8
 max_scale = 1.3
 random_seed = 225
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="EastMushrooms" type="Node3D" parent="Nature/Outside/Undergrowth"]
 position = Vector3(8.3, 0, 0)
@@ -846,6 +880,7 @@ min_scale = 0.8
 max_scale = 1.2
 random_seed = 226
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="SouthBushes" type="Node3D" parent="Nature/Outside/Undergrowth"]
 position = Vector3(0, 0, 8.6)
@@ -857,6 +892,7 @@ min_scale = 1.6
 max_scale = 2.4
 random_seed = 231
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 min_distance = 1.2
 
 [node name="SouthRocks" type="Node3D" parent="Nature/Outside/Undergrowth"]
@@ -869,6 +905,7 @@ min_scale = 0.9
 max_scale = 1.5
 random_seed = 232
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 min_distance = 2
 
 [node name="SouthLogs" type="Node3D" parent="Nature/Outside/Undergrowth"]
@@ -881,6 +918,7 @@ min_scale = 1
 max_scale = 1.4
 random_seed = 233
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 min_distance = 3
 
 [node name="SouthFlowers" type="Node3D" parent="Nature/Outside/Undergrowth"]
@@ -893,6 +931,7 @@ min_scale = 0.8
 max_scale = 1.2
 random_seed = 234
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="SouthGrass" type="Node3D" parent="Nature/Outside/Undergrowth"]
 position = Vector3(0, 0, 8.6)
@@ -904,6 +943,7 @@ min_scale = 0.8
 max_scale = 1.3
 random_seed = 235
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="SouthMushrooms" type="Node3D" parent="Nature/Outside/Undergrowth"]
 position = Vector3(0, 0, 8.6)
@@ -915,6 +955,7 @@ min_scale = 0.8
 max_scale = 1.2
 random_seed = 236
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 
 [node name="MagicClearing" type="Node3D" parent="Nature/Outside"]
 position = Vector3(2.5, 0, -10.5)
@@ -934,6 +975,7 @@ min_scale = 0.9
 max_scale = 1.3
 random_seed = 301
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 inner_ratio = 0.88
 
 [node name="ClearingFlowers" type="Node3D" parent="Nature/Outside/MagicClearing"]
@@ -946,6 +988,7 @@ min_scale = 0.8
 max_scale = 1.2
 random_seed = 302
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 inner_ratio = 0.65
 
 [node name="ClearingGrass" type="Node3D" parent="Nature/Outside/MagicClearing"]
@@ -958,6 +1001,7 @@ min_scale = 0.8
 max_scale = 1.2
 random_seed = 303
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 inner_ratio = 0.6
 
 [node name="ClearingEdgeTrees" type="Node3D" parent="Nature/Outside/MagicClearing"]
@@ -970,6 +1014,7 @@ min_scale = 1.8
 max_scale = 2.4
 random_seed = 304
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
+casts_shadows = false
 inner_ratio = 0.85
 min_distance = 1.6
 
@@ -1078,4 +1123,5 @@ description = "uma clareira lá fora, depois da cerca, com pedras em roda e luzi
 notice_radius = 1.5
 
 [connection signal="clicked" from="Workspace/Desk/ClickArea" to="ComputerScreen" method="open"]
+
 [connection signal="clicked" from="Workspace/Chalkboard/ClickArea" to="ChalkboardViewer" method="open"]

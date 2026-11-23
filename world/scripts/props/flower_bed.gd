@@ -127,6 +127,8 @@ func _add_flowers() -> void:
 			copies_per_model[model_index].append(Transform3D(flower_basis, flower_position))
 	for model_index: int in usable_models.size():
 		for drawer: MultiMeshInstance3D in MultiMeshCopies.add_to(self, usable_models[model_index], copies_per_model[model_index]):
+			# Small flowers: their shadow is barely visible and costs a draw call per shadow split.
+			drawer.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			_built_nodes.append(drawer)
 
 
