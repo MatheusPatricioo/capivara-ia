@@ -4,9 +4,10 @@ from pathlib import Path
 
 import pytest
 
-from src.application.category_matcher import CategoryMatch
+from src.application.category_matcher import CategoryCandidate
 from src.application.chalkboard_artist import ChalkboardArtist
 from src.application.conversation import Conversation
+from src.application.doodle_category_chooser import DoodleCategoryChooser
 from src.application.illustrate_discovery import IllustrateDiscovery
 from src.application.tools.save_discovery_tool import SaveDiscoveryTool
 from src.application.tools.seen_sources import SeenSources
@@ -17,6 +18,7 @@ from src.domain.doodle import Doodle, DoodleLibrary
 from src.domain.language_model import (
     ChatMessage,
     Role,
+    StructuredReply,
     ToolCall,
     ToolDefinition,
 )
@@ -53,7 +55,7 @@ class FakeWebSearcher:
 
 
 class ScriptedLanguageModel:
-    """Searches, saves the discovery, then answers."""
+    """Searches, saves the discovery, then answers; picks the ocean when asked to choose."""
 
     def __init__(self) -> None:
         self._replies = iter(
@@ -73,12 +75,21 @@ class ScriptedLanguageModel:
         self.received_histories.append(messages)
         return next(self._replies)
 
+    def complete_json(
+        self, messages: list[ChatMessage], schema: dict[str, object]
+    ) -> StructuredReply:
+        return StructuredReply(data={"category": "ocean"})
 
-class OceanFinder:
-    """Stands in for the embeddings: every discovery is clearly about the ocean."""
 
-    def closest(self, text: str) -> CategoryMatch:
-        return CategoryMatch(category="ocean", similarity=0.8, margin=0.1)
+class OceanCandidates:
+    """Stands in for the embeddings: the ocean and two unrelated candidates."""
+
+    def candidates(self, text: str, count: int) -> tuple[CategoryCandidate, ...]:
+        return (
+            CategoryCandidate(category="ocean", label="oceano, mar", similarity=0.71),
+            CategoryCandidate(category="hot tub", label="ofurô", similarity=0.65),
+            CategoryCandidate(category="star", label="estrela", similarity=0.62),
+        )
 
 
 @pytest.fixture
@@ -97,11 +108,10 @@ def conversation(
 ) -> Conversation:
     seen_sources = SeenSources()
     illustrator = IllustrateDiscovery(
-        OceanFinder(),
+        DoodleCategoryChooser(OceanCandidates(), language_model, "Escolha:\n{candidates}"),
         DoodleLibrary({"ocean": [WAVES_DOODLE]}),
         CapybaraHand(STILL_HAND),
         ChalkboardArtist(PngDrawingRepository(tmp_path), chalkboard, today=lambda: TODAY),
-        min_margin=0.02,
     )
     tools = [
         WebSearchTool(FakeWebSearcher(), seen_sources=seen_sources),

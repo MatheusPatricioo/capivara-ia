@@ -1,3 +1,4 @@
+import json
 import logging
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass, replace
@@ -8,12 +9,14 @@ from src.domain.language_model import (
     ChatMessage,
     LanguageModelError,
     Role,
+    StructuredReply,
     ToolCall,
     ToolDefinition,
 )
 from src.infrastructure.text_tool_call_parser import find_tool_call_in_text
 
 UNEXPECTED_FORMAT_MESSAGE = "Unexpected response format from Ollama"
+NOT_A_JSON_OBJECT_MESSAGE = "Ollama did not answer with a JSON object"
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +53,21 @@ class OllamaLanguageModel:
         if tools and not reply.tool_calls:
             return self._recover_tool_call_written_as_text(reply, tools)
         return reply
+
+    def complete_json(
+        self, messages: list[ChatMessage], schema: dict[str, object]
+    ) -> StructuredReply:
+        """Uses Ollama's "format": while generating, only text that fits the schema is allowed."""
+        payload = self._base_payload(messages)
+        payload["format"] = schema
+        reply = self._parse_reply(self._post_chat(payload))
+        try:
+            data = json.loads(reply.content)
+        except json.JSONDecodeError as error:
+            raise LanguageModelError(NOT_A_JSON_OBJECT_MESSAGE) from error
+        if not isinstance(data, dict):
+            raise LanguageModelError(NOT_A_JSON_OBJECT_MESSAGE)
+        return StructuredReply(data=data, token_count=reply.token_count)
 
     def _base_payload(self, messages: list[ChatMessage]) -> dict[str, object]:
         payload: dict[str, object] = {

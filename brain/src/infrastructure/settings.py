@@ -22,8 +22,6 @@ class Settings(BaseSettings):
     ollama_temperature: float = Field(default=0.8, ge=0.0, le=2.0)
     ollama_repeat_penalty: float = Field(default=1.1, gt=0.0)
     ollama_embedding_model: str = "nomic-embed-text"
-    # How far the closest doodle category must be ahead of the second one to be drawn.
-    doodle_min_margin: float = Field(default=0.016, ge=0.0)
     max_tool_steps: int = 5
     web_search_backend: str = "duckduckgo"
     # DuckDuckGo region code; "br-pt" brings Brazilian pages first.

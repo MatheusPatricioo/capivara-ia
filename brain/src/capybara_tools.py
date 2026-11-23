@@ -5,6 +5,7 @@ from ddgs import DDGS
 
 from src.application.category_matcher import CategoryMatcher
 from src.application.chalkboard_artist import ChalkboardArtist
+from src.application.doodle_category_chooser import DoodleCategoryChooser
 from src.application.illustrate_discovery import IllustrateDiscovery
 from src.application.tools.embodied_tool import EmbodiedTool
 from src.application.tools.save_discovery_tool import SaveDiscoveryTool
@@ -13,6 +14,7 @@ from src.application.tools.web_search_tool import WebSearchTool
 from src.domain.body import Body, Place
 from src.domain.capybara_hand import CapybaraHand
 from src.domain.chalkboard import Chalkboard
+from src.domain.language_model import StructuredLanguageModel
 from src.domain.tool import Tool
 from src.infrastructure.duckduckgo_web_searcher import DuckDuckGoWebSearcher
 from src.infrastructure.json_embedding_cache import JsonEmbeddingCache
@@ -21,6 +23,7 @@ from src.infrastructure.jsonl_search_log import JsonlSearchLog
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
 from src.infrastructure.ollama_text_embedder import OllamaTextEmbedder
 from src.infrastructure.png_drawing_repository import PngDrawingRepository
+from src.infrastructure.prompt_loader import load_prompt
 from src.infrastructure.quickdraw_doodles import (
     DEFAULT_EMBEDDING_CACHE_FILE,
     load_category_labels,
@@ -35,17 +38,20 @@ SEARCH_LOG_RELATIVE_PATH = "history/searches.jsonl"
 # save_discovery now... then tell Matheus") buried what had just happened and made her narrate
 # instead of acting. Measured on real moments after a save: 11/20 drawings with it, 16/20 without.
 TOOL_RESULT_REMINDER_OVERRIDES = {"save_discovery": ""}
+CHOOSE_DOODLE_PROMPT_NAME = "choose_doodle"
 
 
 def build_capybara_tools(
     settings: Settings,
     chalkboard: Chalkboard,
+    language_model: StructuredLanguageModel,
     http_client: httpx.Client,
     body: Body | None = None,
 ) -> list[Tool]:
     """Creates fresh tools for one conversation. With a body, each tool walks to its place.
 
-    http_client talks to Ollama, whose embedding model picks the doodle for a discovery.
+    The doodle for a discovery is chosen with retrieve and rerank: http_client reaches
+    Ollama's embedding model (retrieve) and language_model picks among them (rerank).
 
     There is no draw tool: every saved discovery is offered a drawing automatically, because
     with a draw tool she often said she would draw and never called it.
@@ -62,11 +68,14 @@ def build_capybara_tools(
         search_log=JsonlSearchLog(settings.discoveries_dir / SEARCH_LOG_RELATIVE_PATH),
     )
     illustrator = IllustrateDiscovery(
-        _build_category_matcher(settings, http_client),
+        DoodleCategoryChooser(
+            _build_category_matcher(settings, http_client),
+            language_model,
+            load_prompt(CHOOSE_DOODLE_PROMPT_NAME),
+        ),
         load_doodle_library(),
         CapybaraHand(),
         ChalkboardArtist(PngDrawingRepository(settings.discoveries_dir), chalkboard, body=body),
-        min_margin=settings.doodle_min_margin,
     )
     save_discovery_tool = SaveDiscoveryTool(
         MarkdownDiscoveryRepository(settings.discoveries_dir),

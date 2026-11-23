@@ -21,17 +21,8 @@ class CategoryCandidate:
     similarity: float
 
 
-@dataclass(frozen=True)
-class CategoryMatch:
-    category: str
-    similarity: float
-    """Cosine similarity between the text and the category: closer to 1 is more alike."""
-    margin: float
-    """How far ahead of the second closest category it is. Near 0 means the model was torn."""
-
-
 class CategoryMatcher:
-    """Finds the category whose meaning is closest to a text, using embeddings.
+    """Finds the categories whose meaning is closest to a text, using embeddings.
 
     Each category is compared through a label in the same language as the texts (the
     discoveries are in Portuguese, the Quick, Draw! names in English). The label
@@ -73,15 +64,6 @@ class CategoryMatcher:
             reverse=True,
         )
         return tuple(ranked[:count])
-
-    def closest(self, text: str) -> CategoryMatch:
-        """Raises EmbeddingError when the embedding model cannot be reached."""
-        best, second = self.candidates(text, count=2)
-        return CategoryMatch(
-            category=best.category,
-            similarity=best.similarity,
-            margin=best.similarity - second.similarity,
-        )
 
     def _embeddings_of_labels(self) -> dict[str, Embedding]:
         """Loaded once per run; only labels missing from the cache are sent to the model."""

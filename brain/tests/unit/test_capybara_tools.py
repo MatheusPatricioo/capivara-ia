@@ -7,8 +7,16 @@ from src.capybara_tools import build_capybara_tools
 from src.domain.body import Place
 from src.domain.chalkboard import Chalkboard
 from src.domain.drawing import Drawing
+from src.domain.language_model import ChatMessage, StructuredReply
 from src.domain.tool import ToolError
 from src.infrastructure.settings import Settings
+
+
+class NeverAskedStructuredLanguageModel:
+    def complete_json(
+        self, messages: list[ChatMessage], schema: dict[str, object]
+    ) -> StructuredReply:
+        raise AssertionError("building the tools must not call the model")
 
 
 def never_called(request: httpx.Request) -> httpx.Response:
@@ -41,7 +49,9 @@ def settings(tmp_path: Path) -> Settings:
 def test_offers_only_search_and_save_because_drawing_is_automatic(
     settings: Settings, http_client: httpx.Client
 ) -> None:
-    tools = build_capybara_tools(settings, Chalkboard(3), http_client)
+    tools = build_capybara_tools(
+        settings, Chalkboard(3), NeverAskedStructuredLanguageModel(), http_client
+    )
 
     assert [tool.definition.name for tool in tools] == ["web_search", "save_discovery"]
 
@@ -50,7 +60,9 @@ def test_goes_to_the_computer_to_save_a_discovery(
     settings: Settings, http_client: httpx.Client
 ) -> None:
     body = RecordingBody()
-    tools = build_capybara_tools(settings, Chalkboard(3), http_client, body=body)
+    tools = build_capybara_tools(
+        settings, Chalkboard(3), NeverAskedStructuredLanguageModel(), http_client, body=body
+    )
     save_discovery = next(tool for tool in tools if tool.definition.name == "save_discovery")
 
     with pytest.raises(ToolError):

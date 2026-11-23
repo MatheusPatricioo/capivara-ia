@@ -32,7 +32,7 @@ def main() -> None:
             language_model,
             load_prompt(SYSTEM_PROMPT_NAME),
             tools=build_capybara_tools(
-                settings, Chalkboard(settings.chalkboard_capacity), http_client
+                settings, Chalkboard(settings.chalkboard_capacity), language_model, http_client
             ),
             max_steps=settings.max_tool_steps,
             tool_result_reminder=load_prompt(TOOL_RESULT_REMINDER_NAME),
