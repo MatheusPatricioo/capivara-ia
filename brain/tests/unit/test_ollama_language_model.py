@@ -330,3 +330,28 @@ def test_raises_language_model_error_when_the_structured_call_fails(
 ) -> None:
     with pytest.raises(LanguageModelError):
         ollama_with_server_error.complete_json(MESSAGES, DRAWING_SCHEMA)
+
+
+def test_structured_replies_use_their_own_token_limit(
+    received_requests: list[httpx.Request],
+) -> None:
+    def reply_with_json(request: httpx.Request) -> httpx.Response:
+        received_requests.append(request)
+        body = {"message": {"role": "assistant", "content": '{"wants_to_draw": true}'}}
+        return httpx.Response(200, json=body)
+
+    client = httpx.Client(base_url=OLLAMA_URL, transport=httpx.MockTransport(reply_with_json))
+    language_model = OllamaLanguageModel(
+        client=client,
+        model=MODEL_NAME,
+        generation_options=GENERATION_OPTIONS,
+        structured_num_predict=800,
+    )
+
+    language_model.complete_json(MESSAGES, DRAWING_SCHEMA)
+
+    assert json.loads(received_requests[0].content)["options"] == {
+        "num_predict": 800,
+        "temperature": 0.8,
+        "repeat_penalty": 1.1,
+    }

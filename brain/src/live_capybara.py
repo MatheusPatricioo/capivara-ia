@@ -53,6 +53,7 @@ def main() -> None:
                 client=http_client,
                 model=settings.ollama_model,
                 generation_options=settings.ollama_generation_options(),
+                structured_num_predict=settings.ollama_structured_num_predict,
             ),
             budget,
         )

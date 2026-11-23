@@ -17,6 +17,9 @@ from src.infrastructure.text_tool_call_parser import find_tool_call_in_text
 
 UNEXPECTED_FORMAT_MESSAGE = "Unexpected response format from Ollama"
 NOT_A_JSON_OBJECT_MESSAGE = "Ollama did not answer with a JSON object"
+# JSON answers are longer than a spoken reply (a drawing has many shapes), and a JSON cut
+# by the token limit is useless, so they get their own, larger limit.
+DEFAULT_STRUCTURED_NUM_PREDICT = 800
 
 logger = logging.getLogger(__name__)
 
@@ -36,10 +39,12 @@ class OllamaLanguageModel:
         client: httpx.Client,
         model: str,
         generation_options: OllamaGenerationOptions | None = None,
+        structured_num_predict: int = DEFAULT_STRUCTURED_NUM_PREDICT,
     ) -> None:
         self._client = client
         self._model = model
         self._generation_options = generation_options
+        self._structured_num_predict = structured_num_predict
 
     def chat(
         self,
@@ -58,7 +63,7 @@ class OllamaLanguageModel:
         self, messages: list[ChatMessage], schema: dict[str, object]
     ) -> StructuredReply:
         """Uses Ollama's "format": while generating, only text that fits the schema is allowed."""
-        payload = self._base_payload(messages)
+        payload = self._base_payload(messages, num_predict=self._structured_num_predict)
         payload["format"] = schema
         reply = self._parse_reply(self._post_chat(payload))
         try:
@@ -69,14 +74,19 @@ class OllamaLanguageModel:
             raise LanguageModelError(NOT_A_JSON_OBJECT_MESSAGE)
         return StructuredReply(data=data, token_count=reply.token_count)
 
-    def _base_payload(self, messages: list[ChatMessage]) -> dict[str, object]:
+    def _base_payload(
+        self, messages: list[ChatMessage], num_predict: int | None = None
+    ) -> dict[str, object]:
         payload: dict[str, object] = {
             "model": self._model,
             "messages": [self._serialize_message(message) for message in messages],
             "stream": False,
         }
-        if self._generation_options is not None:
-            payload["options"] = asdict(self._generation_options)
+        options = asdict(self._generation_options) if self._generation_options else {}
+        if num_predict is not None:
+            options["num_predict"] = num_predict
+        if options:
+            payload["options"] = options
         return payload
 
     def _post_chat(self, payload: dict[str, object]) -> httpx.Response:

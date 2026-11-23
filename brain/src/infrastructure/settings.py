@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     ollama_model: str = "qwen2.5:7b"
     ollama_timeout_seconds: float = 120.0
     ollama_num_predict: int = Field(default=300, gt=0)
+    ollama_structured_num_predict: int = Field(default=800, gt=0)
     ollama_temperature: float = Field(default=0.8, ge=0.0, le=2.0)
     ollama_repeat_penalty: float = Field(default=1.1, gt=0.0)
     max_tool_steps: int = 5
