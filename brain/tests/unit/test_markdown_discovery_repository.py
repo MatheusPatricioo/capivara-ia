@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from src.domain.discovery import Discovery, DiscoveryStorageError
+from src.domain.discovery import Discovery, DiscoveryHeadline, DiscoveryStorageError
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
 
 DISCOVERY = Discovery(
@@ -113,3 +113,62 @@ def test_raises_a_storage_error_when_the_folder_cannot_be_created(tmp_path: Path
 
     with pytest.raises(DiscoveryStorageError):
         repository.save(DISCOVERY)
+
+
+def test_reads_back_the_title_and_topic_of_a_saved_discovery(
+    repository: MarkdownDiscoveryRepository,
+) -> None:
+    repository.save(DISCOVERY)
+
+    assert repository.latest_headlines(limit=5) == [
+        DiscoveryHeadline(title="O que capivaras comem?", topic="capivaras")
+    ]
+
+
+def test_lists_the_most_recent_discoveries_first(
+    repository: MarkdownDiscoveryRepository,
+) -> None:
+    repository.save(replace(DISCOVERY, title="Antiga", discovered_on=date(2026, 11, 20)))
+    repository.save(replace(DISCOVERY, title="Nova", discovered_on=date(2026, 11, 23)))
+
+    titles = [headline.title for headline in repository.latest_headlines(limit=5)]
+
+    assert titles == ["Nova", "Antiga"]
+
+
+def test_lists_at_most_the_requested_number_of_discoveries(
+    repository: MarkdownDiscoveryRepository,
+) -> None:
+    for day in (20, 21, 22):
+        repository.save(replace(DISCOVERY, title=f"Dia {day}", discovered_on=date(2026, 11, day)))
+
+    titles = [headline.title for headline in repository.latest_headlines(limit=2)]
+
+    assert titles == ["Dia 22", "Dia 21"]
+
+
+def test_skips_markdown_files_without_a_title(
+    repository: MarkdownDiscoveryRepository, discoveries_dir: Path
+) -> None:
+    repository.save(DISCOVERY)
+    (discoveries_dir / "2026-12-01-nota-solta.md").write_text("só uma nota", encoding="utf-8")
+
+    titles = [headline.title for headline in repository.latest_headlines(limit=5)]
+
+    assert titles == ["O que capivaras comem?"]
+
+
+def test_lists_nothing_when_the_folder_does_not_exist(
+    repository: MarkdownDiscoveryRepository,
+) -> None:
+    assert repository.latest_headlines(limit=5) == []
+
+
+def test_raises_a_storage_error_when_a_discovery_cannot_be_read(
+    repository: MarkdownDiscoveryRepository, discoveries_dir: Path
+) -> None:
+    discoveries_dir.mkdir()
+    (discoveries_dir / "2026-11-22-quebrada.md").write_bytes(b"\xff\xfe# invalid utf-8 \xff")
+
+    with pytest.raises(DiscoveryStorageError):
+        repository.latest_headlines(limit=5)

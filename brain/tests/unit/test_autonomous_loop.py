@@ -80,7 +80,7 @@ def loop(
     return AutonomousLoop(
         start_conversation,
         budget,
-        INNER_VOICE,
+        lambda: INNER_VOICE,
         INTERVAL_SECONDS,
         on_thought=thoughts.append,
         sleep=sleeps.append,
@@ -137,9 +137,27 @@ def test_a_failed_cycle_returns_none_and_logs_a_warning(
     loop = AutonomousLoop(
         lambda: Conversation(OfflineLanguageModel(), "You are a capybara."),
         budget,
-        INNER_VOICE,
+        lambda: INNER_VOICE,
         INTERVAL_SECONDS,
     )
 
     assert loop.run_cycle() is None
     assert caplog.messages == ["Cycle failed: Ollama is not running"]
+
+
+def test_composes_the_inner_voice_again_for_every_cycle(
+    budget: HourlyTokenBudget, language_model: ThinkingLanguageModel
+) -> None:
+    inner_voices = iter(["(primeiro ciclo)", "(segundo ciclo)"])
+    loop = AutonomousLoop(
+        lambda: Conversation(language_model, "You are a capybara."),
+        budget,
+        lambda: next(inner_voices),
+        INTERVAL_SECONDS,
+        sleep=lambda seconds: None,
+    )
+
+    loop.run(cycles=2)
+
+    sent_messages = [messages[-1].content for messages in language_model.received_messages]
+    assert sent_messages == ["(primeiro ciclo)", "(segundo ciclo)"]

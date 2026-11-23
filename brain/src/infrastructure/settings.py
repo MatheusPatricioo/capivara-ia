@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     world_server_port: int = Field(default=8765, gt=0, lt=65536)
     autonomous_cycle_interval_seconds: float = Field(default=120.0, gt=0)
     max_tokens_per_hour: int = Field(default=60000, gt=0)
+    max_remembered_discoveries: int = Field(default=20, gt=0)
     log_level: LogLevel = "INFO"
     log_file: Path = PROJECT_ROOT / "logs" / "capybara.log"
 

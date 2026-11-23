@@ -17,21 +17,22 @@ class AutonomousLoop:
     """Wakes the capybara up from time to time so she decides on her own what to do.
 
     Each cycle starts a fresh conversation, so the history never grows without limit,
-    and is skipped while the hourly token budget is spent.
+    and is skipped while the hourly token budget is spent. The inner voice is composed
+    again every cycle, so it can carry what she learned in the previous ones.
     """
 
     def __init__(
         self,
         start_conversation: Callable[[], Conversation],
         budget: HourlyTokenBudget,
-        inner_voice: str,
+        compose_inner_voice: Callable[[], str],
         interval_seconds: float,
         on_thought: Callable[[str], None] = _ignore_thought,
         sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         self._start_conversation = start_conversation
         self._budget = budget
-        self._inner_voice = inner_voice
+        self._compose_inner_voice = compose_inner_voice
         self._interval_seconds = interval_seconds
         self._on_thought = on_thought
         self._sleep = sleep
@@ -54,7 +55,7 @@ class AutonomousLoop:
             )
             return None
         try:
-            thought = self._start_conversation().send(self._inner_voice)
+            thought = self._start_conversation().send(self._compose_inner_voice())
         except (LanguageModelError, StepLimitReachedError) as error:
             logger.warning("Cycle failed: %s", error)
             return None

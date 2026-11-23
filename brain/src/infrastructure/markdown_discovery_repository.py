@@ -2,9 +2,11 @@ import re
 import unicodedata
 from pathlib import Path
 
-from src.domain.discovery import Discovery, DiscoveryStorageError
+from src.domain.discovery import Discovery, DiscoveryHeadline, DiscoveryStorageError
 
 FILE_EXTENSION = ".md"
+TITLE_PREFIX = "# "
+TOPIC_PREFIX = "- **Tema:** "
 FALLBACK_SLUG = "descoberta"
 MAX_SLUG_LENGTH = 60
 NON_SLUG_CHARACTERS = re.compile(r"[^a-z0-9]+")
@@ -18,6 +20,14 @@ def slugify(text: str) -> str:
     slug = NON_SLUG_CHARACTERS.sub("-", without_accents.lower()).strip("-")
     shortened_slug = slug[:MAX_SLUG_LENGTH].rstrip("-")
     return shortened_slug or FALLBACK_SLUG
+
+
+def _first_value_after(prefix: str, lines: list[str]) -> str:
+    """Returns what follows the prefix on the first line that starts with it, or ''."""
+    for line in lines:
+        if line.startswith(prefix):
+            return line.removeprefix(prefix).strip()
+    return ""
 
 
 class MarkdownDiscoveryRepository:
@@ -36,6 +46,41 @@ class MarkdownDiscoveryRepository:
         except OSError as error:
             raise DiscoveryStorageError(f"could not save the discovery: {error}") from error
         return file_path.name
+
+    def latest_headlines(self, limit: int) -> list[DiscoveryHeadline]:
+        """Reads title and topic back from the newest files (names start with the date).
+
+        Markdown files without a title line are skipped, so notes dropped into the
+        folder by hand do not break anything.
+        """
+        if not self._discoveries_dir.is_dir():
+            return []
+        discovery_files = sorted(
+            self._discoveries_dir.glob(f"*{FILE_EXTENSION}"),
+            key=lambda discovery_file: discovery_file.name,
+            reverse=True,
+        )
+        headlines: list[DiscoveryHeadline] = []
+        for discovery_file in discovery_files:
+            if len(headlines) == limit:
+                break
+            headline = self._read_headline(discovery_file)
+            if headline is not None:
+                headlines.append(headline)
+        return headlines
+
+    @staticmethod
+    def _read_headline(discovery_file: Path) -> DiscoveryHeadline | None:
+        try:
+            lines = discovery_file.read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeDecodeError) as error:
+            raise DiscoveryStorageError(
+                f"could not read the discovery {discovery_file.name}: {error}"
+            ) from error
+        title = _first_value_after(TITLE_PREFIX, lines)
+        if not title:
+            return None
+        return DiscoveryHeadline(title=title, topic=_first_value_after(TOPIC_PREFIX, lines))
 
     def _free_file_path(self, discovery: Discovery) -> Path:
         """Builds date + slug, adding -2, -3... so an existing file is never overwritten."""
@@ -58,9 +103,9 @@ class MarkdownDiscoveryRepository:
     def _to_markdown(discovery: Discovery) -> str:
         source_lines = "\n".join(f"- {source}" for source in discovery.sources)
         return (
-            f"# {discovery.title}\n\n"
+            f"{TITLE_PREFIX}{discovery.title}\n\n"
             f"- **Data:** {discovery.discovered_on.isoformat()}\n"
-            f"- **Tema:** {discovery.topic}\n\n"
+            f"{TOPIC_PREFIX}{discovery.topic}\n\n"
             f"## O que eu descobri\n\n"
             f"{discovery.summary}\n\n"
             f"## Fontes\n\n"
