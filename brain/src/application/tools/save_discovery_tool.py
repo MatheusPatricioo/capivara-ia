@@ -102,8 +102,9 @@ class SaveDiscoveryTool:
     def _ensure_sources_came_from_web_search(self, urls: tuple[str, ...]) -> None:
         if self._seen_sources.is_empty:
             raise ToolError(
-                "no web search was done in this conversation yet: "
-                "use web_search first and cite the URLs it returns"
+                "you have no web_search results to cite in this conversation (you did not "
+                "search yet, or the search found nothing): search with other words and cite "
+                "the URLs it returns, or do not save anything this time"
             )
         if not urls:
             raise ToolError("a discovery needs at least one source from your web_search results")

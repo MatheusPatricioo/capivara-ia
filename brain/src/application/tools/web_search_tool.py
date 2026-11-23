@@ -7,7 +7,12 @@ from src.domain.web_search import SearchResult, WebSearcher, WebSearchError
 
 DEFAULT_MAX_RESULTS = 5
 DEFAULT_MAX_SNIPPET_LENGTH = 300
-NO_RESULTS_MESSAGE = "No results found."
+# Says right away that an empty search leaves nothing to save, so the model does not
+# try save_discovery without sources and burn the remaining steps on refusals.
+NO_RESULTS_MESSAGE = (
+    "No results found, so there is nothing from this search to save. "
+    "Try other words, or move on."
+)
 ELLIPSIS = "..."
 
 logger = logging.getLogger(__name__)

@@ -110,10 +110,12 @@ def test_rejects_an_empty_source_list(save_discovery_tool: SaveDiscoveryTool) ->
         save_discovery_tool.run(arguments_with(sources=[]))
 
 
-def test_refuses_to_save_before_any_web_search(repository: InMemoryDiscoveryRepository) -> None:
+def test_refuses_to_save_without_any_search_result_and_offers_to_give_up(
+    repository: InMemoryDiscoveryRepository,
+) -> None:
     tool = SaveDiscoveryTool(repository, SeenSources(), today=lambda: TODAY)
 
-    with pytest.raises(ToolError, match="use web_search first"):
+    with pytest.raises(ToolError, match="or do not save anything this time"):
         tool.run(VALID_ARGUMENTS)
 
 

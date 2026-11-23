@@ -135,12 +135,12 @@ def test_does_not_remember_urls_left_out_by_the_limit() -> None:
     assert not seen_sources.contains(EXTRA_RESULT.url)
 
 
-def test_says_so_when_there_are_no_results() -> None:
+def test_says_there_is_nothing_to_save_when_there_are_no_results() -> None:
     tool = build_tool([])
 
     output = tool.run({"query": QUERY})
 
-    assert output == "No results found."
+    assert output.startswith("No results found, so there is nothing from this search to save")
 
 
 def test_logs_how_many_results_were_returned(caplog: pytest.LogCaptureFixture) -> None:
