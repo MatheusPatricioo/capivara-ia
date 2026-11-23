@@ -74,10 +74,12 @@ class WorldServer:
             self._send(client, payload)
 
     def _handle_client(self, connection: ServerConnection) -> None:
+        # Read the address now: after an abrupt disconnect the socket can no longer tell it.
+        address = connection.remote_address
         with self._lock:
             self._clients.add(connection)
             remembered_payloads = list(self._remembered.values())
-        logger.info("World connected: %s", connection.remote_address)
+        logger.info("World connected: %s", address)
         for payload in remembered_payloads:
             self._send(connection, payload)
         try:
@@ -88,7 +90,7 @@ class WorldServer:
         finally:
             with self._lock:
                 self._clients.discard(connection)
-            logger.info("World disconnected: %s", connection.remote_address)
+            logger.info("World disconnected: %s", address)
 
     def _send(self, client: ServerConnection, payload: str) -> None:
         try:

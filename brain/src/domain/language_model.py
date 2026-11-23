@@ -30,6 +30,8 @@ class ChatMessage:
     content: str
     tool_calls: tuple[ToolCall, ...] = ()
     tool_name: str | None = None
+    token_count: int = 0
+    """Tokens the model read and wrote to produce this reply (0 when unknown)."""
 
 
 class LanguageModelError(Exception):

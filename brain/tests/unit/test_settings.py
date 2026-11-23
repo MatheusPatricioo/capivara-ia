@@ -179,5 +179,32 @@ def test_world_server_listens_on_local_port_8765_by_default(
     assert (settings.world_server_host, settings.world_server_port) == ("127.0.0.1", 8765)
 
 
+@pytest.fixture
+def environment_without_autonomous_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("AUTONOMOUS_CYCLE_INTERVAL_SECONDS", raising=False)
+    monkeypatch.delenv("MAX_TOKENS_PER_HOUR", raising=False)
+
+
+@pytest.fixture
+def zero_max_tokens_per_hour(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MAX_TOKENS_PER_HOUR", "0")
+
+
+def test_autonomous_mode_defaults_to_two_minutes_and_60k_tokens_per_hour(
+    environment_without_autonomous_settings: None,
+) -> None:
+    settings = Settings(_env_file=None)
+
+    assert (settings.autonomous_cycle_interval_seconds, settings.max_tokens_per_hour) == (
+        120.0,
+        60000,
+    )
+
+
+def test_rejects_a_token_limit_of_zero(zero_max_tokens_per_hour: None) -> None:
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None)
+
+
 def test_env_file_points_to_the_brain_folder_regardless_of_working_directory() -> None:
     assert Settings.model_config["env_file"] == PROJECT_ROOT / "brain" / ".env"

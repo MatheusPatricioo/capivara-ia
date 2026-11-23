@@ -209,3 +209,23 @@ def test_raises_language_model_error_when_response_format_is_unexpected(
 ) -> None:
     with pytest.raises(LanguageModelError):
         ollama_with_unexpected_response.chat(MESSAGES)
+
+
+def test_reports_the_tokens_read_and_written() -> None:
+    def reply_with_token_counts(request: httpx.Request) -> httpx.Response:
+        body = {
+            "message": {"role": "assistant", "content": ASSISTANT_REPLY},
+            "prompt_eval_count": 1200,
+            "eval_count": 80,
+        }
+        return httpx.Response(200, json=body)
+
+    reply = build_language_model(reply_with_token_counts).chat(MESSAGES)
+
+    assert reply.token_count == 1280
+
+
+def test_reports_zero_tokens_when_ollama_omits_the_counts(
+    healthy_ollama: OllamaLanguageModel,
+) -> None:
+    assert healthy_ollama.chat(MESSAGES).token_count == 0

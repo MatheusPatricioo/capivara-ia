@@ -81,7 +81,8 @@ class OllamaLanguageModel:
     @classmethod
     def _parse_reply(cls, response: httpx.Response) -> ChatMessage:
         try:
-            message = response.json()["message"]
+            body = response.json()
+            message = body["message"]
             content = message["content"]
             raw_tool_calls = message.get("tool_calls") or []
         except (ValueError, KeyError, TypeError, AttributeError) as error:
@@ -89,7 +90,18 @@ class OllamaLanguageModel:
         if not isinstance(content, str) or not isinstance(raw_tool_calls, list):
             raise LanguageModelError(UNEXPECTED_FORMAT_MESSAGE)
         tool_calls = tuple(cls._parse_tool_call(raw_tool_call) for raw_tool_call in raw_tool_calls)
-        return ChatMessage(role=Role.ASSISTANT, content=content, tool_calls=tool_calls)
+        return ChatMessage(
+            role=Role.ASSISTANT,
+            content=content,
+            tool_calls=tool_calls,
+            token_count=cls._token_count(body),
+        )
+
+    @staticmethod
+    def _token_count(body: dict[str, object]) -> int:
+        """Ollama reports read tokens (prompt_eval_count) and written tokens (eval_count)."""
+        counts = (body.get("prompt_eval_count"), body.get("eval_count"))
+        return sum(count for count in counts if isinstance(count, int))
 
     @staticmethod
     def _parse_tool_call(raw_tool_call: object) -> ToolCall:

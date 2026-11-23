@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     chalkboard_capacity: int = Field(default=3, gt=0)
     world_server_host: str = "127.0.0.1"
     world_server_port: int = Field(default=8765, gt=0, lt=65536)
+    autonomous_cycle_interval_seconds: float = Field(default=120.0, gt=0)
+    max_tokens_per_hour: int = Field(default=60000, gt=0)
     log_level: LogLevel = "INFO"
     log_file: Path = PROJECT_ROOT / "logs" / "capybara.log"
 
