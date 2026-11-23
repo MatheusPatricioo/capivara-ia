@@ -46,6 +46,8 @@ Before deciding what to do next, the capybara queries its memory using RAG (retr
   ollama pull qwen2.5:7b
   ```
 
+- [Godot 4](https://godotengine.org/download) (only to watch the 3D world)
+
 ### Setup
 
 Create and activate a virtual environment, then install the dependencies (`--group` requires pip 25.1+):
@@ -81,6 +83,23 @@ python -m src.chat_with_capybara
 
 Type `sair` to leave the chat.
 
+### Watch the capybara live
+
+In live mode nobody talks to the capybara: every couple of minutes she decides on her own what to do (research something, save a discovery, draw it on the chalkboard, or just rest), and her body follows in the 3D world.
+
+1. Make sure Ollama is running, then start the brain:
+
+   ```bash
+   cd brain
+   python -m src.live_capybara
+   ```
+
+2. Open the `world/` folder in Godot and press Play. The order does not matter: the world keeps trying to connect to the brain.
+
+In the world she walks to the computer before searching, to the mural before saving and to the chalkboard before drawing. The chalkboard shows her three most recent drawings: a new one erases the oldest. Every discovery (Markdown) and drawing (PNG) is saved in the discoveries folder (`DISCOVERIES_DIR` in `brain/.env`, or `discoveries/` by default).
+
+Press `Ctrl+C` to stop. The cycle interval and the hourly token limit are set in `brain/.env` (`AUTONOMOUS_CYCLE_INTERVAL_SECONDS`, `MAX_TOKENS_PER_HOUR`).
+
 ### Run the tests
 
 From the project root:
@@ -98,4 +117,7 @@ mypy brain/src
 
 ## Status
 
-🚧 Early stage. The project structure and tooling are in place; the agent loop, the 3D world, and memory are under active development.
+🚧 In active development.
+
+- **Working:** chat and autonomous live mode, web search, discoveries saved as Markdown, chalkboard drawings, the 3D world connected to the brain over WebSocket, and an hourly token budget.
+- **Next:** long-term memory (ChromaDB + RAG), so each new cycle builds on what she already knows.
