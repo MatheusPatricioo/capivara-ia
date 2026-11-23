@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     ollama_repeat_penalty: float = Field(default=1.1, gt=0.0)
     max_tool_steps: int = 5
     web_search_backend: str = "duckduckgo"
+    # DuckDuckGo region code; "br-pt" brings Brazilian pages first.
+    web_search_region: str = "br-pt"
     discoveries_dir: Path = PROJECT_ROOT / "discoveries"
     chalkboard_capacity: int = Field(default=3, gt=0)
     world_server_host: str = "127.0.0.1"

@@ -34,16 +34,23 @@ class SaveDiscoveryTool:
             name="save_discovery",
             description=(
                 "Saves something interesting you learned in your discoveries folder. "
-                "The file name is chosen automatically."
+                "The file name is chosen automatically. Title, topic and summary are always "
+                "written in Brazilian Portuguese, even when the pages were in another language."
             ),
             parameters={
                 "type": "object",
                 "properties": {
-                    "title": {"type": "string", "description": "Short title of the discovery."},
-                    "topic": {"type": "string", "description": "General theme, e.g. 'stars'."},
+                    "title": {
+                        "type": "string",
+                        "description": "Short title, in Brazilian Portuguese.",
+                    },
+                    "topic": {
+                        "type": "string",
+                        "description": "General theme in Brazilian Portuguese, e.g. 'estrelas'.",
+                    },
                     "summary": {
                         "type": "string",
-                        "description": "What you learned, written in your own words.",
+                        "description": "What you learned, in your own words, in Portuguese.",
                     },
                     "sources": {
                         "type": "array",

@@ -56,12 +56,22 @@ def test_converts_raw_results_into_search_results(fake_ddgs: FakeDDGS) -> None:
     ]
 
 
-def test_passes_the_result_limit_and_backend_to_ddgs(fake_ddgs: FakeDDGS) -> None:
-    searcher = DuckDuckGoWebSearcher(fake_ddgs, backend="auto")
+def test_passes_the_result_limit_backend_and_region_to_ddgs(fake_ddgs: FakeDDGS) -> None:
+    searcher = DuckDuckGoWebSearcher(fake_ddgs, backend="auto", region="us-en")
 
     searcher.search(QUERY, MAX_RESULTS)
 
-    assert fake_ddgs.received_calls == [(QUERY, {"max_results": MAX_RESULTS, "backend": "auto"})]
+    assert fake_ddgs.received_calls == [
+        (QUERY, {"max_results": MAX_RESULTS, "backend": "auto", "region": "us-en"})
+    ]
+
+
+def test_searches_brazilian_results_by_default(fake_ddgs: FakeDDGS) -> None:
+    searcher = DuckDuckGoWebSearcher(fake_ddgs)
+
+    searcher.search(QUERY, MAX_RESULTS)
+
+    assert fake_ddgs.received_calls[0][1]["region"] == "br-pt"
 
 
 def test_returns_an_empty_list_when_ddgs_finds_nothing() -> None:

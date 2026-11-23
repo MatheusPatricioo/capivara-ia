@@ -58,7 +58,10 @@ class WebSearchTool:
             parameters={
                 "type": "object",
                 "properties": {
-                    "query": {"type": "string", "description": "What to search for."},
+                    "query": {
+                        "type": "string",
+                        "description": "What to search for, written in Brazilian Portuguese.",
+                    },
                 },
                 "required": ["query"],
             },

@@ -43,7 +43,11 @@ def build_capybara_tools(
     """
     seen_sources = SeenSources()
     web_search_tool = WebSearchTool(
-        DuckDuckGoWebSearcher(DDGS(), backend=settings.web_search_backend),
+        DuckDuckGoWebSearcher(
+            DDGS(),
+            backend=settings.web_search_backend,
+            region=settings.web_search_region,
+        ),
         seen_sources=seen_sources,
         search_history=JsonSearchHistory(settings.discoveries_dir / SEARCH_HISTORY_FILE_NAME),
         search_log=JsonlSearchLog(settings.discoveries_dir / SEARCH_LOG_RELATIVE_PATH),
