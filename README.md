@@ -125,6 +125,7 @@ mypy brain/src
 ## Créditos
 
 - Kits de natureza e móveis por [Kenney](https://kenney.nl) (CC0)
+- Rabiscos da lousa: amostra do dataset [Quick, Draw!](https://github.com/googlecreativelab/quickdraw-dataset) do Google, sob licença [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Os traços foram convertidos para pares `[x, y]` e só 30 rabiscos por categoria foram guardados (`brain/doodles/quickdraw_sample.json`, gerado por `python -m src.download_quickdraw_sample`).
 - Modelo da capivara gerado com TRELLIS (Microsoft, MIT)
 
 ## Status
