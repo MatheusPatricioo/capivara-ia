@@ -2,7 +2,7 @@ class_name CapybaraBrainDriver
 extends Node
 
 ## Makes the parent capybara obey the brain: she walks to the place it asks for (computer,
-## mural, chalkboard...), stays there a little while the brain works, then goes back to strolling.
+## chalkboard, pond...), stays there a little while the brain works, then goes back to strolling.
 
 ## Seconds the capybara stays at a place after arriving, before strolling again.
 @export var stay_seconds: float = 6.0

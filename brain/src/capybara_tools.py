@@ -66,5 +66,6 @@ def build_capybara_tools(
         return [web_search_tool, save_discovery_tool]
     return [
         EmbodiedTool(web_search_tool, body, Place.COMPUTER),
-        EmbodiedTool(save_discovery_tool, body, Place.MURAL),
+        # Saving a discovery writes a file, and her files live in the computer.
+        EmbodiedTool(save_discovery_tool, body, Place.COMPUTER),
     ]

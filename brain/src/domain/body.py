@@ -9,7 +9,6 @@ class Place(StrEnum):
 
     COMPUTER = "computer"
     CHALKBOARD = "chalkboard"
-    MURAL = "mural"
     POND = "pond"
     FOOD_BOWL = "food_bowl"
     DOG_HOUSE = "dog_house"
