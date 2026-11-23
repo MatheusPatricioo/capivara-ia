@@ -3,194 +3,76 @@
 [ext_resource type="Script" path="res://scripts/props/fence_line.gd" id="1_fence_line"]
 [ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/fence_simple.glb" id="2_fence_simple"]
 [ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/fence_simpleLow.glb" id="3_fence_simple_low"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/plant_bushLarge.glb" id="10_plant_bush_large"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/plant_bushLargeTriangle.glb" id="11_plant_bush_large_triangle"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/plant_bushDetailed.glb" id="12_plant_bush_detailed"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/plant_bushTriangle.glb" id="13_plant_bush_triangle"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/rock_largeA.glb" id="20_rock_large_a"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/rock_largeB.glb" id="21_rock_large_b"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/rock_tallA.glb" id="22_rock_tall_a"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/rock_smallC.glb" id="23_rock_small_c"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/stone_tallD.glb" id="24_stone_tall_d"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/stone_smallF.glb" id="25_stone_small_f"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_pineRoundB.glb" id="30_tree_pine_round_b"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_cone.glb" id="31_tree_cone"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_pineTallA.glb" id="32_tree_pine_tall_a"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_oak.glb" id="33_tree_oak"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_pineRoundD.glb" id="34_tree_pine_round_d"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_default.glb" id="35_tree_default"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_pineTallC.glb" id="36_tree_pine_tall_c"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_fat.glb" id="37_tree_fat"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_detailed.glb" id="38_tree_detailed"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_pineSmallA.glb" id="39_tree_pine_small_a"]
+[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/fence_gate.glb" id="4_fence_gate"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_wall_along_x"]
-size = Vector3(20, 2, 1)
+size = Vector3(14, 2, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_wall_along_z"]
-size = Vector3(1, 2, 20)
+size = Vector3(1, 2, 14)
 
 [node name="Boundary" type="Node3D"]
 
 [node name="Walls" type="Node3D" parent="."]
 
 [node name="WallNorth" type="StaticBody3D" parent="Walls"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -9.5)
+position = Vector3(0, 1, -6.4)
 
 [node name="WallNorthCollision" type="CollisionShape3D" parent="Walls/WallNorth"]
 shape = SubResource("BoxShape3D_wall_along_x")
 
 [node name="WallSouth" type="StaticBody3D" parent="Walls"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 9.5)
+position = Vector3(0, 1, 6.4)
 
 [node name="WallSouthCollision" type="CollisionShape3D" parent="Walls/WallSouth"]
 shape = SubResource("BoxShape3D_wall_along_x")
 
 [node name="WallEast" type="StaticBody3D" parent="Walls"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.5, 1, 0)
+position = Vector3(6.4, 1, 0)
 
 [node name="WallEastCollision" type="CollisionShape3D" parent="Walls/WallEast"]
 shape = SubResource("BoxShape3D_wall_along_z")
 
 [node name="WallWest" type="StaticBody3D" parent="Walls"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.5, 1, 0)
+position = Vector3(-6.4, 1, 0)
 
 [node name="WallWestCollision" type="CollisionShape3D" parent="Walls/WallWest"]
 shape = SubResource("BoxShape3D_wall_along_z")
 
 [node name="Fences" type="Node3D" parent="."]
 
-[node name="FenceNorthWest" type="Node3D" parent="Fences"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.65, 0, -9.3)
+[node name="FenceNorth" type="Node3D" parent="Fences"]
+position = Vector3(0, 0, -6)
 script = ExtResource("1_fence_line")
 piece_model = ExtResource("2_fence_simple")
-length = 7.3
+length = 12.0
 
-[node name="FenceNorthEast" type="Node3D" parent="Fences"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.65, 0, -9.3)
+[node name="FenceEast" type="Node3D" parent="Fences"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 6, 0, 0)
 script = ExtResource("1_fence_line")
 piece_model = ExtResource("2_fence_simple")
-length = 7.3
+length = 12.0
 
-[node name="FenceEastNorth" type="Node3D" parent="Fences"]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 9.3, 0, -4.65)
+[node name="FenceWest" type="Node3D" parent="Fences"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -6, 0, 0)
 script = ExtResource("1_fence_line")
 piece_model = ExtResource("2_fence_simple")
-length = 7.3
-
-[node name="FenceEastSouth" type="Node3D" parent="Fences"]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 9.3, 0, 4.65)
-script = ExtResource("1_fence_line")
-piece_model = ExtResource("2_fence_simple")
-length = 7.3
+length = 12.0
 
 [node name="FenceSouthWest" type="Node3D" parent="Fences"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.65, 0, 9.3)
+position = Vector3(-3, 0, 6)
 script = ExtResource("1_fence_line")
 piece_model = ExtResource("3_fence_simple_low")
-length = 7.3
+length = 6.0
+
+[node name="Gate" type="Node3D" parent="Fences"]
+position = Vector3(1, 0, 6)
+script = ExtResource("1_fence_line")
+piece_model = ExtResource("4_fence_gate")
+length = 2.0
 
 [node name="FenceSouthEast" type="Node3D" parent="Fences"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.65, 0, 9.3)
+position = Vector3(4, 0, 6)
 script = ExtResource("1_fence_line")
 piece_model = ExtResource("3_fence_simple_low")
-length = 7.3
-
-[node name="FenceWestNorth" type="Node3D" parent="Fences"]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -9.3, 0, -4.65)
-script = ExtResource("1_fence_line")
-piece_model = ExtResource("2_fence_simple")
-length = 7.3
-
-[node name="FenceWestSouth" type="Node3D" parent="Fences"]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -9.3, 0, 4.65)
-script = ExtResource("1_fence_line")
-piece_model = ExtResource("2_fence_simple")
-length = 7.3
-
-[node name="Corners" type="Node3D" parent="."]
-
-[node name="PineNorthWest" parent="Corners" instance=ExtResource("30_tree_pine_round_b")]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -9.6, 0, -9.6)
-
-[node name="BushNorthWest" parent="Corners" instance=ExtResource("10_plant_bush_large")]
-transform = Transform3D(0, 0, -2, 0, 2, 0, 2, 0, 0, -8.6, 0, -9.9)
-
-[node name="RockNorthEast" parent="Corners" instance=ExtResource("21_rock_large_b")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 9.8, 0, -9.8)
-
-[node name="BushNorthEast" parent="Corners" instance=ExtResource("11_plant_bush_large_triangle")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 10, 0, -8.7)
-
-[node name="ConeTreeSouthEast" parent="Corners" instance=ExtResource("31_tree_cone")]
-transform = Transform3D(0, 0, 3, 0, 3, 0, -3, 0, 0, 9.7, 0, 9.7)
-
-[node name="BushSouthEast" parent="Corners" instance=ExtResource("12_plant_bush_detailed")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 8.7, 0, 10)
-
-[node name="TallRockSouthWest" parent="Corners" instance=ExtResource("22_rock_tall_a")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -9.8, 0, 9.8)
-
-[node name="BushSouthWest" parent="Corners" instance=ExtResource("10_plant_bush_large")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -10, 0, 8.7)
-
-[node name="SideGaps" type="Node3D" parent="."]
-
-[node name="BushNorthGap" parent="SideGaps" instance=ExtResource("10_plant_bush_large")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0.2, 0, -9.7)
-
-[node name="RockNorthGap" parent="SideGaps" instance=ExtResource("23_rock_small_c")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -0.7, 0, -9.5)
-
-[node name="RockEastGap" parent="SideGaps" instance=ExtResource("20_rock_large_a")]
-transform = Transform3D(0, 0, -2, 0, 2, 0, 2, 0, 0, 9.8, 0, 0.3)
-
-[node name="BushEastGap" parent="SideGaps" instance=ExtResource("13_plant_bush_triangle")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 9.6, 0, -0.7)
-
-[node name="BushSouthGap" parent="SideGaps" instance=ExtResource("12_plant_bush_detailed")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 9.7)
-
-[node name="StoneSouthGap" parent="SideGaps" instance=ExtResource("25_stone_small_f")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0.8, 0, 9.5)
-
-[node name="TallStoneWestGap" parent="SideGaps" instance=ExtResource("24_stone_tall_d")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -9.8, 0, -0.3)
-
-[node name="BushWestGap" parent="SideGaps" instance=ExtResource("10_plant_bush_large")]
-transform = Transform3D(0, 0, 2, 0, 2, 0, -2, 0, 0, -9.7, 0, 0.7)
-
-[node name="OuterForest" type="Node3D" parent="."]
-
-[node name="TallPineOuterNorthWest" parent="OuterForest" instance=ExtResource("32_tree_pine_tall_a")]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -12, 0, -11)
-
-[node name="OakOuterNorth" parent="OuterForest" instance=ExtResource("33_tree_oak")]
-transform = Transform3D(0, 0, 3, 0, 3, 0, -3, 0, 0, -5, 0, -12)
-
-[node name="PineOuterNorth" parent="OuterForest" instance=ExtResource("34_tree_pine_round_d")]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 3, 0, -12.5)
-
-[node name="DefaultOuterNorthEast" parent="OuterForest" instance=ExtResource("35_tree_default")]
-transform = Transform3D(0, 0, -3, 0, 3, 0, 3, 0, 0, 10.5, 0, -12)
-
-[node name="TallPineOuterEast" parent="OuterForest" instance=ExtResource("36_tree_pine_tall_c")]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 12.5, 0, -5)
-
-[node name="FatOuterEast" parent="OuterForest" instance=ExtResource("37_tree_fat")]
-transform = Transform3D(0, 0, 3, 0, 3, 0, -3, 0, 0, 12, 0, 3)
-
-[node name="PineOuterWest" parent="OuterForest" instance=ExtResource("30_tree_pine_round_b")]
-transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, -12.5, 0, -4)
-
-[node name="DetailedOuterWest" parent="OuterForest" instance=ExtResource("38_tree_detailed")]
-transform = Transform3D(0, 0, -3, 0, 3, 0, 3, 0, 0, -12, 0, 5)
-
-[node name="SmallPineOuterSouthWest" parent="OuterForest" instance=ExtResource("39_tree_pine_small_a")]
-transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, -6, 0, 11.5)
-
-[node name="SmallPineOuterSouthEast" parent="OuterForest" instance=ExtResource("39_tree_pine_small_a")]
-transform = Transform3D(0, 0, 2.5, 0, 2.5, 0, -2.5, 0, 0, 5, 0, 11.5)
-
-[node name="BushOuterSouth" parent="OuterForest" instance=ExtResource("10_plant_bush_large")]
-transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -1, 0, 11)
+length = 4.0
