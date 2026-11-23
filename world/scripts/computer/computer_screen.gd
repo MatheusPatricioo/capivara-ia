@@ -10,6 +10,7 @@ const TAB_TITLES: PackedStringArray = ["Histórico", "Descobertas", "Desenhos"]
 @onready var _tabs: TabContainer = %Tabs
 @onready var _close_button: Button = %CloseButton
 @onready var _folder_label: Label = %FolderLabel
+@onready var _history_tab: HistoryTab = %HistoryTab
 
 
 func _ready() -> void:
@@ -19,8 +20,11 @@ func _ready() -> void:
 	_close_button.pressed.connect(close)
 
 
+## Reads the folder again on every open, so the tabs always show the latest files.
 func open() -> void:
-	_folder_label.text = "Pasta: %s" % DiscoveriesFolder.path()
+	var discoveries_path: String = DiscoveriesFolder.path()
+	_folder_label.text = "Pasta: %s" % discoveries_path
+	_history_tab.show_history(discoveries_path)
 	show()
 
 

@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/computer/computer_screen.gd" id="1_computer_screen"]
+[ext_resource type="Script" path="res://scripts/computer/history_tab.gd" id="2_history_tab"]
 
 [sub_resource type="SystemFont" id="SystemFont_terminal"]
 font_names = PackedStringArray("Consolas", "Courier New", "Monospace")
@@ -85,6 +86,9 @@ Button/styles/hover = SubResource("StyleBoxFlat_button_hover")
 Button/styles/normal = SubResource("StyleBoxFlat_button")
 Button/styles/pressed = SubResource("StyleBoxFlat_button_hover")
 Label/colors/font_color = Color(0.2, 0.9, 0.35, 1)
+LinkButton/colors/font_color = Color(0.55, 0.85, 1, 1)
+LinkButton/colors/font_hover_color = Color(0.85, 0.95, 1, 1)
+LinkButton/colors/font_pressed_color = Color(0.85, 0.95, 1, 1)
 PanelContainer/styles/panel = SubResource("StyleBoxFlat_monitor")
 TabContainer/colors/font_hovered_color = Color(0.6, 1, 0.65, 1)
 TabContainer/colors/font_selected_color = Color(0.02, 0.04, 0.02, 1)
@@ -140,12 +144,20 @@ size_flags_vertical = 3
 current_tab = 0
 
 [node name="HistoryTab" type="MarginContainer" parent="Monitor/Layout/Tabs"]
+unique_name_in_owner = true
 layout_mode = 2
+script = ExtResource("2_history_tab")
 metadata/_tab_index = 0
 
-[node name="Placeholder" type="Label" parent="Monitor/Layout/Tabs/HistoryTab"]
+[node name="Scroll" type="ScrollContainer" parent="Monitor/Layout/Tabs/HistoryTab"]
 layout_mode = 2
-text = "> carregando histórico..."
+horizontal_scroll_mode = 0
+
+[node name="EntryList" type="VBoxContainer" parent="Monitor/Layout/Tabs/HistoryTab/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
 
 [node name="DiscoveriesTab" type="MarginContainer" parent="Monitor/Layout/Tabs"]
 visible = false
