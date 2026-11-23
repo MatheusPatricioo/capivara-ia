@@ -1,0 +1,172 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/computer/computer_screen.gd" id="1_computer_screen"]
+
+[sub_resource type="SystemFont" id="SystemFont_terminal"]
+font_names = PackedStringArray("Consolas", "Courier New", "Monospace")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_monitor"]
+content_margin_left = 16.0
+content_margin_top = 12.0
+content_margin_right = 16.0
+content_margin_bottom = 12.0
+bg_color = Color(0.04, 0.07, 0.04, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.2, 0.9, 0.35, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_panel"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.02, 0.04, 0.02, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.9, 0.35, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_selected"]
+content_margin_left = 12.0
+content_margin_top = 4.0
+content_margin_right = 12.0
+content_margin_bottom = 4.0
+bg_color = Color(0.2, 0.9, 0.35, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_unselected"]
+content_margin_left = 12.0
+content_margin_top = 4.0
+content_margin_right = 12.0
+content_margin_bottom = 4.0
+bg_color = Color(0.04, 0.07, 0.04, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_color = Color(0.2, 0.9, 0.35, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button"]
+content_margin_left = 8.0
+content_margin_top = 2.0
+content_margin_right = 8.0
+content_margin_bottom = 2.0
+bg_color = Color(0.04, 0.07, 0.04, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.9, 0.35, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_hover"]
+content_margin_left = 8.0
+content_margin_top = 2.0
+content_margin_right = 8.0
+content_margin_bottom = 2.0
+bg_color = Color(0.1, 0.3, 0.12, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.9, 0.35, 1)
+
+[sub_resource type="Theme" id="Theme_retro_terminal"]
+default_font = SubResource("SystemFont_terminal")
+default_font_size = 18
+Button/colors/font_color = Color(0.2, 0.9, 0.35, 1)
+Button/colors/font_hover_color = Color(0.6, 1, 0.65, 1)
+Button/colors/font_pressed_color = Color(0.6, 1, 0.65, 1)
+Button/styles/hover = SubResource("StyleBoxFlat_button_hover")
+Button/styles/normal = SubResource("StyleBoxFlat_button")
+Button/styles/pressed = SubResource("StyleBoxFlat_button_hover")
+Label/colors/font_color = Color(0.2, 0.9, 0.35, 1)
+PanelContainer/styles/panel = SubResource("StyleBoxFlat_monitor")
+TabContainer/colors/font_hovered_color = Color(0.6, 1, 0.65, 1)
+TabContainer/colors/font_selected_color = Color(0.02, 0.04, 0.02, 1)
+TabContainer/colors/font_unselected_color = Color(0.2, 0.9, 0.35, 1)
+TabContainer/styles/panel = SubResource("StyleBoxFlat_tab_panel")
+TabContainer/styles/tab_hovered = SubResource("StyleBoxFlat_button_hover")
+TabContainer/styles/tab_selected = SubResource("StyleBoxFlat_tab_selected")
+TabContainer/styles/tab_unselected = SubResource("StyleBoxFlat_tab_unselected")
+
+[node name="ComputerScreen" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_computer_screen")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Monitor" type="PanelContainer" parent="."]
+anchors_preset = 15
+anchor_left = 0.1
+anchor_top = 0.08
+anchor_right = 0.9
+anchor_bottom = 0.92
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_retro_terminal")
+
+[node name="Layout" type="VBoxContainer" parent="Monitor"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TitleBar" type="HBoxContainer" parent="Monitor/Layout"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Monitor/Layout/TitleBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "CAPIVARA-OS v1.0  >_"
+
+[node name="CloseButton" type="Button" parent="Monitor/Layout/TitleBar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "[X]"
+
+[node name="Tabs" type="TabContainer" parent="Monitor/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+current_tab = 0
+
+[node name="HistoryTab" type="MarginContainer" parent="Monitor/Layout/Tabs"]
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="Placeholder" type="Label" parent="Monitor/Layout/Tabs/HistoryTab"]
+layout_mode = 2
+text = "> carregando histórico..."
+
+[node name="DiscoveriesTab" type="MarginContainer" parent="Monitor/Layout/Tabs"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="Placeholder" type="Label" parent="Monitor/Layout/Tabs/DiscoveriesTab"]
+layout_mode = 2
+text = "> carregando descobertas..."
+
+[node name="DrawingsTab" type="MarginContainer" parent="Monitor/Layout/Tabs"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 2
+
+[node name="Placeholder" type="Label" parent="Monitor/Layout/Tabs/DrawingsTab"]
+layout_mode = 2
+text = "> carregando desenhos..."
+
+[node name="FolderLabel" type="Label" parent="Monitor/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Pasta: -"
+text_overrun_behavior = 3

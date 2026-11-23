@@ -27,6 +27,7 @@
 [ext_resource type="PackedScene" path="res://scenes/props/food_bowl.tscn" id="41_food_bowl"]
 [ext_resource type="PackedScene" path="res://scenes/props/mural.tscn" id="42_mural"]
 [ext_resource type="PackedScene" path="res://scenes/props/pond.tscn" id="43_pond"]
+[ext_resource type="PackedScene" path="res://scenes/ui/computer_screen.tscn" id="50_computer_screen"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 
@@ -217,3 +218,7 @@ transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 3.8, 0, 5.5)
 [node name="NavigationRegion" type="NavigationRegion3D" parent="." unique_id=1730609506]
 navigation_mesh = SubResource("NavigationMesh_walkable_area")
 script = ExtResource("8_world_navigation")
+
+[node name="ComputerScreen" parent="." instance=ExtResource("50_computer_screen")]
+
+[connection signal="clicked" from="Workspace/Desk/ClickArea" to="ComputerScreen" method="open"]

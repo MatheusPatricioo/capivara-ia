@@ -4,9 +4,13 @@
 [ext_resource type="PackedScene" path="res://assets/furniture/Models/GLTF format/televisionVintage.glb" id="2_television_vintage"]
 [ext_resource type="PackedScene" path="res://assets/furniture/Models/GLTF format/computerKeyboard.glb" id="3_computer_keyboard"]
 [ext_resource type="Script" path="res://scripts/interaction_point.gd" id="4_interaction_point"]
+[ext_resource type="Script" path="res://scripts/props/clickable_area.gd" id="5_clickable_area"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_crate"]
 size = Vector3(0.4, 0.25, 0.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_computer_click"]
+size = Vector3(0.36, 0.32, 0.4)
 
 [node name="Desk" type="StaticBody3D"]
 
@@ -26,3 +30,10 @@ shape = SubResource("BoxShape3D_crate")
 position = Vector3(0, 0, 0.4)
 script = ExtResource("4_interaction_point")
 point_id = &"computer"
+
+[node name="ClickArea" type="Area3D" parent="."]
+script = ExtResource("5_clickable_area")
+
+[node name="ClickShape" type="CollisionShape3D" parent="ClickArea"]
+position = Vector3(0, 0.36, 0)
+shape = SubResource("BoxShape3D_computer_click")

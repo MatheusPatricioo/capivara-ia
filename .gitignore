@@ -15,7 +15,7 @@ __pycache__/
 .env
 
 # Capybara output (local only)
-discoveries/
+/discoveries/
 logs/
 
 # Personal notes (local only)
