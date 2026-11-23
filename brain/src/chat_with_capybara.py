@@ -4,14 +4,18 @@ import httpx
 from ddgs import DDGS
 
 from src.application.conversation import Conversation, StepLimitReachedError
+from src.application.tools.draw_tool import DrawTool
 from src.application.tools.save_discovery_tool import SaveDiscoveryTool
+from src.application.tools.saved_discoveries import SavedDiscoveries
 from src.application.tools.seen_sources import SeenSources
 from src.application.tools.web_search_tool import WebSearchTool
+from src.domain.chalkboard import Chalkboard
 from src.domain.language_model import LanguageModelError
 from src.infrastructure.duckduckgo_web_searcher import DuckDuckGoWebSearcher
 from src.infrastructure.logging_setup import configure_logging
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
 from src.infrastructure.ollama_language_model import OllamaLanguageModel
+from src.infrastructure.png_drawing_repository import PngDrawingRepository
 from src.infrastructure.prompt_loader import load_prompt
 from src.infrastructure.settings import Settings
 
@@ -34,15 +38,22 @@ def main() -> None:
         )
         web_searcher = DuckDuckGoWebSearcher(DDGS(), backend=settings.web_search_backend)
         seen_sources = SeenSources()
+        saved_discoveries = SavedDiscoveries()
         web_search_tool = WebSearchTool(web_searcher, seen_sources=seen_sources)
         save_discovery_tool = SaveDiscoveryTool(
             MarkdownDiscoveryRepository(settings.discoveries_dir),
             seen_sources,
+            saved_discoveries=saved_discoveries,
+        )
+        draw_tool = DrawTool(
+            PngDrawingRepository(settings.discoveries_dir),
+            Chalkboard(settings.chalkboard_capacity),
+            saved_discoveries,
         )
         conversation = Conversation(
             language_model,
             load_prompt(SYSTEM_PROMPT_NAME),
-            tools=[web_search_tool, save_discovery_tool],
+            tools=[web_search_tool, save_discovery_tool, draw_tool],
             max_steps=settings.max_tool_steps,
             tool_result_reminder=load_prompt(TOOL_RESULT_REMINDER_NAME),
         )

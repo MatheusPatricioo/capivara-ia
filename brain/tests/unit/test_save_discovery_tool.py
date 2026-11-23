@@ -4,6 +4,7 @@ from datetime import date
 import pytest
 
 from src.application.tools.save_discovery_tool import SaveDiscoveryTool
+from src.application.tools.saved_discoveries import SavedDiscoveries
 from src.application.tools.seen_sources import SeenSources
 from src.domain.discovery import Discovery, DiscoveryStorageError
 from src.domain.tool import ToolError
@@ -180,6 +181,19 @@ def test_does_not_save_when_the_arguments_are_invalid(
         save_discovery_tool.run(arguments_with(sources=["not a url"]))
 
     assert repository.saved_discoveries == []
+
+
+def test_remembers_the_saved_title_so_it_can_be_drawn(
+    repository: InMemoryDiscoveryRepository, seen_sources: SeenSources
+) -> None:
+    saved_discoveries = SavedDiscoveries()
+    tool = SaveDiscoveryTool(
+        repository, seen_sources, today=lambda: TODAY, saved_discoveries=saved_discoveries
+    )
+
+    tool.run(VALID_ARGUMENTS)
+
+    assert saved_discoveries.contains("Capivaras nadam")
 
 
 def test_turns_storage_failures_into_tool_errors(seen_sources: SeenSources) -> None:
