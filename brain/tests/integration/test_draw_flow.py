@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from src.application.category_matcher import CategoryMatch
 from src.application.chalkboard_artist import ChalkboardArtist
 from src.application.conversation import Conversation
 from src.application.illustrate_discovery import IllustrateDiscovery
@@ -11,20 +12,18 @@ from src.application.tools.save_discovery_tool import SaveDiscoveryTool
 from src.application.tools.seen_sources import SeenSources
 from src.application.tools.web_search_tool import WebSearchTool
 from src.domain.chalkboard import Chalkboard
+from src.domain.doodle import Doodle, DoodleLibrary
 from src.domain.language_model import (
     ChatMessage,
     Role,
-    StructuredReply,
     ToolCall,
     ToolDefinition,
 )
 from src.domain.web_search import SearchResult
-from src.infrastructure.json_sketch_book import load_sketch_book
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
 from src.infrastructure.png_drawing_repository import PngDrawingRepository
 
 SYSTEM_PROMPT = "You are a curious capybara."
-ILLUSTRATE_INSTRUCTIONS = "Decide if it deserves a drawing on your {width}x{height} board."
 USER_MESSAGE = "Capivaras nadam?"
 FINAL_ANSWER = "Guardei e desenhei!"
 TODAY = date(2026, 11, 23)
@@ -41,11 +40,9 @@ SAVE_REQUEST = ToolCall(
         "sources": [SEARCHED_URL],
     },
 )
-DRAWING_DECISION = StructuredReply(
-    data={
-        "wants_to_draw": True,
-        "sketch": "ondas",
-    }
+WAVES_DOODLE = Doodle(
+    category="ocean",
+    strokes=(((0, 100), (60, 80), (120, 100)), ((0, 150), (60, 130)), ((0, 200), (60, 180))),
 )
 
 
@@ -55,7 +52,7 @@ class FakeWebSearcher:
 
 
 class ScriptedLanguageModel:
-    """Searches, saves the discovery, then answers; always wants to draw when asked."""
+    """Searches, saves the discovery, then answers."""
 
     def __init__(self) -> None:
         self._replies = iter(
@@ -75,10 +72,12 @@ class ScriptedLanguageModel:
         self.received_histories.append(messages)
         return next(self._replies)
 
-    def complete_json(
-        self, messages: list[ChatMessage], schema: dict[str, object]
-    ) -> StructuredReply:
-        return DRAWING_DECISION
+
+class OceanFinder:
+    """Stands in for the embeddings: every discovery is clearly about the ocean."""
+
+    def closest(self, text: str) -> CategoryMatch:
+        return CategoryMatch(category="ocean", similarity=0.8, margin=0.1)
 
 
 @pytest.fixture
@@ -97,10 +96,10 @@ def conversation(
 ) -> Conversation:
     seen_sources = SeenSources()
     illustrator = IllustrateDiscovery(
-        language_model,
+        OceanFinder(),
+        DoodleLibrary({"ocean": [WAVES_DOODLE]}),
         ChalkboardArtist(PngDrawingRepository(tmp_path), chalkboard, today=lambda: TODAY),
-        ILLUSTRATE_INSTRUCTIONS,
-        load_sketch_book(),
+        min_margin=0.02,
     )
     tools = [
         WebSearchTool(FakeWebSearcher(), seen_sources=seen_sources),

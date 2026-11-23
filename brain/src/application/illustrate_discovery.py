@@ -1,79 +1,75 @@
 import logging
+from typing import Protocol
 
+from src.application.category_matcher import CategoryMatch
 from src.application.chalkboard_artist import ChalkboardArtist, PinnedDrawing
-from src.application.drawing_schema import drawing_decision_schema
 from src.domain.discovery import Discovery
+from src.domain.doodle import DoodleLibrary, UnknownCategoryError
 from src.domain.drawing import Drawing, DrawingStorageError, InvalidDrawingError
-from src.domain.language_model import (
-    ChatMessage,
-    LanguageModelError,
-    Role,
-    StructuredLanguageModel,
-)
-from src.domain.sketch import SketchBook, UnknownSketchError
+from src.domain.text_embedding import EmbeddingError
 
 logger = logging.getLogger(__name__)
 
-SKETCHES_PLACEHOLDER = "{sketches}"
+
+class CategoryFinder(Protocol):
+    def closest(self, text: str) -> CategoryMatch: ...
 
 
 class IllustrateDiscovery:
-    """Offers the capybara a drawing for a discovery she just saved, and draws it if she wants.
+    """Sketches one element of a discovery she just saved, as a quick chalk doodle.
 
-    A short, separate call in structured output instead of hoping she calls the draw tool:
-    she always gets asked, the answer always comes in a valid shape, and only the discovery
-    is sent (a few hundred tokens), not the whole conversation. She picks one sketch from
-    her sketch book; the sketch is then drawn big in the middle of the board.
+    The element is the doodle category closest in meaning to the discovery's title and
+    summary (found with embeddings, no language model call), and the strokes come from a
+    real person's Quick, Draw! doodle of it, so the drawing always looks like what it is.
+    When no category clearly stands out (a small margin over the runner-up), nothing in the
+    discovery is drawable and the board is left as it is.
     """
 
     def __init__(
         self,
-        language_model: StructuredLanguageModel,
+        category_finder: CategoryFinder,
+        doodle_library: DoodleLibrary,
         artist: ChalkboardArtist,
-        instructions_template: str,
-        sketch_book: SketchBook,
+        min_margin: float,
     ) -> None:
-        self._language_model = language_model
+        self._category_finder = category_finder
+        self._doodle_library = doodle_library
         self._artist = artist
-        self._sketch_book = sketch_book
-        self._schema = drawing_decision_schema(sketch_book.names)
-        self._instructions = instructions_template.replace(
-            SKETCHES_PLACEHOLDER, self._sketch_list()
-        )
+        self._min_margin = min_margin
 
     def illustrate(self, discovery: Discovery) -> PinnedDrawing | None:
-        """Returns the pinned drawing, or None when she chose not to draw or drawing failed.
+        """Returns the pinned drawing, or None when nothing fits or drawing failed.
 
         A failure never undoes the saved discovery: it is only logged.
         """
         try:
-            reply = self._language_model.complete_json(self._messages(discovery), self._schema)
-            if reply.data.get("wants_to_draw") is not True:
-                logger.info("Chose not to draw: %s", discovery.title)
+            match = self._category_finder.closest(f"{discovery.title}. {discovery.summary}")
+            if match.margin < self._min_margin:
+                logger.info(
+                    "No doodle fits '%s': closest was '%s' (%s)",
+                    discovery.title,
+                    match.category,
+                    _scores(match),
+                )
                 return None
-            sketch = self._sketch_book.find(str(reply.data.get("sketch")))
-            logger.info("Chose the sketch '%s' for: %s", sketch.name, discovery.title)
-            drawing = Drawing(title=discovery.title, strokes=sketch.on_the_board())
+            logger.info(
+                "Chose the doodle '%s' for '%s' (%s)",
+                match.category,
+                discovery.title,
+                _scores(match),
+            )
+            doodle = self._doodle_library.pick(match.category)
+            drawing = Drawing(title=discovery.title, strokes=doodle.on_the_board())
             return self._artist.draw(drawing)
         except (
-            LanguageModelError,
-            UnknownSketchError,
+            EmbeddingError,
+            UnknownCategoryError,
             InvalidDrawingError,
             DrawingStorageError,
         ) as error:
             logger.warning("Could not draw '%s': %s", discovery.title, error)
             return None
 
-    def _sketch_list(self) -> str:
-        return "\n".join(
-            f"- {sketch.name}: {sketch.description}" for sketch in self._sketch_book.sketches
-        )
 
-    def _messages(self, discovery: Discovery) -> list[ChatMessage]:
-        saved_discovery = (
-            f"Título: {discovery.title}\nTema: {discovery.topic}\nResumo: {discovery.summary}"
-        )
-        return [
-            ChatMessage(Role.SYSTEM, self._instructions),
-            ChatMessage(Role.USER, saved_discovery),
-        ]
+def _scores(match: CategoryMatch) -> str:
+    return f"similarity {match.similarity:.3f}, margin {match.margin:.3f}"

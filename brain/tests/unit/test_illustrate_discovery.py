@@ -3,27 +3,21 @@ from datetime import date
 
 import pytest
 
+from src.application.category_matcher import CategoryMatch
 from src.application.chalkboard_artist import ChalkboardArtist, PinnedDrawing
-from src.application.drawing_schema import drawing_decision_schema
 from src.application.illustrate_discovery import IllustrateDiscovery
 from src.domain.chalkboard import Chalkboard
 from src.domain.discovery import Discovery
+from src.domain.doodle import Doodle, DoodleLibrary
 from src.domain.drawing import Drawing, DrawingStorageError
-from src.domain.language_model import (
-    ChatMessage,
-    LanguageModelError,
-    Role,
-    StructuredReply,
-)
-from src.domain.sketch import Sketch, SketchBook
+from src.domain.text_embedding import EmbeddingError
 
 TODAY = date(2026, 11, 23)
 SAVED_FILE_NAME = "2026-11-23-o-sol.png"
 ILLUSTRATE_LOGGER = "src.application.illustrate_discovery"
-INSTRUCTIONS_TEMPLATE = "Escolha um esboço:\n{sketches}"
-SUN_SKETCH = Sketch(name="sol", description="sol, calor", strokes=(((0, 50), (100, 50)),))
-MOON_SKETCH = Sketch(name="lua", description="lua, noite", strokes=(((50, 0), (50, 100)),))
-SKETCH_BOOK = SketchBook([SUN_SKETCH, MOON_SKETCH])
+MIN_MARGIN = 0.02
+SUN_DOODLE = Doodle(category="sun", strokes=(((0, 128), (255, 128)),))
+DOODLE_LIBRARY = DoodleLibrary({"sun": [SUN_DOODLE]})
 SUN_DISCOVERY = Discovery(
     title="O Sol",
     topic="estrelas",
@@ -31,34 +25,27 @@ SUN_DISCOVERY = Discovery(
     sources=("https://example.com/sol",),
     discovered_on=TODAY,
 )
-SUN_DRAWING = Drawing(title="O Sol", strokes=SUN_SKETCH.on_the_board())
-WANTS_TO_DRAW_THE_SUN = StructuredReply(data={"wants_to_draw": True, "sketch": "sol"})
-DOES_NOT_WANT_TO_DRAW = StructuredReply(data={"wants_to_draw": False, "sketch": "sol"})
-UNKNOWN_SKETCH = StructuredReply(data={"wants_to_draw": True, "sketch": "dragão"})
-WITHOUT_A_SKETCH = StructuredReply(data={"wants_to_draw": True})
+SUN_DRAWING = Drawing(title="O Sol", strokes=SUN_DOODLE.on_the_board())
+CLEARLY_THE_SUN = CategoryMatch(category="sun", similarity=0.81, margin=0.12)
+TORN_ABOUT_THE_SUN = CategoryMatch(category="sun", similarity=0.61, margin=0.005)
+A_CATEGORY_WITHOUT_DOODLES = CategoryMatch(category="volcano", similarity=0.8, margin=0.1)
 
 
-class ScriptedStructuredLanguageModel:
-    """Always gives the same structured reply and records what it was asked."""
+class ScriptedCategoryFinder:
+    """Always finds the same match and records the texts it was given."""
 
-    def __init__(self, reply: StructuredReply) -> None:
-        self._reply = reply
-        self.received_messages: list[list[ChatMessage]] = []
-        self.received_schemas: list[dict[str, object]] = []
+    def __init__(self, match: CategoryMatch) -> None:
+        self._match = match
+        self.received_texts: list[str] = []
 
-    def complete_json(
-        self, messages: list[ChatMessage], schema: dict[str, object]
-    ) -> StructuredReply:
-        self.received_messages.append(messages)
-        self.received_schemas.append(schema)
-        return self._reply
+    def closest(self, text: str) -> CategoryMatch:
+        self.received_texts.append(text)
+        return self._match
 
 
-class UnreachableStructuredLanguageModel:
-    def complete_json(
-        self, messages: list[ChatMessage], schema: dict[str, object]
-    ) -> StructuredReply:
-        raise LanguageModelError("connection refused")
+class OfflineCategoryFinder:
+    def closest(self, text: str) -> CategoryMatch:
+        raise EmbeddingError("connection refused")
 
 
 class InMemoryDrawingRepository:
@@ -85,102 +72,72 @@ def artist(repository: InMemoryDrawingRepository) -> ChalkboardArtist:
     return ChalkboardArtist(repository, Chalkboard(capacity=3), today=lambda: TODAY)
 
 
-def illustrator_answering(reply: StructuredReply, artist: ChalkboardArtist) -> IllustrateDiscovery:
-    return IllustrateDiscovery(
-        ScriptedStructuredLanguageModel(reply), artist, INSTRUCTIONS_TEMPLATE, SKETCH_BOOK
-    )
+@pytest.fixture
+def finder_sure_of_the_sun() -> ScriptedCategoryFinder:
+    return ScriptedCategoryFinder(CLEARLY_THE_SUN)
 
 
 @pytest.fixture
-def language_model_wanting_to_draw() -> ScriptedStructuredLanguageModel:
-    return ScriptedStructuredLanguageModel(WANTS_TO_DRAW_THE_SUN)
-
-
-@pytest.fixture
-def illustrator_wanting_to_draw(
-    language_model_wanting_to_draw: ScriptedStructuredLanguageModel, artist: ChalkboardArtist
+def illustrator(
+    finder_sure_of_the_sun: ScriptedCategoryFinder, artist: ChalkboardArtist
 ) -> IllustrateDiscovery:
-    return IllustrateDiscovery(
-        language_model_wanting_to_draw, artist, INSTRUCTIONS_TEMPLATE, SKETCH_BOOK
-    )
+    return IllustrateDiscovery(finder_sure_of_the_sun, DOODLE_LIBRARY, artist, MIN_MARGIN)
 
 
-def test_draws_the_sketch_she_chose_centered_on_the_board(
-    illustrator_wanting_to_draw: IllustrateDiscovery, repository: InMemoryDrawingRepository
+def illustrator_finding(match: CategoryMatch, artist: ChalkboardArtist) -> IllustrateDiscovery:
+    return IllustrateDiscovery(ScriptedCategoryFinder(match), DOODLE_LIBRARY, artist, MIN_MARGIN)
+
+
+def test_draws_a_doodle_of_the_closest_category(
+    illustrator: IllustrateDiscovery, repository: InMemoryDrawingRepository
 ) -> None:
-    illustrator_wanting_to_draw.illustrate(SUN_DISCOVERY)
+    illustrator.illustrate(SUN_DISCOVERY)
 
     assert repository.saved == [SUN_DRAWING]
 
 
-def test_returns_the_pinned_drawing(illustrator_wanting_to_draw: IllustrateDiscovery) -> None:
-    assert illustrator_wanting_to_draw.illustrate(SUN_DISCOVERY) == PinnedDrawing(
+def test_returns_the_pinned_drawing(illustrator: IllustrateDiscovery) -> None:
+    assert illustrator.illustrate(SUN_DISCOVERY) == PinnedDrawing(
         drawing=SUN_DRAWING, file_name=SAVED_FILE_NAME, erased=None
     )
 
 
-def test_asks_in_the_drawing_decision_schema(
-    illustrator_wanting_to_draw: IllustrateDiscovery,
-    language_model_wanting_to_draw: ScriptedStructuredLanguageModel,
+def test_looks_for_the_category_by_the_title_and_the_summary(
+    illustrator: IllustrateDiscovery, finder_sure_of_the_sun: ScriptedCategoryFinder
 ) -> None:
-    illustrator_wanting_to_draw.illustrate(SUN_DISCOVERY)
+    illustrator.illustrate(SUN_DISCOVERY)
 
-    assert language_model_wanting_to_draw.received_schemas == [
-        drawing_decision_schema(("sol", "lua"))
-    ]
+    assert finder_sure_of_the_sun.received_texts == ["O Sol. O Sol é uma estrela gigante."]
 
 
-def test_sends_only_the_instructions_and_the_saved_discovery(
-    illustrator_wanting_to_draw: IllustrateDiscovery,
-    language_model_wanting_to_draw: ScriptedStructuredLanguageModel,
-) -> None:
-    illustrator_wanting_to_draw.illustrate(SUN_DISCOVERY)
-
-    assert language_model_wanting_to_draw.received_messages == [
-        [
-            ChatMessage(Role.SYSTEM, "Escolha um esboço:\n- sol: sol, calor\n- lua: lua, noite"),
-            ChatMessage(
-                Role.USER,
-                "Título: O Sol\nTema: estrelas\nResumo: O Sol é uma estrela gigante.",
-            ),
-        ]
-    ]
-
-
-def test_returns_none_when_she_does_not_want_to_draw(artist: ChalkboardArtist) -> None:
-    illustrator = illustrator_answering(DOES_NOT_WANT_TO_DRAW, artist)
-
-    assert illustrator.illustrate(SUN_DISCOVERY) is None
-
-
-def test_draws_nothing_when_she_does_not_want_to(
+def test_draws_nothing_when_no_category_stands_out(
     artist: ChalkboardArtist, repository: InMemoryDrawingRepository
 ) -> None:
-    illustrator_answering(DOES_NOT_WANT_TO_DRAW, artist).illustrate(SUN_DISCOVERY)
-
-    assert repository.saved == []
-
-
-def test_draws_nothing_when_the_sketch_is_not_in_the_book(
-    artist: ChalkboardArtist, repository: InMemoryDrawingRepository
-) -> None:
-    result = illustrator_answering(UNKNOWN_SKETCH, artist).illustrate(SUN_DISCOVERY)
+    result = illustrator_finding(TORN_ABOUT_THE_SUN, artist).illustrate(SUN_DISCOVERY)
 
     assert (result, repository.saved) == (None, [])
 
 
-def test_draws_nothing_when_she_names_no_sketch(
+def test_draws_when_the_margin_is_exactly_the_minimum(
     artist: ChalkboardArtist, repository: InMemoryDrawingRepository
 ) -> None:
-    result = illustrator_answering(WITHOUT_A_SKETCH, artist).illustrate(SUN_DISCOVERY)
+    just_enough = CategoryMatch(category="sun", similarity=0.7, margin=MIN_MARGIN)
+
+    illustrator_finding(just_enough, artist).illustrate(SUN_DISCOVERY)
+
+    assert repository.saved == [SUN_DRAWING]
+
+
+def test_draws_nothing_for_a_category_without_doodles(
+    artist: ChalkboardArtist, repository: InMemoryDrawingRepository
+) -> None:
+    result = illustrator_finding(A_CATEGORY_WITHOUT_DOODLES, artist).illustrate(SUN_DISCOVERY)
 
     assert (result, repository.saved) == (None, [])
 
 
-def test_returns_none_when_the_model_is_unreachable(artist: ChalkboardArtist) -> None:
-    illustrator = IllustrateDiscovery(
-        UnreachableStructuredLanguageModel(), artist, INSTRUCTIONS_TEMPLATE, SKETCH_BOOK
-    )
+def test_returns_none_when_the_embedding_model_is_offline(artist: ChalkboardArtist) -> None:
+    illustrator = IllustrateDiscovery(OfflineCategoryFinder(), DOODLE_LIBRARY, artist, MIN_MARGIN)
 
     assert illustrator.illustrate(SUN_DISCOVERY) is None
 
@@ -188,37 +145,39 @@ def test_returns_none_when_the_model_is_unreachable(artist: ChalkboardArtist) ->
 def test_returns_none_when_the_image_cannot_be_saved() -> None:
     artist = ChalkboardArtist(FullDiskDrawingRepository(), Chalkboard(capacity=3))
 
-    assert illustrator_answering(WANTS_TO_DRAW_THE_SUN, artist).illustrate(SUN_DISCOVERY) is None
+    assert illustrator_finding(CLEARLY_THE_SUN, artist).illustrate(SUN_DISCOVERY) is None
+
+
+def test_logs_the_chosen_category_and_its_scores(
+    illustrator: IllustrateDiscovery, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger=ILLUSTRATE_LOGGER)
+
+    illustrator.illustrate(SUN_DISCOVERY)
+
+    assert caplog.messages == [
+        "Chose the doodle 'sun' for 'O Sol' (similarity 0.810, margin 0.120)"
+    ]
+
+
+def test_logs_the_closest_category_when_nothing_fits(
+    artist: ChalkboardArtist, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger=ILLUSTRATE_LOGGER)
+
+    illustrator_finding(TORN_ABOUT_THE_SUN, artist).illustrate(SUN_DISCOVERY)
+
+    assert caplog.messages == [
+        "No doodle fits 'O Sol': closest was 'sun' (similarity 0.610, margin 0.005)"
+    ]
 
 
 def test_logs_why_the_drawing_failed(
     artist: ChalkboardArtist, caplog: pytest.LogCaptureFixture
 ) -> None:
     caplog.set_level(logging.WARNING, logger=ILLUSTRATE_LOGGER)
-    illustrator = IllustrateDiscovery(
-        UnreachableStructuredLanguageModel(), artist, INSTRUCTIONS_TEMPLATE, SKETCH_BOOK
-    )
+    illustrator = IllustrateDiscovery(OfflineCategoryFinder(), DOODLE_LIBRARY, artist, MIN_MARGIN)
 
     illustrator.illustrate(SUN_DISCOVERY)
 
     assert caplog.messages == ["Could not draw 'O Sol': connection refused"]
-
-
-def test_logs_when_she_chooses_not_to_draw(
-    artist: ChalkboardArtist, caplog: pytest.LogCaptureFixture
-) -> None:
-    caplog.set_level(logging.INFO, logger=ILLUSTRATE_LOGGER)
-
-    illustrator_answering(DOES_NOT_WANT_TO_DRAW, artist).illustrate(SUN_DISCOVERY)
-
-    assert caplog.messages == ["Chose not to draw: O Sol"]
-
-
-def test_logs_which_sketch_she_chose(
-    illustrator_wanting_to_draw: IllustrateDiscovery, caplog: pytest.LogCaptureFixture
-) -> None:
-    caplog.set_level(logging.INFO, logger=ILLUSTRATE_LOGGER)
-
-    illustrator_wanting_to_draw.illustrate(SUN_DISCOVERY)
-
-    assert caplog.messages == ["Chose the sketch 'sol' for: O Sol"]
