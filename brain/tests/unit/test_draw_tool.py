@@ -105,6 +105,18 @@ def test_tells_the_model_which_drawing_was_erased(draw_tool: DrawTool) -> None:
     assert result.endswith("To make room, you erased the old drawing 'O Sol'.")
 
 
+def test_accepts_the_saved_file_name_and_draws_with_the_real_title(
+    repository: InMemoryDrawingRepository, chalkboard: Chalkboard
+) -> None:
+    saved_discoveries = SavedDiscoveries()
+    saved_discoveries.remember("O Sol", "2026-11-23-o-sol.md")
+    tool = DrawTool(repository, chalkboard, saved_discoveries, today=lambda: TODAY)
+
+    tool.run(arguments_with(discovery_title="2026-11-23-o-sol"))
+
+    assert repository.saved == [(SUN_DRAWING, TODAY)]
+
+
 def test_refuses_a_discovery_not_saved_in_this_conversation(draw_tool: DrawTool) -> None:
     with pytest.raises(ToolError, match="save it with save_discovery first"):
         draw_tool.run(arguments_with(discovery_title="Os Ursos"))

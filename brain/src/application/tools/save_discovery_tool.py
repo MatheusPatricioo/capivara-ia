@@ -67,7 +67,7 @@ class SaveDiscoveryTool:
             file_name = self._repository.save(discovery)
         except DiscoveryStorageError as error:
             raise ToolError(f"could not save the discovery: {error}") from error
-        self._saved_discoveries.remember(discovery.title)
+        self._saved_discoveries.remember(discovery.title, file_name)
         logger.info("Discovery saved: %s (sources: %s)", file_name, ", ".join(discovery.sources))
         return f"Saved as {file_name}"
 

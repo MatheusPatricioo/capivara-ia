@@ -196,6 +196,19 @@ def test_remembers_the_saved_title_so_it_can_be_drawn(
     assert saved_discoveries.contains("Capivaras nadam")
 
 
+def test_remembers_the_saved_file_name_as_another_way_to_find_it(
+    repository: InMemoryDiscoveryRepository, seen_sources: SeenSources
+) -> None:
+    saved_discoveries = SavedDiscoveries()
+    tool = SaveDiscoveryTool(
+        repository, seen_sources, today=lambda: TODAY, saved_discoveries=saved_discoveries
+    )
+
+    tool.run(VALID_ARGUMENTS)
+
+    assert saved_discoveries.title_for(SAVED_FILE_NAME) == "Capivaras nadam"
+
+
 def test_turns_storage_failures_into_tool_errors(seen_sources: SeenSources) -> None:
     tool = SaveDiscoveryTool(FullDiskDiscoveryRepository(), seen_sources, today=lambda: TODAY)
 

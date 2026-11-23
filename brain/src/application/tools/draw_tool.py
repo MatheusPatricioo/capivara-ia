@@ -81,8 +81,7 @@ class DrawTool:
         )
 
     def run(self, arguments: dict[str, object]) -> str:
-        title = self._required_title(arguments)
-        self._ensure_can_draw(title)
+        title = self._saved_title(self._required_title(arguments))
         try:
             drawing = Drawing(title=title, shapes=parse_shapes(arguments.get("shapes")))
         except InvalidDrawingError as error:
@@ -103,14 +102,17 @@ class DrawTool:
             raise ToolError("the 'discovery_title' argument must be a non-empty text")
         return value.strip()
 
-    def _ensure_can_draw(self, title: str) -> None:
-        if not self._saved_discoveries.contains(title):
+    def _saved_title(self, requested_name: str) -> str:
+        """Finds the real title of a saved discovery that was not drawn yet."""
+        title = self._saved_discoveries.title_for(requested_name)
+        if title is None:
             raise ToolError(
-                f"'{title}' is not a discovery you saved in this conversation: "
+                f"'{requested_name}' is not a discovery you saved in this conversation: "
                 "save it with save_discovery first, then draw it using the same title"
             )
         if self._saved_discoveries.was_drawn(title):
             raise ToolError(f"you already drew '{title}': each discovery gets only one drawing")
+        return title
 
     @staticmethod
     def _result_message(file_name: str, erased: Drawing | None) -> str:

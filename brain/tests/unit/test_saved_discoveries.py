@@ -22,6 +22,30 @@ def test_does_not_contain_an_unknown_title(saved_discoveries: SavedDiscoveries) 
     assert not saved_discoveries.contains("A Lua")
 
 
+def test_finds_the_real_title_by_the_title_in_other_case(
+    saved_discoveries: SavedDiscoveries,
+) -> None:
+    assert saved_discoveries.title_for("o sol") == "O Sol"
+
+
+def test_finds_the_real_title_by_the_saved_file_name() -> None:
+    discoveries = SavedDiscoveries()
+    discoveries.remember("Capivaras nadam", "2026-11-23-capivaras-nadam.md")
+
+    assert discoveries.title_for("2026-11-23-capivaras-nadam.md") == "Capivaras nadam"
+
+
+def test_finds_the_real_title_by_the_file_name_without_extension() -> None:
+    discoveries = SavedDiscoveries()
+    discoveries.remember("Capivaras nadam", "2026-11-23-capivaras-nadam.md")
+
+    assert discoveries.title_for("2026-11-23-capivaras-nadam") == "Capivaras nadam"
+
+
+def test_has_no_title_for_an_unknown_name(saved_discoveries: SavedDiscoveries) -> None:
+    assert saved_discoveries.title_for("A Lua") is None
+
+
 def test_a_saved_discovery_starts_without_a_drawing(saved_discoveries: SavedDiscoveries) -> None:
     assert not saved_discoveries.was_drawn("O Sol")
 
