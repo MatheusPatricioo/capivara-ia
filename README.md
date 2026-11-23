@@ -1,56 +1,56 @@
 # Capivara IA
 
-**An autonomous AI agent with a body: a capybara that explores the web, thinks out loud on a chalkboard, and keeps what it learns.**
+**Um agente de IA autônomo com corpo: uma capivara que explora a internet, pensa em voz alta numa lousa e guarda o que aprende.**
 
-## The idea
+## A ideia
 
-Capivara IA is a capybara living in a small 3D world, driven by an AI brain. On its own, it researches topics on the internet, sketches ideas on a chalkboard, and saves its discoveries as text and drawings. You can watch it work in real time.
+Capivara IA é uma capivara que vive num pequeno mundo 3D, comandada por um cérebro de IA. Sozinha, ela pesquisa assuntos na internet, rabisca ideias numa lousa e salva suas descobertas em textos e desenhos. Dá para acompanhar tudo em tempo real.
 
-## Architecture
+## Arquitetura
 
-The project has three parts:
+O projeto tem três partes:
 
-| Part | Tech | Responsibility |
-|------|------|----------------|
-| **World** | Godot 4 | Renders the 3D world and animates the capybara. No AI logic lives here. |
-| **Brain** | Python | Runs the agent loop: decides what to do next, calls tools (web search, drawing, saving), and talks to the LLM. |
-| **Memory** | Markdown + ChromaDB | Keeps everything the capybara has learned, both for humans and for the agent. |
+| Parte | Tecnologia | Responsabilidade |
+|-------|------------|------------------|
+| **Mundo** | Godot 4 | Renderiza o mundo 3D e anima a capivara. Nenhuma lógica de IA fica aqui. |
+| **Cérebro** | Python | Roda o loop do agente: decide o que fazer, chama ferramentas (pesquisa na web, desenho, salvar) e conversa com o LLM. |
+| **Memória** | Markdown + ChromaDB | Guarda tudo o que a capivara aprendeu, tanto para pessoas quanto para o agente. |
 
-World and Brain talk over a WebSocket using validated JSON messages. The Brain follows a layered architecture (domain → application → infrastructure), so LLM providers and tools can be swapped without touching the agent's rules.
+Mundo e Cérebro conversam por WebSocket, com mensagens JSON validadas. O Cérebro segue uma arquitetura em camadas (domain → application → infrastructure), então provedores de LLM e ferramentas podem ser trocados sem mexer nas regras do agente.
 
-### Memory
+### Memória
 
-Memory has two layers:
+A memória tem duas camadas:
 
-- **Discoveries:** human-readable Markdown files in `discoveries/`. Anyone can browse what the capybara has found.
-- **Vector index:** a ChromaDB index over those discoveries, used for semantic search.
+- **Descobertas:** arquivos Markdown legíveis em `discoveries/`. Qualquer pessoa pode ver o que a capivara encontrou.
+- **Índice vetorial:** um índice ChromaDB sobre essas descobertas, usado para busca semântica.
 
-Before deciding what to do next, the capybara queries its memory using RAG (retrieval-augmented generation), so new research builds on what it already knows.
+Antes de decidir o que fazer, a capivara consulta a memória usando RAG (geração aumentada por recuperação), para que cada nova pesquisa aproveite o que ela já sabe.
 
 ## Stack
 
-- **World:** Godot 4, GDScript
-- **Brain:** Python 3.12, Pydantic, WebSocket
-- **LLMs:** Ollama (local), Claude, OpenAI, behind a single interface
-- **Memory:** ChromaDB, Markdown
-- **Quality:** pytest, ruff, mypy (strict)
+- **Mundo:** Godot 4, GDScript
+- **Cérebro:** Python 3.12, Pydantic, WebSocket
+- **LLMs:** Ollama (local), Claude, OpenAI, atrás de uma única interface
+- **Memória:** ChromaDB, Markdown
+- **Qualidade:** pytest, ruff, mypy (strict)
 
-## Getting started
+## Como começar
 
-### Prerequisites
+### Pré-requisitos
 
 - [Python 3.12+](https://www.python.org/downloads/)
-- [Ollama](https://ollama.com/download) with the `qwen2.5:7b` model:
+- [Ollama](https://ollama.com/download) com o modelo `qwen2.5:7b`:
 
   ```bash
   ollama pull qwen2.5:7b
   ```
 
-- [Godot 4](https://godotengine.org/download) (only to watch the 3D world)
+- [Godot 4](https://godotengine.org/download) (só para ver o mundo 3D)
 
-### Setup
+### Instalação
 
-Create and activate a virtual environment, then install the dependencies (`--group` requires pip 25.1+):
+Crie e ative um ambiente virtual e instale as dependências (`--group` exige pip 25.1+):
 
 **Windows (PowerShell)**
 
@@ -72,37 +72,39 @@ pip install --group dev .
 cp brain/.env.example brain/.env
 ```
 
-### Talk to the capybara
+### Conversar com a capivara
 
-Make sure Ollama is running, then (same on all platforms):
+Com o Ollama rodando (igual em todos os sistemas):
 
 ```bash
 cd brain
 python -m src.chat_with_capybara
 ```
 
-Type `sair` to leave the chat.
+Digite `sair` para encerrar o chat.
 
-### Watch the capybara live
+### Ver a capivara viva
 
-In live mode nobody talks to the capybara: every couple of minutes she decides on her own what to do (research something, save a discovery, draw it on the chalkboard, or just rest), and her body follows in the 3D world.
+No modo vivo ninguém fala com a capivara: a cada poucos minutos ela decide sozinha o que fazer (pesquisar algo, salvar uma descoberta, desenhar na lousa ou só descansar), e o corpo dela acompanha no mundo 3D.
 
-1. Make sure Ollama is running, then start the brain:
+1. Com o Ollama rodando, inicie o cérebro:
 
    ```bash
    cd brain
    python -m src.live_capybara
    ```
 
-2. Open the `world/` folder in Godot and press Play. The order does not matter: the world keeps trying to connect to the brain.
+2. Abra a pasta `world/` no Godot e aperte Play. A ordem não importa: o mundo fica tentando se conectar ao cérebro.
 
-In the world she walks to the computer before searching, to the mural before saving and to the chalkboard before drawing. The chalkboard shows her three most recent drawings: a new one erases the oldest. Every discovery (Markdown) and drawing (PNG) is saved in the discoveries folder (`DISCOVERIES_DIR` in `brain/.env`, or `discoveries/` by default).
+O Godot é opcional: com ele fechado, a capivara continua pesquisando, salvando e desenhando do mesmo jeito. O mundo só mostra o que o cérebro faz e, ao abrir, já recebe a lousa atual.
 
-Press `Ctrl+C` to stop. The cycle interval and the hourly token limit are set in `brain/.env` (`AUTONOMOUS_CYCLE_INTERVAL_SECONDS`, `MAX_TOKENS_PER_HOUR`).
+No mundo, ela vai até o computador antes de pesquisar, até o mural antes de salvar e até a lousa antes de desenhar. A lousa mostra os três desenhos mais recentes: um novo apaga o mais antigo. Toda descoberta (Markdown) e todo desenho (PNG) ficam na pasta de descobertas (`DISCOVERIES_DIR` no `brain/.env`, ou `discoveries/` por padrão).
 
-### Run the tests
+Aperte `Ctrl+C` para encerrar. O intervalo entre os ciclos e o limite de tokens por hora ficam no `brain/.env` (`AUTONOMOUS_CYCLE_INTERVAL_SECONDS`, `MAX_TOKENS_PER_HOUR`).
 
-From the project root:
+### Rodar os testes
+
+Na raiz do projeto:
 
 ```bash
 pytest
@@ -110,14 +112,14 @@ ruff check .
 mypy brain/src
 ```
 
-## Credits
+## Créditos
 
-- Nature and furniture kits by [Kenney](https://kenney.nl) (CC0)
-- Capybara model generated with TRELLIS (Microsoft, MIT)
+- Kits de natureza e móveis por [Kenney](https://kenney.nl) (CC0)
+- Modelo da capivara gerado com TRELLIS (Microsoft, MIT)
 
 ## Status
 
-🚧 In active development.
+🚧 Em desenvolvimento ativo.
 
-- **Working:** chat and autonomous live mode, web search, discoveries saved as Markdown, chalkboard drawings, the 3D world connected to the brain over WebSocket, and an hourly token budget.
-- **Next:** long-term memory (ChromaDB + RAG), so each new cycle builds on what she already knows.
+- **Funcionando:** chat e modo vivo autônomo, pesquisa na web, descobertas salvas em Markdown, desenhos na lousa, mundo 3D conectado ao cérebro por WebSocket e limite de tokens por hora.
+- **Próximo passo:** memória de longo prazo (ChromaDB + RAG), para que cada novo ciclo aproveite o que ela já sabe.
