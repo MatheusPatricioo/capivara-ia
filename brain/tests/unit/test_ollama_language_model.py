@@ -330,3 +330,42 @@ def test_raises_language_model_error_when_the_structured_call_fails(
 ) -> None:
     with pytest.raises(LanguageModelError):
         ollama_with_server_error.complete_json(MESSAGES, CHOICE_SCHEMA)
+
+
+def test_structured_replies_always_take_the_most_likely_answer(
+    received_requests: list[httpx.Request],
+) -> None:
+    def reply_with_json(request: httpx.Request) -> httpx.Response:
+        received_requests.append(request)
+        body = {"message": {"role": "assistant", "content": '{"category": "cat"}'}}
+        return httpx.Response(200, json=body)
+
+    client = httpx.Client(base_url=OLLAMA_URL, transport=httpx.MockTransport(reply_with_json))
+    language_model = OllamaLanguageModel(
+        client=client, model=MODEL_NAME, generation_options=GENERATION_OPTIONS
+    )
+
+    language_model.complete_json(MESSAGES, CHOICE_SCHEMA)
+
+    assert json.loads(received_requests[0].content)["options"] == {
+        "num_predict": 300,
+        "temperature": 0.0,
+        "repeat_penalty": 1.1,
+    }
+
+
+def test_chat_replies_keep_the_configured_temperature(
+    received_requests: list[httpx.Request],
+) -> None:
+    def reply_with_text(request: httpx.Request) -> httpx.Response:
+        received_requests.append(request)
+        return httpx.Response(200, json={"message": {"role": "assistant", "content": "Oi!"}})
+
+    client = httpx.Client(base_url=OLLAMA_URL, transport=httpx.MockTransport(reply_with_text))
+    language_model = OllamaLanguageModel(
+        client=client, model=MODEL_NAME, generation_options=GENERATION_OPTIONS
+    )
+
+    language_model.chat(MESSAGES)
+
+    assert json.loads(received_requests[0].content)["options"]["temperature"] == 0.8

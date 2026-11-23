@@ -17,6 +17,10 @@ from src.infrastructure.text_tool_call_parser import find_tool_call_in_text
 
 UNEXPECTED_FORMAT_MESSAGE = "Unexpected response format from Ollama"
 NOT_A_JSON_OBJECT_MESSAGE = "Ollama did not answer with a JSON object"
+# A JSON answer is a choice, not a chat: the same question must get the same answer, so
+# it always takes the most likely option. Measured on 16 doodle choices: with 0.8 the
+# answers changed between runs (moon or star for the crescent moon), with 0 they did not.
+STRUCTURED_TEMPERATURE = 0.0
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +64,11 @@ class OllamaLanguageModel:
         """Uses Ollama's "format": while generating, only text that fits the schema is allowed."""
         payload = self._base_payload(messages)
         payload["format"] = schema
+        options = payload.get("options")
+        payload["options"] = {
+            **(options if isinstance(options, dict) else {}),
+            "temperature": STRUCTURED_TEMPERATURE,
+        }
         reply = self._parse_reply(self._post_chat(payload))
         try:
             data = json.loads(reply.content)
