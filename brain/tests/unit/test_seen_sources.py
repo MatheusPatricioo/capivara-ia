@@ -31,3 +31,22 @@ def test_ignores_surrounding_spaces_when_checking(seen_sources: SeenSources) -> 
 
 def test_does_not_contain_a_url_it_never_saw(seen_sources: SeenSources) -> None:
     assert not seen_sources.contains(UNSEEN_URL)
+
+
+def test_matches_a_link_written_with_encoded_accents() -> None:
+    sources = SeenSources()
+    sources.remember(["https://pt.wikipedia.org/wiki/Satélites_artificiais"])
+
+    assert sources.contains("https://pt.wikipedia.org/wiki/Sat%C3%A9lites_artificiais")
+
+
+def test_keeps_the_results_of_the_latest_search(seen_sources: SeenSources) -> None:
+    seen_sources.remember(["https://example.com/a", "https://example.com/b"])
+
+    assert seen_sources.latest_results == ("https://example.com/a", "https://example.com/b")
+
+
+def test_a_search_without_results_keeps_the_previous_ones(seen_sources: SeenSources) -> None:
+    seen_sources.remember([])
+
+    assert seen_sources.latest_results == (SEARCHED_URL,)

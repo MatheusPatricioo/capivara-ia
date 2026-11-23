@@ -70,12 +70,8 @@ def test_definition_is_named_save_discovery(save_discovery_tool: SaveDiscoveryTo
 def test_definition_does_not_let_the_model_choose_a_file_name(
     save_discovery_tool: SaveDiscoveryTool,
 ) -> None:
-    assert save_discovery_tool.definition.parameters["required"] == [
-        "title",
-        "topic",
-        "summary",
-        "sources",
-    ]
+    """Sources are optional: when she leaves them out, the latest search is cited."""
+    assert save_discovery_tool.definition.parameters["required"] == ["title", "topic", "summary"]
 
 
 def test_saves_the_discovery_with_todays_date(
@@ -160,6 +156,26 @@ def test_rejects_a_missing_text_field(save_discovery_tool: SaveDiscoveryTool, fi
 def test_rejects_a_blank_title(save_discovery_tool: SaveDiscoveryTool) -> None:
     with pytest.raises(ToolError, match="title"):
         save_discovery_tool.run(arguments_with(title="   "))
+
+
+def test_cites_the_latest_search_when_she_leaves_the_sources_out(
+    save_discovery_tool: SaveDiscoveryTool, repository: InMemoryDiscoveryRepository
+) -> None:
+    arguments = {name: value for name, value in VALID_ARGUMENTS.items() if name != "sources"}
+
+    save_discovery_tool.run(arguments)
+
+    assert repository.saved_discoveries[0].sources == tuple(SEARCHED_URLS)
+
+
+def test_refuses_to_save_without_sources_and_without_any_search(
+    repository: InMemoryDiscoveryRepository,
+) -> None:
+    tool = SaveDiscoveryTool(repository, SeenSources(), today=lambda: TODAY)
+    arguments = {name: value for name, value in VALID_ARGUMENTS.items() if name != "sources"}
+
+    with pytest.raises(ToolError, match="no web_search results"):
+        tool.run(arguments)
 
 
 def test_rejects_sources_that_are_not_a_list(save_discovery_tool: SaveDiscoveryTool) -> None:

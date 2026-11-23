@@ -54,10 +54,13 @@ class SaveDiscoveryTool:
                     "sources": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "description": "URLs from your web_search results where you found it.",
+                        "description": (
+                            "URLs from your web_search results where you found it. "
+                            "If left out, the results of your latest search are cited."
+                        ),
                     },
                 },
-                "required": ["title", "topic", "summary", "sources"],
+                "required": ["title", "topic", "summary"],
             },
         )
 
@@ -98,19 +101,30 @@ class SaveDiscoveryTool:
 
     def _sources(self, arguments: dict[str, object]) -> tuple[str, ...]:
         sources = arguments.get("sources")
+        if sources is None:
+            return self._latest_search_results()
         if not isinstance(sources, list):
             raise ToolError("the 'sources' argument must be a list of URLs")
         urls = tuple(self._valid_url(source) for source in sources)
         self._ensure_sources_came_from_web_search(urls)
         return urls
 
-    def _ensure_sources_came_from_web_search(self, urls: tuple[str, ...]) -> None:
+    def _latest_search_results(self) -> tuple[str, ...]:
+        """The small model often leaves sources out; the search it just made is the source."""
+        self._ensure_there_are_search_results()
+        logger.info("No sources given: citing the results of the latest search")
+        return self._seen_sources.latest_results
+
+    def _ensure_there_are_search_results(self) -> None:
         if self._seen_sources.is_empty:
             raise ToolError(
                 "you have no web_search results to cite in this conversation (you did not "
                 "search yet, or the search found nothing): search with other words and cite "
                 "the URLs it returns, or do not save anything this time"
             )
+
+    def _ensure_sources_came_from_web_search(self, urls: tuple[str, ...]) -> None:
+        self._ensure_there_are_search_results()
         if not urls:
             raise ToolError("a discovery needs at least one source from your web_search results")
         for url in urls:
