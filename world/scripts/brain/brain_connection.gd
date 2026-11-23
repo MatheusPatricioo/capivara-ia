@@ -1,7 +1,8 @@
 extends Node
 
 ## Connection to the capybara's brain (the Python service), registered as the autoload "Brain".
-## It only receives orders and turns them into signals: no AI logic lives here.
+## It receives orders and turns them into signals, and reports what happens in the world
+## (like something the capybara noticed): no AI logic lives here.
 ## While the brain is offline it keeps trying to connect, so the world can open first.
 
 signal go_to_requested(point_id: StringName)
@@ -47,6 +48,16 @@ func _connect_to_brain() -> void:
 	var error: Error = _socket.connect_to_url(_url)
 	if error != OK:
 		push_warning("Could not start a connection to the brain at %s (error %d)" % [_url, error])
+
+
+## Tells the brain the capybara noticed something. Dropped while the brain is offline:
+## she will notice it again the next time she walks by.
+func report_noticed(thing_id: StringName, description: String) -> void:
+	print("Capybara noticed %s" % thing_id)
+	if not _is_connected:
+		return
+	var event: Dictionary = {"type": "noticed", "thing": String(thing_id), "description": description}
+	_socket.send_text(JSON.stringify(event))
 
 
 func _read_messages() -> void:

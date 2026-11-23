@@ -1,5 +1,7 @@
 """Autonomous mode: the capybara lives on her own and her body follows in the Godot world."""
 
+import logging
+
 import httpx
 
 from src.application.autonomous_loop import AutonomousLoop
@@ -15,6 +17,7 @@ from src.infrastructure.ollama_language_model import OllamaLanguageModel
 from src.infrastructure.prompt_loader import load_prompt
 from src.infrastructure.settings import Settings
 from src.infrastructure.websocket_body import WebSocketBody
+from src.infrastructure.world_messages import NoticedMessage
 from src.infrastructure.world_server import WorldServer
 
 SYSTEM_PROMPT_NAME = "capybara"
@@ -22,9 +25,16 @@ TOOL_RESULT_REMINDER_NAME = "tool_result_reminder"
 INNER_VOICE_NAME = "autonomous_cycle"
 MEMORY_TEMPLATE_NAME = "known_discoveries"
 
+logger = logging.getLogger(__name__)
+
 
 def print_thought(thought: str) -> None:
     print(f"Capivara (pensando): {thought}\n", flush=True)
+
+
+def log_noticed_thing(event: NoticedMessage) -> None:
+    # For now she only notices; the attention list comes in the next step.
+    logger.info("Capybara noticed %s: %s", event.thing, event.description)
 
 
 def main() -> None:
@@ -41,7 +51,9 @@ def main() -> None:
         max_remembered_discoveries=settings.max_remembered_discoveries,
     )
     with (
-        WorldServer(settings.world_server_host, settings.world_server_port) as world_server,
+        WorldServer(
+            settings.world_server_host, settings.world_server_port, on_event=log_noticed_thing
+        ) as world_server,
         httpx.Client(
             base_url=settings.ollama_base_url, timeout=settings.ollama_timeout_seconds
         ) as http_client,

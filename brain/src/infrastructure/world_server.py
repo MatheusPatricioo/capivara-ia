@@ -1,14 +1,19 @@
 import logging
 import threading
+from collections.abc import Callable
 from types import TracebackType
 from typing import Self
 
 from websockets.exceptions import ConnectionClosed
 from websockets.sync.server import Server, ServerConnection, serve
 
-from src.infrastructure.world_messages import WorldMessage
+from src.infrastructure.world_messages import NoticedMessage, WorldMessage, parse_world_event
 
 logger = logging.getLogger(__name__)
+
+
+def _ignore_event(event: NoticedMessage) -> None:
+    pass
 
 
 class WorldServer:
@@ -17,11 +22,20 @@ class WorldServer:
     It runs in a background thread, so the agent loop can stay synchronous.
     Messages sent with remember=True are replayed to worlds that connect later,
     so a world opened after a drawing still shows the current chalkboard.
+
+    Events sent by the world (like NoticedMessage) are validated and handed to on_event,
+    which runs in the server thread. Invalid messages are logged and dropped.
     """
 
-    def __init__(self, host: str, port: int) -> None:
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        on_event: Callable[[NoticedMessage], None] = _ignore_event,
+    ) -> None:
         self._host = host
         self._port = port
+        self._on_event = on_event
         self._clients: set[ServerConnection] = set()
         self._remembered: dict[str, str] = {}
         self._lock = threading.Lock()
@@ -80,17 +94,28 @@ class WorldServer:
             self._clients.add(connection)
             remembered_payloads = list(self._remembered.values())
         logger.info("World connected: %s", address)
-        for payload in remembered_payloads:
-            self._send(connection, payload)
+        for remembered_payload in remembered_payloads:
+            self._send(connection, remembered_payload)
         try:
-            for _ignored_message in connection:
-                pass
+            for received_payload in connection:
+                self._receive(received_payload)
         except ConnectionClosed:
             pass
         finally:
             with self._lock:
                 self._clients.discard(connection)
             logger.info("World disconnected: %s", address)
+
+    def _receive(self, payload: str | bytes) -> None:
+        event = parse_world_event(payload)
+        if event is None:
+            logger.warning("Ignored an invalid message from the world: %.200r", payload)
+            return
+        try:
+            self._on_event(event)
+        except Exception:
+            # A bug in the listener must not disconnect the world.
+            logger.exception("Failed to handle a world event: %s", event)
 
     def _send(self, client: ServerConnection, payload: str) -> None:
         try:
