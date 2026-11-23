@@ -3,9 +3,19 @@
 [ext_resource type="Script" path="res://scripts/interaction_point.gd" id="1_interaction_point"]
 [ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/ground_riverCorner.glb" id="10_river_corner"]
 [ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/ground_riverSide.glb" id="11_river_side"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/ground_riverRocks.glb" id="12_river_rocks"]
+[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/ground_riverOpen.glb" id="12_river_open"]
+[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/ground_riverSideOpen.glb" id="13_river_side_open"]
 [ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/lily_large.glb" id="20_lily_large"]
 [ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/lily_small.glb" id="21_lily_small"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_water"]
+albedo_color = Color(0.24, 0.58, 0.84, 1)
+metallic = 0.2
+roughness = 0.08
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_water"]
+material = SubResource("StandardMaterial3D_water")
+size = Vector2(3.6, 3.6)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_water"]
 size = Vector3(3.6, 1, 3.6)
@@ -13,7 +23,7 @@ size = Vector3(3.6, 1, 3.6)
 [node name="Pond" type="StaticBody3D"]
 
 [node name="Tiles" type="Node3D" parent="."]
-position = Vector3(0, 0.01, 0)
+position = Vector3(0, -0.02, 0)
 scale = Vector3(1.2, 1.2, 1.2)
 
 [node name="CornerNorthWest" parent="Tiles" instance=ExtResource("10_river_corner")]
@@ -26,8 +36,8 @@ position = Vector3(0, 0, -1)
 position = Vector3(1, 0, -1)
 rotation_degrees = Vector3(0, -90, 0)
 
-[node name="SideEast" parent="Tiles" instance=ExtResource("11_river_side")]
-position = Vector3(1, 0, 0)
+[node name="InletEast" parent="Tiles" instance=ExtResource("13_river_side_open")]
+position = Vector3(1, -0.3, 0)
 rotation_degrees = Vector3(0, -90, 0)
 
 [node name="CornerSouthEast" parent="Tiles" instance=ExtResource("10_river_corner")]
@@ -46,7 +56,12 @@ rotation_degrees = Vector3(0, 90, 0)
 position = Vector3(-1, 0, 0)
 rotation_degrees = Vector3(0, 90, 0)
 
-[node name="Center" parent="Tiles" instance=ExtResource("12_river_rocks")]
+[node name="Center" parent="Tiles" instance=ExtResource("12_river_open")]
+position = Vector3(0, -0.2, 0)
+
+[node name="WaterSurface" type="MeshInstance3D" parent="."]
+position = Vector3(0, -0.1, 0)
+mesh = SubResource("PlaneMesh_water")
 
 [node name="WaterCollision" type="CollisionShape3D" parent="."]
 position = Vector3(0, 0.5, 0)
