@@ -1,15 +1,53 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/props/prop_model.gd" id="1_prop_model"]
-[ext_resource type="PackedScene" path="res://assets/props/bowl.glb" id="2_bowl"]
-[ext_resource type="Script" path="res://scripts/interaction_point.gd" id="3_interaction_point"]
+[ext_resource type="Script" path="res://scripts/interaction_point.gd" id="1_interaction_point"]
+
+; A small clay bowl with greens on top, built from simple shapes.
+; The old bowl.glb model did not show up in the world (its meshes had broken sizes).
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_clay"]
+albedo_color = Color(0.72, 0.38, 0.22, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_greens"]
+albedo_color = Color(0.42, 0.68, 0.26, 1)
+roughness = 0.95
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_bowl"]
+material = SubResource("StandardMaterial3D_clay")
+top_radius = 0.24
+bottom_radius = 0.17
+height = 0.12
+radial_segments = 16
+rings = 1
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_greens"]
+material = SubResource("StandardMaterial3D_greens")
+top_radius = 0.17
+bottom_radius = 0.2
+height = 0.05
+radial_segments = 10
+rings = 1
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_bowl"]
+radius = 0.24
+height = 0.3
 
 [node name="FoodBowl" type="StaticBody3D"]
-script = ExtResource("1_prop_model")
-model = ExtResource("2_bowl")
-collision_from_model = true
+
+[node name="Bowl" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.06, 0)
+mesh = SubResource("CylinderMesh_bowl")
+
+[node name="Greens" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.12, 0)
+mesh = SubResource("CylinderMesh_greens")
+
+[node name="BowlCollision" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.15, 0)
+shape = SubResource("CylinderShape3D_bowl")
 
 [node name="ArrivalPoint" type="Marker3D" parent="."]
 position = Vector3(0, 0, 0.8)
-script = ExtResource("3_interaction_point")
+script = ExtResource("1_interaction_point")
 point_id = &"food_bowl"

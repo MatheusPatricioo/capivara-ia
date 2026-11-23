@@ -10,6 +10,6 @@ model = ExtResource("2_house")
 collision_from_model = true
 
 [node name="ArrivalPoint" type="Marker3D" parent="."]
-position = Vector3(0, 0, 1.2)
+position = Vector3(0, 0, 0.9)
 script = ExtResource("3_interaction_point")
 point_id = &"dog_house"
