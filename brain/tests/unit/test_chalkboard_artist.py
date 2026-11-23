@@ -36,9 +36,10 @@ class FullDiskDrawingRepository:
 class RecordingBody:
     def __init__(self) -> None:
         self.shown_chalkboards: list[tuple[Drawing, ...]] = []
+        self.visited_places: list[Place] = []
 
     def go_to(self, place: Place) -> None:
-        pass
+        self.visited_places.append(place)
 
     def show_chalkboard(self, drawings: tuple[Drawing, ...]) -> None:
         self.shown_chalkboards.append(drawings)
@@ -117,3 +118,11 @@ def test_logs_the_saved_drawing(artist: ChalkboardArtist, caplog: pytest.LogCapt
     artist.draw(SUN_DRAWING)
 
     assert caplog.messages == [f"Drawing saved: {SAVED_FILE_NAME} (1 shape(s))"]
+
+
+def test_walks_to_the_chalkboard_before_drawing(
+    artist: ChalkboardArtist, body: RecordingBody
+) -> None:
+    artist.draw(SUN_DRAWING)
+
+    assert body.visited_places == [Place.CHALKBOARD]

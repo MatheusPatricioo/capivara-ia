@@ -4,23 +4,31 @@ from pathlib import Path
 
 import pytest
 
+from src.application.chalkboard_artist import ChalkboardArtist
 from src.application.conversation import Conversation
-from src.application.tools.draw_tool import DrawTool
+from src.application.illustrate_discovery import IllustrateDiscovery
 from src.application.tools.save_discovery_tool import SaveDiscoveryTool
-from src.application.tools.saved_discoveries import SavedDiscoveries
 from src.application.tools.seen_sources import SeenSources
 from src.application.tools.web_search_tool import WebSearchTool
 from src.domain.chalkboard import Chalkboard
-from src.domain.language_model import ChatMessage, Role, ToolCall, ToolDefinition
+from src.domain.language_model import (
+    ChatMessage,
+    Role,
+    StructuredReply,
+    ToolCall,
+    ToolDefinition,
+)
 from src.domain.web_search import SearchResult
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
 from src.infrastructure.png_drawing_repository import PngDrawingRepository
 
 SYSTEM_PROMPT = "You are a curious capybara."
+ILLUSTRATE_INSTRUCTIONS = "Decide if it deserves a drawing on your {width}x{height} board."
 USER_MESSAGE = "Capivaras nadam?"
 FINAL_ANSWER = "Guardei e desenhei!"
 TODAY = date(2026, 11, 23)
 SEARCHED_URL = "https://example.com/swim"
+EXPECTED_DISCOVERY_FILE = "2026-11-23-capivaras-nadam.md"
 EXPECTED_DRAWING_FILE = "2026-11-23-capivaras-nadam.png"
 SEARCH_REQUEST = ToolCall(name="web_search", arguments={"query": "capybaras swim"})
 SAVE_REQUEST = ToolCall(
@@ -32,15 +40,14 @@ SAVE_REQUEST = ToolCall(
         "sources": [SEARCHED_URL],
     },
 )
-DRAW_REQUEST = ToolCall(
-    name="draw",
-    arguments={
-        "discovery_title": "Capivaras nadam",
+DRAWING_DECISION = StructuredReply(
+    data={
+        "wants_to_draw": True,
         "shapes": [
             {"type": "line", "x1": 0, "y1": 200, "x2": 400, "y2": 200, "color": "blue"},
             {"type": "circle", "x": 200, "y": 180, "radius": 30, "color": "pink"},
         ],
-    },
+    }
 )
 
 
@@ -50,14 +57,13 @@ class FakeWebSearcher:
 
 
 class ScriptedLanguageModel:
-    """Searches, saves the discovery, draws it, then gives the final answer."""
+    """Searches, saves the discovery, then answers; always wants to draw when asked."""
 
     def __init__(self) -> None:
         self._replies = iter(
             [
                 ChatMessage(Role.ASSISTANT, "", tool_calls=(SEARCH_REQUEST,)),
                 ChatMessage(Role.ASSISTANT, "", tool_calls=(SAVE_REQUEST,)),
-                ChatMessage(Role.ASSISTANT, "", tool_calls=(DRAW_REQUEST,)),
                 ChatMessage(Role.ASSISTANT, FINAL_ANSWER),
             ]
         )
@@ -70,6 +76,11 @@ class ScriptedLanguageModel:
     ) -> ChatMessage:
         self.received_histories.append(messages)
         return next(self._replies)
+
+    def complete_json(
+        self, messages: list[ChatMessage], schema: dict[str, object]
+    ) -> StructuredReply:
+        return DRAWING_DECISION
 
 
 @pytest.fixture
@@ -87,17 +98,18 @@ def conversation(
     language_model: ScriptedLanguageModel, chalkboard: Chalkboard, tmp_path: Path
 ) -> Conversation:
     seen_sources = SeenSources()
-    saved_discoveries = SavedDiscoveries()
+    illustrator = IllustrateDiscovery(
+        language_model,
+        ChalkboardArtist(PngDrawingRepository(tmp_path), chalkboard, today=lambda: TODAY),
+        ILLUSTRATE_INSTRUCTIONS,
+    )
     tools = [
         WebSearchTool(FakeWebSearcher(), seen_sources=seen_sources),
         SaveDiscoveryTool(
             MarkdownDiscoveryRepository(tmp_path),
             seen_sources,
             today=lambda: TODAY,
-            saved_discoveries=saved_discoveries,
-        ),
-        DrawTool(
-            PngDrawingRepository(tmp_path), chalkboard, saved_discoveries, today=lambda: TODAY
+            illustrate=illustrator.illustrate,
         ),
     ]
     return Conversation(language_model, SYSTEM_PROMPT, tools=tools, max_steps=5)
@@ -108,7 +120,10 @@ def test_writes_the_drawing_png_next_to_the_discovery(
 ) -> None:
     conversation.send(USER_MESSAGE)
 
-    assert (tmp_path / EXPECTED_DRAWING_FILE).exists()
+    assert sorted(path.name for path in tmp_path.iterdir()) == [
+        EXPECTED_DISCOVERY_FILE,
+        EXPECTED_DRAWING_FILE,
+    ]
 
 
 def test_pins_the_drawing_on_the_chalkboard(
@@ -119,16 +134,17 @@ def test_pins_the_drawing_on_the_chalkboard(
     assert [drawing.title for drawing in chalkboard.drawings] == ["Capivaras nadam"]
 
 
-def test_tells_the_model_the_drawing_was_pinned(
+def test_tells_the_model_the_discovery_was_saved_and_drawn(
     conversation: Conversation, language_model: ScriptedLanguageModel
 ) -> None:
     conversation.send(USER_MESSAGE)
 
-    tool_result = language_model.received_histories[3][-1]
+    tool_result = language_model.received_histories[2][-1]
     assert tool_result == ChatMessage(
         Role.TOOL,
-        f"Drawn as {EXPECTED_DRAWING_FILE} and pinned on your chalkboard.",
-        tool_name="draw",
+        f"Saved as {EXPECTED_DISCOVERY_FILE}. Then you walked to your chalkboard and drew it "
+        f"with 2 chalk shape(s), saved as {EXPECTED_DRAWING_FILE}.",
+        tool_name="save_discovery",
     )
 
 

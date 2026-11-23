@@ -3,10 +3,12 @@ from datetime import date
 
 import pytest
 
+from src.application.chalkboard_artist import PinnedDrawing
 from src.application.tools.save_discovery_tool import SaveDiscoveryTool
 from src.application.tools.saved_discoveries import SavedDiscoveries
 from src.application.tools.seen_sources import SeenSources
 from src.domain.discovery import Discovery, DiscoveryStorageError
+from src.domain.drawing import Circle, Drawing, Point, Text
 from src.domain.tool import ToolError
 
 TODAY = date(2026, 11, 22)
@@ -95,14 +97,6 @@ def test_saves_the_discovery_with_todays_date(
 
 def test_tells_the_model_the_saved_file_name(save_discovery_tool: SaveDiscoveryTool) -> None:
     assert save_discovery_tool.run(VALID_ARGUMENTS).startswith(f"Saved as {SAVED_FILE_NAME}.")
-
-
-def test_invites_the_drawing_with_the_exact_saved_title(
-    save_discovery_tool: SaveDiscoveryTool,
-) -> None:
-    result = save_discovery_tool.run(VALID_ARGUMENTS)
-
-    assert "call draw now with discovery_title 'Capivaras nadam'" in result
 
 
 def test_rejects_an_empty_source_list(save_discovery_tool: SaveDiscoveryTool) -> None:
@@ -224,3 +218,103 @@ def test_turns_storage_failures_into_tool_errors(seen_sources: SeenSources) -> N
 
     with pytest.raises(ToolError, match="no space left on device"):
         tool.run(VALID_ARGUMENTS)
+
+
+DRAWING_FILE_NAME = "2026-11-22-capivaras-nadam.png"
+SWIMMING_DRAWING = Drawing(
+    title="Capivaras nadam",
+    shapes=(
+        Circle(center=Point(200, 150), radius=40, color="blue"),
+        Text(position=Point(150, 250), content="Splash!", color="white"),
+    ),
+)
+OLD_DRAWING = Drawing(
+    title="O Sol", shapes=(Circle(center=Point(100, 100), radius=30, color="yellow"),)
+)
+
+
+class RecordingIllustrator:
+    """Answers every discovery with the same pinned drawing (or None) and records them."""
+
+    def __init__(self, pinned_drawing: PinnedDrawing | None) -> None:
+        self._pinned_drawing = pinned_drawing
+        self.offered_discoveries: list[Discovery] = []
+
+    def illustrate(self, discovery: Discovery) -> PinnedDrawing | None:
+        self.offered_discoveries.append(discovery)
+        return self._pinned_drawing
+
+
+def tool_illustrated_by(
+    illustrator: RecordingIllustrator,
+    repository: InMemoryDiscoveryRepository,
+    seen_sources: SeenSources,
+) -> SaveDiscoveryTool:
+    return SaveDiscoveryTool(
+        repository, seen_sources, today=lambda: TODAY, illustrate=illustrator.illustrate
+    )
+
+
+@pytest.fixture
+def illustrator_that_draws() -> RecordingIllustrator:
+    return RecordingIllustrator(
+        PinnedDrawing(drawing=SWIMMING_DRAWING, file_name=DRAWING_FILE_NAME, erased=None)
+    )
+
+
+def test_offers_the_saved_discovery_for_a_drawing(
+    illustrator_that_draws: RecordingIllustrator,
+    repository: InMemoryDiscoveryRepository,
+    seen_sources: SeenSources,
+) -> None:
+    tool_illustrated_by(illustrator_that_draws, repository, seen_sources).run(VALID_ARGUMENTS)
+
+    assert illustrator_that_draws.offered_discoveries == repository.saved_discoveries
+
+
+def test_tells_her_what_she_already_drew(
+    illustrator_that_draws: RecordingIllustrator,
+    repository: InMemoryDiscoveryRepository,
+    seen_sources: SeenSources,
+) -> None:
+    tool = tool_illustrated_by(illustrator_that_draws, repository, seen_sources)
+
+    assert tool.run(VALID_ARGUMENTS) == (
+        f"Saved as {SAVED_FILE_NAME}. Then you walked to your chalkboard and drew it with "
+        f"2 chalk shape(s), saved as {DRAWING_FILE_NAME}. You wrote 'Splash!' on it."
+    )
+
+
+def test_tells_her_which_old_drawing_was_erased(
+    repository: InMemoryDiscoveryRepository, seen_sources: SeenSources
+) -> None:
+    illustrator = RecordingIllustrator(
+        PinnedDrawing(drawing=SWIMMING_DRAWING, file_name=DRAWING_FILE_NAME, erased=OLD_DRAWING)
+    )
+
+    result = tool_illustrated_by(illustrator, repository, seen_sources).run(VALID_ARGUMENTS)
+
+    assert result.endswith("To make room, you erased the old drawing 'O Sol'.")
+
+
+def test_tells_her_when_the_discovery_did_not_become_a_drawing(
+    repository: InMemoryDiscoveryRepository, seen_sources: SeenSources
+) -> None:
+    tool = tool_illustrated_by(RecordingIllustrator(None), repository, seen_sources)
+
+    assert tool.run(VALID_ARGUMENTS) == (
+        f"Saved as {SAVED_FILE_NAME}. At your chalkboard, this one did not become a drawing."
+    )
+
+
+def test_offers_no_drawing_when_the_discovery_was_not_saved(
+    illustrator_that_draws: RecordingIllustrator,
+    repository: InMemoryDiscoveryRepository,
+    seen_sources: SeenSources,
+) -> None:
+    tool = tool_illustrated_by(illustrator_that_draws, repository, seen_sources)
+
+    with pytest.raises(ToolError):
+        tool.run(arguments_with(sources=[INVENTED_URL]))
+
+    assert illustrator_that_draws.offered_discoveries == []

@@ -3,7 +3,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
 
-from src.domain.body import Body
+from src.domain.body import Body, Place
 from src.domain.chalkboard import Chalkboard
 from src.domain.drawing import Drawing, DrawingRepository
 
@@ -21,7 +21,8 @@ class PinnedDrawing:
 
 
 class ChalkboardArtist:
-    """Puts a finished drawing in the world: saves the image, pins it and shows it on the body.
+    """Puts a finished drawing in the world: walks to the board, saves the image, pins it
+    and shows it on the body.
 
     Shared by the draw tool and by the automatic drawing of saved discoveries.
     """
@@ -40,6 +41,8 @@ class ChalkboardArtist:
 
     def draw(self, drawing: Drawing) -> PinnedDrawing:
         """Raises DrawingStorageError when the image cannot be saved; nothing is pinned then."""
+        if self._body is not None:
+            self._body.go_to(Place.CHALKBOARD)
         file_name = self._repository.save(drawing, self._today())
         erased = self._chalkboard.pin(drawing)
         if self._body is not None:

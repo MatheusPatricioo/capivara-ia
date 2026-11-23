@@ -27,11 +27,14 @@ def main() -> None:
             client=http_client,
             model=settings.ollama_model,
             generation_options=settings.ollama_generation_options(),
+            structured_num_predict=settings.ollama_structured_num_predict,
         )
         conversation = Conversation(
             language_model,
             load_prompt(SYSTEM_PROMPT_NAME),
-            tools=build_capybara_tools(settings, Chalkboard(settings.chalkboard_capacity)),
+            tools=build_capybara_tools(
+                settings, Chalkboard(settings.chalkboard_capacity), language_model
+            ),
             max_steps=settings.max_tool_steps,
             tool_result_reminder=load_prompt(TOOL_RESULT_REMINDER_NAME),
             tool_result_reminders=TOOL_RESULT_REMINDER_OVERRIDES,

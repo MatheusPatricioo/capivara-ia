@@ -62,7 +62,7 @@ def main() -> None:
             return Conversation(
                 language_model,
                 system_prompt,
-                tools=build_capybara_tools(settings, chalkboard, body),
+                tools=build_capybara_tools(settings, chalkboard, language_model, body),
                 max_steps=settings.max_tool_steps,
                 tool_result_reminder=tool_result_reminder,
                 tool_result_reminders=TOOL_RESULT_REMINDER_OVERRIDES,

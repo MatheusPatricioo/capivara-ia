@@ -2,9 +2,11 @@ import logging
 from collections.abc import Callable
 from datetime import date
 
+from src.application.chalkboard_artist import PinnedDrawing
 from src.application.tools.saved_discoveries import SavedDiscoveries
 from src.application.tools.seen_sources import SeenSources
 from src.domain.discovery import Discovery, DiscoveryRepository, DiscoveryStorageError
+from src.domain.drawing import Text
 from src.domain.language_model import ToolDefinition
 from src.domain.tool import ToolError
 
@@ -20,13 +22,16 @@ class SaveDiscoveryTool:
         seen_sources: SeenSources,
         today: Callable[[], date] = date.today,
         saved_discoveries: SavedDiscoveries | None = None,
+        illustrate: Callable[[Discovery], PinnedDrawing | None] | None = None,
     ) -> None:
+        """illustrate is offered every discovery right after it is saved (None: no drawing)."""
         self._repository = repository
         self._seen_sources = seen_sources
         self._today = today
         self._saved_discoveries = (
             saved_discoveries if saved_discoveries is not None else SavedDiscoveries()
         )
+        self._illustrate = illustrate
 
     @property
     def definition(self) -> ToolDefinition:
@@ -69,20 +74,20 @@ class SaveDiscoveryTool:
             raise ToolError(f"could not save the discovery: {error}") from error
         self._saved_discoveries.remember(discovery.title, file_name)
         logger.info("Discovery saved: %s (sources: %s)", file_name, ", ".join(discovery.sources))
-        return self._result_message(file_name, discovery.title)
+        pinned_drawing = self._illustrate(discovery) if self._illustrate else None
+        return self._result_message(file_name, pinned_drawing)
 
-    @staticmethod
-    def _result_message(file_name: str, title: str) -> str:
-        """Invites the drawing right away, with the exact title the draw tool expects.
+    def _result_message(self, file_name: str, pinned_drawing: PinnedDrawing | None) -> str:
+        """Tells her what already happened, drawing included, so she only has to tell it.
 
-        Small models often announce "now I'll draw it" and never call the tool, or mix the
-        title with the file name; the last thing they read is the best place to prevent both.
+        Asking her to call a draw tool made her promise drawings she never made.
         """
-        return (
-            f"Saved as {file_name}. If this discovery deserves a drawing, call draw now with "
-            f"discovery_title '{title}', without announcing it first: saying you will draw "
-            "does not draw anything."
-        )
+        message = f"Saved as {file_name}."
+        if self._illustrate is None:
+            return message
+        if pinned_drawing is None:
+            return f"{message} At your chalkboard, this one did not become a drawing."
+        return f"{message} {_describe_drawing(pinned_drawing)}"
 
     @staticmethod
     def _required_text(arguments: dict[str, object], name: str) -> str:
@@ -120,3 +125,17 @@ class SaveDiscoveryTool:
         if not isinstance(source, str) or not source.strip().startswith(ALLOWED_URL_PREFIXES):
             raise ToolError(f"invalid source URL: '{source}'")
         return source.strip()
+
+
+def _describe_drawing(pinned_drawing: PinnedDrawing) -> str:
+    drawing = pinned_drawing.drawing
+    words = [f"'{shape.content}'" for shape in drawing.shapes if isinstance(shape, Text)]
+    description = (
+        f"Then you walked to your chalkboard and drew it with {len(drawing.shapes)} chalk "
+        f"shape(s), saved as {pinned_drawing.file_name}."
+    )
+    if words:
+        description += f" You wrote {', '.join(words)} on it."
+    if pinned_drawing.erased is not None:
+        description += f" To make room, you erased the old drawing '{pinned_drawing.erased.title}'."
+    return description
