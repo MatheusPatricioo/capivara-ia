@@ -14,6 +14,7 @@ from src.domain.language_model import StructuredLanguageModel
 from src.domain.tool import Tool
 from src.infrastructure.duckduckgo_web_searcher import DuckDuckGoWebSearcher
 from src.infrastructure.json_search_history import JsonSearchHistory
+from src.infrastructure.json_sketch_book import load_sketch_book
 from src.infrastructure.jsonl_search_log import JsonlSearchLog
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
 from src.infrastructure.png_drawing_repository import PngDrawingRepository
@@ -56,6 +57,7 @@ def build_capybara_tools(
         language_model,
         ChalkboardArtist(PngDrawingRepository(settings.discoveries_dir), chalkboard, body=body),
         load_prompt(ILLUSTRATE_DISCOVERY_PROMPT_NAME),
+        load_sketch_book(),
     )
     save_discovery_tool = SaveDiscoveryTool(
         MarkdownDiscoveryRepository(settings.discoveries_dir),

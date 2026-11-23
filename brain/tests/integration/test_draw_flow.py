@@ -19,6 +19,7 @@ from src.domain.language_model import (
     ToolDefinition,
 )
 from src.domain.web_search import SearchResult
+from src.infrastructure.json_sketch_book import load_sketch_book
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
 from src.infrastructure.png_drawing_repository import PngDrawingRepository
 
@@ -43,10 +44,7 @@ SAVE_REQUEST = ToolCall(
 DRAWING_DECISION = StructuredReply(
     data={
         "wants_to_draw": True,
-        "strokes": [
-            [[0, 200], [400, 200]],
-            [[170, 180], [200, 150], [230, 180]],
-        ],
+        "sketch": "ondas",
     }
 )
 
@@ -102,6 +100,7 @@ def conversation(
         language_model,
         ChalkboardArtist(PngDrawingRepository(tmp_path), chalkboard, today=lambda: TODAY),
         ILLUSTRATE_INSTRUCTIONS,
+        load_sketch_book(),
     )
     tools = [
         WebSearchTool(FakeWebSearcher(), seen_sources=seen_sources),
@@ -143,7 +142,7 @@ def test_tells_the_model_the_discovery_was_saved_and_drawn(
     assert tool_result == ChatMessage(
         Role.TOOL,
         f"Saved as {EXPECTED_DISCOVERY_FILE}. Then you walked to your chalkboard and drew it "
-        f"with 2 chalk stroke(s), saved as {EXPECTED_DRAWING_FILE}.",
+        f"with 3 chalk stroke(s), saved as {EXPECTED_DRAWING_FILE}.",
         tool_name="save_discovery",
     )
 
