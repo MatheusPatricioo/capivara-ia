@@ -5,6 +5,7 @@ import pytest
 
 from src.application.tools.draw_tool import DrawTool
 from src.application.tools.saved_discoveries import SavedDiscoveries
+from src.domain.body import Place
 from src.domain.chalkboard import Chalkboard
 from src.domain.drawing import Circle, Drawing, DrawingStorageError, Point
 from src.domain.tool import ToolError
@@ -167,6 +168,44 @@ def test_turns_storage_failures_into_tool_errors(
 
     with pytest.raises(ToolError, match="no space left on device"):
         tool.run(VALID_ARGUMENTS)
+
+
+class RecordingBody:
+    def __init__(self) -> None:
+        self.shown_chalkboards: list[tuple[Drawing, ...]] = []
+
+    def go_to(self, place: Place) -> None:
+        pass
+
+    def show_chalkboard(self, drawings: tuple[Drawing, ...]) -> None:
+        self.shown_chalkboards.append(drawings)
+
+
+def test_shows_the_updated_chalkboard_on_the_body(
+    repository: InMemoryDrawingRepository,
+    chalkboard: Chalkboard,
+    saved_discoveries: SavedDiscoveries,
+) -> None:
+    body = RecordingBody()
+    tool = DrawTool(repository, chalkboard, saved_discoveries, today=lambda: TODAY, body=body)
+
+    tool.run(VALID_ARGUMENTS)
+
+    assert body.shown_chalkboards == [(SUN_DRAWING,)]
+
+
+def test_does_not_show_the_chalkboard_when_the_drawing_is_invalid(
+    repository: InMemoryDrawingRepository,
+    chalkboard: Chalkboard,
+    saved_discoveries: SavedDiscoveries,
+) -> None:
+    body = RecordingBody()
+    tool = DrawTool(repository, chalkboard, saved_discoveries, today=lambda: TODAY, body=body)
+
+    with pytest.raises(ToolError):
+        tool.run(arguments_with(shapes=[]))
+
+    assert body.shown_chalkboards == []
 
 
 def test_logs_the_saved_drawing(draw_tool: DrawTool, caplog: pytest.LogCaptureFixture) -> None:

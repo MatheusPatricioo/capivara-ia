@@ -4,6 +4,7 @@ from datetime import date
 
 from src.application.tools.saved_discoveries import SavedDiscoveries
 from src.application.tools.shape_arguments import SHAPE_TYPES, parse_shapes
+from src.domain.body import Body
 from src.domain.chalkboard import Chalkboard
 from src.domain.drawing import (
     CANVAS_HEIGHT,
@@ -30,11 +31,13 @@ class DrawTool:
         chalkboard: Chalkboard,
         saved_discoveries: SavedDiscoveries,
         today: Callable[[], date] = date.today,
+        body: Body | None = None,
     ) -> None:
         self._repository = repository
         self._chalkboard = chalkboard
         self._saved_discoveries = saved_discoveries
         self._today = today
+        self._body = body
 
     @property
     def definition(self) -> ToolDefinition:
@@ -92,6 +95,8 @@ class DrawTool:
             raise ToolError(f"could not save the drawing: {error}") from error
         erased = self._chalkboard.pin(drawing)
         self._saved_discoveries.mark_drawn(title)
+        if self._body is not None:
+            self._body.show_chalkboard(self._chalkboard.drawings)
         logger.info("Drawing saved: %s (%d shape(s))", file_name, len(drawing.shapes))
         return self._result_message(file_name, erased)
 
