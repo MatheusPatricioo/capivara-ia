@@ -12,9 +12,12 @@ from src.domain.body import Body, Place
 from src.domain.chalkboard import Chalkboard
 from src.domain.tool import Tool
 from src.infrastructure.duckduckgo_web_searcher import DuckDuckGoWebSearcher
+from src.infrastructure.json_search_history import JsonSearchHistory
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
 from src.infrastructure.png_drawing_repository import PngDrawingRepository
 from src.infrastructure.settings import Settings
+
+SEARCH_HISTORY_FILE_NAME = "search-history.json"
 
 
 def build_capybara_tools(
@@ -26,6 +29,7 @@ def build_capybara_tools(
     web_search_tool = WebSearchTool(
         DuckDuckGoWebSearcher(DDGS(), backend=settings.web_search_backend),
         seen_sources=seen_sources,
+        search_history=JsonSearchHistory(settings.discoveries_dir / SEARCH_HISTORY_FILE_NAME),
     )
     save_discovery_tool = SaveDiscoveryTool(
         MarkdownDiscoveryRepository(settings.discoveries_dir),

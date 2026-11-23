@@ -1,9 +1,11 @@
 import logging
+from datetime import date
 
 import pytest
 
 from src.application.tools.seen_sources import SeenSources
 from src.application.tools.web_search_tool import WebSearchTool
+from src.domain.search_history import SearchHistoryError
 from src.domain.tool import ToolError
 from src.domain.web_search import SearchResult, WebSearchError
 
@@ -181,3 +183,98 @@ def test_turns_search_failures_into_tool_errors() -> None:
 
     with pytest.raises(ToolError, match="connection timed out"):
         tool.run({"query": QUERY})
+
+
+SEARCH_DAY = date(2026, 11, 23)
+
+
+class InMemorySearchHistory:
+    """Keeps searches in a dict, keyed by the exact query (normalization is tested elsewhere)."""
+
+    def __init__(self) -> None:
+        self.days_by_query: dict[str, date] = {}
+
+    def last_searched_on(self, query: str) -> date | None:
+        return self.days_by_query.get(query)
+
+    def record(self, query: str, searched_on: date) -> None:
+        self.days_by_query[query] = searched_on
+
+
+class BrokenSearchHistory:
+    def last_searched_on(self, query: str) -> date | None:
+        raise SearchHistoryError("disk unplugged")
+
+    def record(self, query: str, searched_on: date) -> None:
+        raise SearchHistoryError("disk unplugged")
+
+
+@pytest.fixture
+def search_history() -> InMemorySearchHistory:
+    return InMemorySearchHistory()
+
+
+@pytest.fixture
+def web_searcher() -> FakeWebSearcher:
+    return FakeWebSearcher([GRASS_RESULT])
+
+
+def build_tool_with_history(
+    web_searcher: FakeWebSearcher, search_history: InMemorySearchHistory | BrokenSearchHistory
+) -> WebSearchTool:
+    return WebSearchTool(web_searcher, search_history=search_history, today=lambda: SEARCH_DAY)
+
+
+def test_records_a_search_that_found_results(
+    web_searcher: FakeWebSearcher, search_history: InMemorySearchHistory
+) -> None:
+    build_tool_with_history(web_searcher, search_history).run({"query": QUERY})
+
+    assert search_history.days_by_query == {QUERY: SEARCH_DAY}
+
+
+def test_does_not_record_a_search_that_found_nothing(
+    search_history: InMemorySearchHistory,
+) -> None:
+    build_tool_with_history(FakeWebSearcher([]), search_history).run({"query": QUERY})
+
+    assert search_history.days_by_query == {}
+
+
+def test_does_not_search_the_web_again_for_a_repeated_search(
+    web_searcher: FakeWebSearcher, search_history: InMemorySearchHistory
+) -> None:
+    search_history.record(QUERY, SEARCH_DAY)
+
+    build_tool_with_history(web_searcher, search_history).run({"query": QUERY})
+
+    assert web_searcher.received_searches == []
+
+
+def test_tells_the_model_when_it_already_searched_the_same_thing(
+    web_searcher: FakeWebSearcher, search_history: InMemorySearchHistory
+) -> None:
+    search_history.record(QUERY, SEARCH_DAY)
+
+    output = build_tool_with_history(web_searcher, search_history).run({"query": QUERY})
+
+    assert output.startswith(f"You already searched '{QUERY}' on 2026-11-23")
+
+
+def test_still_searches_when_the_history_is_broken(web_searcher: FakeWebSearcher) -> None:
+    build_tool_with_history(web_searcher, BrokenSearchHistory()).run({"query": QUERY})
+
+    assert web_searcher.received_searches == [(QUERY, 5)]
+
+
+def test_logs_a_warning_when_the_history_is_broken(
+    web_searcher: FakeWebSearcher, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.WARNING, logger=WEB_SEARCH_TOOL_LOGGER)
+
+    build_tool_with_history(web_searcher, BrokenSearchHistory()).run({"query": QUERY})
+
+    assert caplog.messages == [
+        "Could not check the search history: disk unplugged",
+        "Could not record the search: disk unplugged",
+    ]
