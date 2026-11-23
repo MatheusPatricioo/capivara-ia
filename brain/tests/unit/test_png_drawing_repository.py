@@ -97,3 +97,19 @@ def test_raises_a_storage_error_when_the_folder_cannot_be_created(tmp_path: Path
 
     with pytest.raises(DrawingStorageError):
         repository.save(DRAWING, DRAWN_ON)
+
+
+def rendered_text(repository: PngDrawingRepository, discoveries_dir: Path, content: str) -> bytes:
+    text = Text(position=Point(20, 100), content=content, color="white")
+    file_name = repository.save(Drawing(title=content, shapes=(text,)), DRAWN_ON)
+    return Image.open(discoveries_dir / file_name).convert("RGB").tobytes()
+
+
+def test_writes_accented_letters_instead_of_a_missing_glyph_box(
+    repository: PngDrawingRepository, discoveries_dir: Path
+) -> None:
+    """A font without accents draws the same empty box for every accented letter."""
+    with_tilde = rendered_text(repository, discoveries_dir, "ã")
+    with_acute = rendered_text(repository, discoveries_dir, "é")
+
+    assert with_tilde != with_acute

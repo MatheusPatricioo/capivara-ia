@@ -27,15 +27,19 @@ CHALK_RGB = {
     "green": (160, 220, 150),
 }
 STROKE_WIDTH = 3
-FONT_SIZE = 18
+FONT_SIZE = 22
+# A free (OFL) handwriting font shipped with the project: Pillow's default font has no
+# accented letters, so 'corações' came out as 'cora□□es'.
+FONTS_DIR = Path(__file__).resolve().parents[2] / "assets" / "fonts"
+DEFAULT_FONT_FILE = FONTS_DIR / "PatrickHand-Regular.ttf"
 
 
 class PngDrawingRepository:
     """Renders each drawing as a chalkboard-style PNG inside the discoveries folder."""
 
-    def __init__(self, discoveries_dir: Path) -> None:
+    def __init__(self, discoveries_dir: Path, font_file: Path = DEFAULT_FONT_FILE) -> None:
         self._discoveries_dir = discoveries_dir.resolve()
-        self._font = ImageFont.load_default(size=FONT_SIZE)
+        self._font = ImageFont.truetype(font_file, FONT_SIZE)
 
     def save(self, drawing: Drawing, drawn_on: date) -> str:
         try:
