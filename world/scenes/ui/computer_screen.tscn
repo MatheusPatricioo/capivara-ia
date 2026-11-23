@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scripts/computer/computer_screen.gd" id="1_computer_screen"]
 [ext_resource type="Script" path="res://scripts/computer/history_tab.gd" id="2_history_tab"]
 [ext_resource type="Script" path="res://scripts/computer/discoveries_tab.gd" id="3_discoveries_tab"]
+[ext_resource type="Script" path="res://scripts/computer/drawings_tab.gd" id="4_drawings_tab"]
 
 [sub_resource type="SystemFont" id="SystemFont_terminal"]
 font_names = PackedStringArray("Consolas", "Courier New", "Monospace")
@@ -193,13 +194,42 @@ bbcode_enabled = true
 selection_enabled = true
 
 [node name="DrawingsTab" type="MarginContainer" parent="Monitor/Layout/Tabs"]
+unique_name_in_owner = true
 visible = false
 layout_mode = 2
+script = ExtResource("4_drawings_tab")
 metadata/_tab_index = 2
 
-[node name="Placeholder" type="Label" parent="Monitor/Layout/Tabs/DrawingsTab"]
+[node name="Layout" type="VBoxContainer" parent="Monitor/Layout/Tabs/DrawingsTab"]
 layout_mode = 2
-text = "> carregando desenhos..."
+theme_override_constants/separation = 10
+
+[node name="Toolbar" type="HBoxContainer" parent="Monitor/Layout/Tabs/DrawingsTab/Layout"]
+layout_mode = 2
+
+[node name="DrawingCount" type="Label" parent="Monitor/Layout/Tabs/DrawingsTab/Layout/Toolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "> nenhum desenho ainda."
+
+[node name="OpenFolderButton" type="Button" parent="Monitor/Layout/Tabs/DrawingsTab/Layout/Toolbar"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "[ abrir pasta ]"
+
+[node name="Scroll" type="ScrollContainer" parent="Monitor/Layout/Tabs/DrawingsTab/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="DrawingGrid" type="GridContainer" parent="Monitor/Layout/Tabs/DrawingsTab/Layout/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 16
+columns = 3
 
 [node name="FolderLabel" type="Label" parent="Monitor/Layout"]
 unique_name_in_owner = true
