@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/interaction_point.gd" id="1_interaction_point"]
+[ext_resource type="Script" path="res://scripts/props/chalkboard_display.gd" id="2_chalkboard_display"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood"]
 albedo_color = Color(0.55, 0.36, 0.2, 1)
@@ -33,6 +34,10 @@ size = Vector3(1.72, 1.56, 0.4)
 [node name="Surface" type="MeshInstance3D" parent="."]
 position = Vector3(0, 1, 0)
 mesh = SubResource("BoxMesh_surface")
+
+[node name="Display" type="Node3D" parent="."]
+position = Vector3(0, 1, 0.012)
+script = ExtResource("2_chalkboard_display")
 
 [node name="Frame" type="Node3D" parent="."]
 

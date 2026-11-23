@@ -20,6 +20,7 @@ const ALL_NAVIGATION_LAYERS: int = 1
 @export var reachable_tolerance: float = 0.5
 
 var _rest_timer: Timer = Timer.new()
+var _is_paused: bool = false
 
 @onready var _capybara: Capybara = get_parent() as Capybara
 
@@ -32,7 +33,21 @@ func _ready() -> void:
 	_start_rest()
 
 
+## Stops strolling, for example while the brain sends the capybara somewhere.
+func pause() -> void:
+	_is_paused = true
+	_rest_timer.stop()
+
+
+## Goes back to strolling after a short rest.
+func resume() -> void:
+	_is_paused = false
+	_start_rest()
+
+
 func _start_rest() -> void:
+	if _is_paused:
+		return
 	_rest_timer.start(randf_range(min_rest_seconds, max_rest_seconds))
 
 

@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://2laypg7mjgh0" path="res://scripts/capybara_wander.gd" id="2_capybara_wander"]
 [ext_resource type="Script" uid="uid://2y24cmfmdof" path="res://scripts/capybara_body_animation.gd" id="3_capybara_body_animation"]
 [ext_resource type="PackedScene" path="res://assets/capybara/capybara.glb" id="4_capybara_model"]
+[ext_resource type="Script" path="res://scripts/capybara_brain_driver.gd" id="5_capybara_brain_driver"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_capybara"]
 radius = 0.4
@@ -24,6 +25,9 @@ height = 0.8
 
 [node name="Wander" type="Node" parent="."]
 script = ExtResource("2_capybara_wander")
+
+[node name="BrainDriver" type="Node" parent="."]
+script = ExtResource("5_capybara_brain_driver")
 
 [node name="Body" type="Node3D" parent="."]
 script = ExtResource("3_capybara_body_animation")
