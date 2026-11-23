@@ -11,6 +11,7 @@ const TAB_TITLES: PackedStringArray = ["Histórico", "Descobertas", "Desenhos"]
 @onready var _close_button: Button = %CloseButton
 @onready var _folder_label: Label = %FolderLabel
 @onready var _history_tab: HistoryTab = %HistoryTab
+@onready var _discoveries_tab: DiscoveriesTab = %DiscoveriesTab
 
 
 func _ready() -> void:
@@ -25,6 +26,7 @@ func open() -> void:
 	var discoveries_path: String = DiscoveriesFolder.path()
 	_folder_label.text = "Pasta: %s" % discoveries_path
 	_history_tab.show_history(discoveries_path)
+	_discoveries_tab.show_discoveries(discoveries_path)
 	show()
 
 

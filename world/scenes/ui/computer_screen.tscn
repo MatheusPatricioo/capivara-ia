@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/computer/computer_screen.gd" id="1_computer_screen"]
 [ext_resource type="Script" path="res://scripts/computer/history_tab.gd" id="2_history_tab"]
+[ext_resource type="Script" path="res://scripts/computer/discoveries_tab.gd" id="3_discoveries_tab"]
 
 [sub_resource type="SystemFont" id="SystemFont_terminal"]
 font_names = PackedStringArray("Consolas", "Courier New", "Monospace")
@@ -85,7 +86,16 @@ Button/colors/font_pressed_color = Color(0.6, 1, 0.65, 1)
 Button/styles/hover = SubResource("StyleBoxFlat_button_hover")
 Button/styles/normal = SubResource("StyleBoxFlat_button")
 Button/styles/pressed = SubResource("StyleBoxFlat_button_hover")
+ItemList/colors/font_color = Color(0.2, 0.9, 0.35, 1)
+ItemList/colors/font_hovered_color = Color(0.6, 1, 0.65, 1)
+ItemList/colors/font_selected_color = Color(0.02, 0.04, 0.02, 1)
+ItemList/styles/hovered = SubResource("StyleBoxFlat_button_hover")
+ItemList/styles/panel = SubResource("StyleBoxFlat_tab_panel")
+ItemList/styles/selected = SubResource("StyleBoxFlat_tab_selected")
+ItemList/styles/selected_focus = SubResource("StyleBoxFlat_tab_selected")
 Label/colors/font_color = Color(0.2, 0.9, 0.35, 1)
+RichTextLabel/colors/default_color = Color(0.2, 0.9, 0.35, 1)
+RichTextLabel/colors/font_link_color = Color(0.55, 0.85, 1, 1)
 LinkButton/colors/font_color = Color(0.55, 0.85, 1, 1)
 LinkButton/colors/font_hover_color = Color(0.85, 0.95, 1, 1)
 LinkButton/colors/font_pressed_color = Color(0.85, 0.95, 1, 1)
@@ -160,13 +170,27 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 14
 
 [node name="DiscoveriesTab" type="MarginContainer" parent="Monitor/Layout/Tabs"]
+unique_name_in_owner = true
 visible = false
 layout_mode = 2
+script = ExtResource("3_discoveries_tab")
 metadata/_tab_index = 1
 
-[node name="Placeholder" type="Label" parent="Monitor/Layout/Tabs/DiscoveriesTab"]
+[node name="Split" type="HSplitContainer" parent="Monitor/Layout/Tabs/DiscoveriesTab"]
 layout_mode = 2
-text = "> carregando descobertas..."
+split_offset = 300
+
+[node name="NoteList" type="ItemList" parent="Monitor/Layout/Tabs/DiscoveriesTab/Split"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+
+[node name="NoteText" type="RichTextLabel" parent="Monitor/Layout/Tabs/DiscoveriesTab/Split"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+selection_enabled = true
 
 [node name="DrawingsTab" type="MarginContainer" parent="Monitor/Layout/Tabs"]
 visible = false

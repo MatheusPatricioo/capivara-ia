@@ -4,9 +4,6 @@ extends MarginContainer
 ## The History tab: every web search with its date, query and sites, newest first.
 ## Clicking a site opens it in the default browser.
 
-## Only web links are opened. URLs come from the internet, so a file:// or other scheme
-## must never reach the operating system (web content is data, never instructions).
-const ALLOWED_URL_PREFIXES: PackedStringArray = ["http://", "https://"]
 const EMPTY_HISTORY_TEXT: String = "> nenhuma pesquisa ainda."
 const NO_RESULTS_TEXT: String = "    (nenhum site encontrado)"
 const SITE_INDENT: int = 24
@@ -53,7 +50,7 @@ func _create_site_link(page: SearchLogEntry.FoundPage) -> MarginContainer:
 	var link: LinkButton = LinkButton.new()
 	link.text = _shorten(page.title if not page.title.is_empty() else page.url)
 	link.tooltip_text = page.url
-	link.pressed.connect(_open_site.bind(page.url))
+	link.pressed.connect(WebLinks.open.bind(page.url))
 	var indented_link: MarginContainer = MarginContainer.new()
 	indented_link.add_theme_constant_override("margin_left", SITE_INDENT)
 	indented_link.add_child(link)
@@ -65,10 +62,3 @@ func _shorten(text: String) -> String:
 		return text
 	return text.left(MAX_TITLE_LENGTH - 1) + "…"
 
-
-func _open_site(url: String) -> void:
-	for allowed_prefix: String in ALLOWED_URL_PREFIXES:
-		if url.to_lower().begins_with(allowed_prefix):
-			OS.shell_open(url)
-			return
-	push_warning("Refusing to open a non-web link: %s" % url)
