@@ -218,6 +218,57 @@ def test_appends_the_reminder_after_a_tool_error(
     assert tool_result.content == f"Error: the search engine is down\n\n{REMINDER}"
 
 
+def test_uses_the_reminder_configured_for_that_tool(
+    language_model_asking_for_echo: ScriptedLanguageModel, echo_tool: EchoTool
+) -> None:
+    conversation = Conversation(
+        language_model_asking_for_echo,
+        SYSTEM_PROMPT,
+        tools=[echo_tool],
+        tool_result_reminder=REMINDER,
+        tool_result_reminders={"echo": "(Echo reminder.)"},
+    )
+
+    conversation.send(QUESTION)
+
+    tool_result = language_model_asking_for_echo.received_histories[1][-1]
+    assert tool_result.content == "echo: moon distance\n\n(Echo reminder.)"
+
+
+def test_an_empty_reminder_for_a_tool_leaves_its_result_alone(
+    language_model_asking_for_echo: ScriptedLanguageModel, echo_tool: EchoTool
+) -> None:
+    conversation = Conversation(
+        language_model_asking_for_echo,
+        SYSTEM_PROMPT,
+        tools=[echo_tool],
+        tool_result_reminder=REMINDER,
+        tool_result_reminders={"echo": ""},
+    )
+
+    conversation.send(QUESTION)
+
+    tool_result = language_model_asking_for_echo.received_histories[1][-1]
+    assert tool_result.content == "echo: moon distance"
+
+
+def test_other_tools_keep_the_general_reminder(
+    language_model_asking_for_echo: ScriptedLanguageModel, echo_tool: EchoTool
+) -> None:
+    conversation = Conversation(
+        language_model_asking_for_echo,
+        SYSTEM_PROMPT,
+        tools=[echo_tool],
+        tool_result_reminder=REMINDER,
+        tool_result_reminders={"draw": "(Draw reminder.)"},
+    )
+
+    conversation.send(QUESTION)
+
+    tool_result = language_model_asking_for_echo.received_histories[1][-1]
+    assert tool_result.content == f"echo: moon distance\n\n{REMINDER}"
+
+
 def test_raises_when_the_model_exceeds_the_step_limit(
     endless_conversation: Conversation,
 ) -> None:

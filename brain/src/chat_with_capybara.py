@@ -3,7 +3,7 @@ import sys
 import httpx
 
 from src.application.conversation import Conversation, StepLimitReachedError
-from src.capybara_tools import build_capybara_tools
+from src.capybara_tools import TOOL_RESULT_REMINDER_OVERRIDES, build_capybara_tools
 from src.domain.chalkboard import Chalkboard
 from src.domain.language_model import LanguageModelError
 from src.infrastructure.logging_setup import configure_logging
@@ -34,6 +34,7 @@ def main() -> None:
             tools=build_capybara_tools(settings, Chalkboard(settings.chalkboard_capacity)),
             max_steps=settings.max_tool_steps,
             tool_result_reminder=load_prompt(TOOL_RESULT_REMINDER_NAME),
+            tool_result_reminders=TOOL_RESULT_REMINDER_OVERRIDES,
         )
         print(f'Converse com a capivara. Digite "{EXIT_COMMAND}" para encerrar.')
         while True:

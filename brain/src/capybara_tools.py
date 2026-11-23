@@ -18,6 +18,10 @@ from src.infrastructure.png_drawing_repository import PngDrawingRepository
 from src.infrastructure.settings import Settings
 
 SEARCH_HISTORY_FILE_NAME = "search-history.json"
+# Tools whose results skip the general reminder. After save_discovery, the reminder ("call
+# save_discovery now... then tell Matheus") buried the invitation to draw and made her narrate
+# instead of drawing. Measured on real moments after a save: 11/20 drawings with it, 16/20 without.
+TOOL_RESULT_REMINDER_OVERRIDES = {"save_discovery": ""}
 
 
 def build_capybara_tools(

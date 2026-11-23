@@ -7,7 +7,7 @@ from src.application.conversation import Conversation
 from src.application.inner_voice import InnerVoice
 from src.application.metered_language_model import MeteredLanguageModel
 from src.application.token_budget import HourlyTokenBudget
-from src.capybara_tools import build_capybara_tools
+from src.capybara_tools import TOOL_RESULT_REMINDER_OVERRIDES, build_capybara_tools
 from src.domain.chalkboard import Chalkboard
 from src.infrastructure.logging_setup import configure_logging
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
@@ -64,6 +64,7 @@ def main() -> None:
                 tools=build_capybara_tools(settings, chalkboard, body),
                 max_steps=settings.max_tool_steps,
                 tool_result_reminder=tool_result_reminder,
+                tool_result_reminders=TOOL_RESULT_REMINDER_OVERRIDES,
             )
 
         loop = AutonomousLoop(

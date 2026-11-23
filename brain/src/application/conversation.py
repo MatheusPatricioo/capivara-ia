@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 from src.domain.language_model import ChatMessage, LanguageModel, Role, ToolCall
 from src.domain.tool import Tool, ToolError
@@ -21,12 +21,17 @@ class Conversation:
         tools: Sequence[Tool] = (),
         max_steps: int = DEFAULT_MAX_STEPS,
         tool_result_reminder: str = "",
+        tool_result_reminders: Mapping[str, str] | None = None,
     ) -> None:
+        """tool_result_reminder goes after every tool result, unless tool_result_reminders
+        has an entry for that tool name: then that text is used instead ('' means none).
+        """
         self._language_model = language_model
         self._history = [ChatMessage(role=Role.SYSTEM, content=system_prompt)]
         self._tools_by_name = {tool.definition.name: tool for tool in tools}
         self._max_steps = max_steps
         self._tool_result_reminder = tool_result_reminder
+        self._tool_result_reminders = dict(tool_result_reminders or {})
 
     @property
     def history(self) -> tuple[ChatMessage, ...]:
@@ -66,12 +71,13 @@ class Conversation:
                 result = f"Error: {error}"
         return ChatMessage(
             role=Role.TOOL,
-            content=self._with_reminder(result),
+            content=self._with_reminder(result, tool_call.name),
             tool_name=tool_call.name,
         )
 
-    def _with_reminder(self, tool_result: str) -> str:
+    def _with_reminder(self, tool_result: str, tool_name: str) -> str:
         """Puts the reminder right after the tool result, the last thing the model reads."""
-        if not self._tool_result_reminder:
+        reminder = self._tool_result_reminders.get(tool_name, self._tool_result_reminder)
+        if not reminder:
             return tool_result
-        return f"{tool_result}\n\n{self._tool_result_reminder}"
+        return f"{tool_result}\n\n{reminder}"
