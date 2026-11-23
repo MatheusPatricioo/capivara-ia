@@ -1,5 +1,6 @@
+import logging
 from collections.abc import Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 
 import httpx
 
@@ -10,8 +11,11 @@ from src.domain.language_model import (
     ToolCall,
     ToolDefinition,
 )
+from src.infrastructure.text_tool_call_parser import find_tool_call_in_text
 
 UNEXPECTED_FORMAT_MESSAGE = "Unexpected response format from Ollama"
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -53,7 +57,25 @@ class OllamaLanguageModel:
             response.raise_for_status()
         except httpx.HTTPError as error:
             raise LanguageModelError(f"Could not get a reply from Ollama: {error}") from error
-        return self._parse_reply(response)
+        reply = self._parse_reply(response)
+        if tools and not reply.tool_calls:
+            return self._recover_tool_call_written_as_text(reply, tools)
+        return reply
+
+    @staticmethod
+    def _recover_tool_call_written_as_text(
+        reply: ChatMessage, tools: Sequence[ToolDefinition]
+    ) -> ChatMessage:
+        """Turns a tool call printed in the text into a real one, dropping the invented rest.
+
+        Whatever the model wrote around the call is discarded: it is either noise from the
+        broken template or a made-up continuation (fake results, fake saves).
+        """
+        tool_call = find_tool_call_in_text(reply.content, {tool.name for tool in tools})
+        if tool_call is None:
+            return reply
+        logger.warning("Recovered a tool call written as text: %s", tool_call.name)
+        return replace(reply, content="", tool_calls=(tool_call,))
 
     @staticmethod
     def _serialize_message(message: ChatMessage) -> dict[str, object]:

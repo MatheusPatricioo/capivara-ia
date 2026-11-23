@@ -83,6 +83,18 @@ def ollama_with_malformed_tool_call() -> OllamaLanguageModel:
     return build_language_model(lambda request: httpx.Response(200, json=body))
 
 
+TOOL_CALL_WRITTEN_AS_TEXT = (
+    'Vou pesquisar!\n Ronaldo {"name": "web_search", "arguments": {"query": "stars"}}\n'
+    "Achei estrelas gemeas!"
+)
+
+
+@pytest.fixture
+def ollama_writing_the_tool_call_as_text() -> OllamaLanguageModel:
+    body = {"message": {"role": "assistant", "content": TOOL_CALL_WRITTEN_AS_TEXT}}
+    return build_language_model(lambda request: httpx.Response(200, json=body))
+
+
 @pytest.fixture
 def ollama_with_server_error() -> OllamaLanguageModel:
     return build_language_model(lambda request: httpx.Response(500))
@@ -229,3 +241,27 @@ def test_reports_zero_tokens_when_ollama_omits_the_counts(
     healthy_ollama: OllamaLanguageModel,
 ) -> None:
     assert healthy_ollama.chat(MESSAGES).token_count == 0
+
+
+def test_recovers_a_tool_call_written_as_text(
+    ollama_writing_the_tool_call_as_text: OllamaLanguageModel,
+) -> None:
+    reply = ollama_writing_the_tool_call_as_text.chat(MESSAGES, tools=[SEARCH_TOOL])
+
+    assert reply == ChatMessage(Role.ASSISTANT, "", tool_calls=(SEARCH_CALL,))
+
+
+def test_keeps_the_text_when_no_tools_were_offered(
+    ollama_writing_the_tool_call_as_text: OllamaLanguageModel,
+) -> None:
+    reply = ollama_writing_the_tool_call_as_text.chat(MESSAGES)
+
+    assert reply == ChatMessage(Role.ASSISTANT, TOOL_CALL_WRITTEN_AS_TEXT)
+
+
+def test_keeps_a_plain_answer_when_tools_were_offered(
+    healthy_ollama: OllamaLanguageModel,
+) -> None:
+    reply = healthy_ollama.chat(MESSAGES, tools=[SEARCH_TOOL])
+
+    assert reply == ChatMessage(Role.ASSISTANT, ASSISTANT_REPLY)
