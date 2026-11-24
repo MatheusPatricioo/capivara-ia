@@ -19,7 +19,10 @@ param(
     [string]$GodotPath = $env:GODOT_PATH,
     # Opens the Godot editor instead of running the game.
     [switch]$Editor,
-    [string]$OllamaUrl = "http://localhost:11434",
+    # 127.0.0.1, not localhost: on Windows, localhost tries IPv6 first, Ollama only listens
+    # on IPv4, and the 2-second health check timed out before falling back, so the script
+    # thought Ollama was down and stopped before starting the brain.
+    [string]$OllamaUrl = "http://127.0.0.1:11434",
     [string]$BrainHost = "127.0.0.1",
     [int]$BrainPort = 8765,
     [int]$WaitSeconds = 30
