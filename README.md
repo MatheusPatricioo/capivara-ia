@@ -123,9 +123,7 @@ Digite `sair` para encerrar o chat.
 
 No modo vivo ninguém fala com a capivara: a cada poucos minutos ela decide sozinha o que fazer (pesquisar algo, salvar uma descoberta, desenhar na lousa ou só descansar), e o corpo dela acompanha no mundo 3D.
 
-Antes, suba a memória (veja [Ligar a memória](#ligar-a-memória)). Sem ela, a capivara funciona do mesmo jeito, só não lembra do que já descobriu.
-
-No Windows, um comando liga o resto: o Ollama (se ainda não estiver rodando), o cérebro numa janela própria do PowerShell, com os logs visíveis, e o mundo no Godot:
+No Windows, um comando liga tudo: o Ollama (se ainda não estiver rodando), a memória no Docker (abrindo o Docker Desktop se precisar, e esperando o banco ficar pronto), o cérebro numa janela própria do PowerShell, com os logs visíveis, e o mundo no Godot:
 
 ```powershell
 setx GODOT_PATH "C:\caminho\para\Godot_v4.x-stable_win64.exe"   # só na primeira vez; abra um terminal novo depois
@@ -133,9 +131,11 @@ setx GODOT_PATH "C:\caminho\para\Godot_v4.x-stable_win64.exe"   # só na primeir
 .\start.ps1 -Editor   # abre o editor do Godot em vez do jogo
 ```
 
+A memória é opcional: sem Docker, ou se o banco não subir, o script avisa e segue, e a capivara funciona do mesmo jeito, só não lembra do que já descobriu.
+
 Para ligar cada parte à mão:
 
-1. Com o Ollama rodando, inicie o cérebro:
+1. Com o Ollama rodando e a memória ligada (veja [Ligar a memória](#ligar-a-memória)), inicie o cérebro:
 
    ```bash
    cd brain
@@ -144,7 +144,7 @@ Para ligar cada parte à mão:
 
 2. Abra a pasta `world/` no Godot e aperte Play. A ordem não importa: o mundo fica tentando se conectar ao cérebro.
 
-O Godot é opcional: com ele fechado, a capivara continua pesquisando, salvando e desenhando do mesmo jeito. O mundo só mostra o que o cérebro faz e, ao abrir, já recebe a lousa atual.
+O Godot é opcional: com ele fechado, a capivara continua pesquisando, salvando e desenhando do mesmo jeito. O mundo só mostra o que o cérebro faz e, ao abrir, já recebe a lousa atual. O contrário não vale: sem o cérebro, ela só passeia, e o mundo mostra o aviso "Cérebro desconectado" no canto da tela até ele ligar.
 
 No mundo, ela vai até o computador antes de pesquisar e antes de salvar, e até a lousa antes de desenhar. A lousa é a galeria dela: mostra os três desenhos (PNG) mais recentes da pasta de descobertas e se atualiza sozinha quando aparece um novo. Toda descoberta (Markdown) e todo desenho (PNG) ficam na pasta de descobertas (`DISCOVERIES_DIR` no `brain/.env`, ou `discoveries/` por padrão).
 
