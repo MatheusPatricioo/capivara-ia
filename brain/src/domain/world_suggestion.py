@@ -50,3 +50,12 @@ class WorldSuggestionRepository(Protocol):
         Raises SuggestionStorageError when it cannot be stored.
         """
         ...
+
+
+class WorldSuggestionArchive(Protocol):
+    def saved_requests(self) -> list[str]:
+        """The request of every suggestion already saved, the oldest first.
+
+        Files that cannot be read, or are not suggestions, are skipped.
+        """
+        ...

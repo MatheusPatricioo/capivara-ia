@@ -40,11 +40,13 @@ A capivara então pega um rabisco real, feito por uma pessoa, dessa categoria co
 
 **Próxima etapa planejada:** hoje ela reinterpreta um rabisco que já existe. O plano é ela criar desenhos inéditos com o [Sketch-RNN](https://magenta.tensorflow.org/sketch-rnn-demo) (Google Magenta), uma rede neural pequena treinada no Quick, Draw! que desenha traço por traço e pode partir de um rabisco existente para criar uma variação. Ela vai rodar localmente e de graça, como o resto do projeto.
 
-### Ela sugere, eu construo (planejado)
+### Ela sugere, eu construo (em construção)
 
 À medida que aprende sobre as coisas, a capivara vai **sugerir melhorias para a própria vida** no mundinho. Depois de pesquisar sobre vitórias-régias, por exemplo, ela pode pedir "um laguinho maior, com vitórias-régias de verdade", e depois de aprender sobre vaga-lumes, "luzinhas no jardim à noite".
 
-Cada sugestão vai ser guardada na pasta de descobertas, com o pedido, o motivo e a descoberta que a inspirou. Eu leio as sugestões e, aos poucos, construo as que fizerem sentido no mundo do Godot. Assim o mundo cresce a partir do que ela aprende, e ela pode reparar nas novidades quando passear por elas.
+Cada sugestão fica num arquivo Markdown em `sugestoes/`, dentro da pasta de descobertas, com o pedido, o motivo e a descoberta que a inspirou. Eu leio as sugestões e, aos poucos, construo as que fizerem sentido no mundo do Godot. Assim o mundo cresce a partir do que ela aprende, e ela pode reparar nas novidades quando passear por elas.
+
+As regras ficam no código, não só no prompt: ela só sugere depois de salvar uma descoberta no mesmo ciclo (que vira a inspiração), no máximo uma vez por ciclo, e um pedido parecido demais com um que ela já fez é recusado. A comparação usa embeddings, com o limite `SUGGESTION_REPEAT_MIN_SIMILARITY` (0,80 por padrão, medido com o `nomic-embed-text`).
 
 ## Stack
 

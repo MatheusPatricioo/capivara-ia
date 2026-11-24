@@ -48,6 +48,9 @@ class Settings(BaseSettings):
     # RAG: a saved discovery comes back for something she noticed only when its cosine
     # similarity reaches this. 0.70 was measured with nomic-embed-text; see .env.example.
     memory_recall_min_similarity: float = Field(default=0.70, ge=0.0, le=1.0)
+    # A new suggestion repeats an earlier one when their cosine similarity reaches this.
+    # 0.80 was measured with nomic-embed-text; see .env.example.
+    suggestion_repeat_min_similarity: float = Field(default=0.80, ge=0.0, le=1.0)
     log_level: LogLevel = "INFO"
     log_file: Path = PROJECT_ROOT / "logs" / "capybara.log"
 

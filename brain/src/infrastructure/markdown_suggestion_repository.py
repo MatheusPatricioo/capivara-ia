@@ -1,7 +1,10 @@
+import logging
 from pathlib import Path
 
 from src.domain.world_suggestion import SuggestionStorageError, WorldSuggestion
 from src.infrastructure.safe_file_names import free_dated_file_path, is_inside
+
+logger = logging.getLogger(__name__)
 
 SUGGESTIONS_FOLDER_NAME = "sugestoes"
 """A subfolder, so suggestions never mix with the discoveries (which are only top-level files)."""
@@ -35,6 +38,33 @@ class MarkdownSuggestionRepository:
         except OSError as error:
             raise SuggestionStorageError(f"could not save the suggestion: {error}") from error
         return file_path.name
+
+    def saved_requests(self) -> list[str]:
+        """The title line of every suggestion file, the oldest first (names start with the date).
+
+        A file that cannot be read, or has no title line (a note dropped in by hand), is
+        skipped: an odd file must not stop her from suggesting.
+        """
+        if not self._suggestions_dir.is_dir():
+            return []
+        requests: list[str] = []
+        for suggestion_file in sorted(self._suggestions_dir.glob(f"*{FILE_EXTENSION}")):
+            request = self._read_request(suggestion_file)
+            if request:
+                requests.append(request)
+        return requests
+
+    @staticmethod
+    def _read_request(suggestion_file: Path) -> str:
+        try:
+            lines = suggestion_file.read_text(encoding="utf-8").splitlines()
+        except (OSError, UnicodeDecodeError) as error:
+            logger.warning("Skipping the unreadable suggestion %s: %s", suggestion_file.name, error)
+            return ""
+        for line in lines:
+            if line.startswith(TITLE_PREFIX):
+                return line.removeprefix(TITLE_PREFIX).strip()
+        return ""
 
     def _ensure_inside_suggestions_dir(self, file_path: Path) -> None:
         if not is_inside(self._suggestions_dir, file_path):

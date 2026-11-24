@@ -91,3 +91,39 @@ def test_raises_a_storage_error_when_the_folder_cannot_be_created(tmp_path: Path
 
     with pytest.raises(SuggestionStorageError, match="could not save"):
         repository.save(SUGGESTION)
+
+
+def test_saved_requests_lists_every_request_the_oldest_first(
+    repository: MarkdownSuggestionRepository,
+) -> None:
+    repository.save(replace(SUGGESTION, request="Vaga-lumes no jardim"))
+    repository.save(replace(SUGGESTION, suggested_on=date(2026, 11, 20)))
+
+    assert repository.saved_requests() == [
+        "Um laguinho com vitórias-régias",
+        "Vaga-lumes no jardim",
+    ]
+
+
+def test_saved_requests_skips_files_without_a_title(
+    repository: MarkdownSuggestionRepository, suggestions_dir: Path
+) -> None:
+    repository.save(SUGGESTION)
+    (suggestions_dir / "anotacao.md").write_text("sem título aqui", encoding="utf-8")
+
+    assert repository.saved_requests() == ["Um laguinho com vitórias-régias"]
+
+
+def test_saved_requests_ignores_files_that_are_not_markdown(
+    repository: MarkdownSuggestionRepository, suggestions_dir: Path
+) -> None:
+    repository.save(SUGGESTION)
+    (suggestions_dir / "rascunho.txt").write_text("# Outra coisa", encoding="utf-8")
+
+    assert repository.saved_requests() == ["Um laguinho com vitórias-régias"]
+
+
+def test_saved_requests_is_empty_when_nothing_was_suggested_yet(
+    repository: MarkdownSuggestionRepository,
+) -> None:
+    assert repository.saved_requests() == []

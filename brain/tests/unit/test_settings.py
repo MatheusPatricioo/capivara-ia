@@ -318,3 +318,28 @@ def test_rejects_a_memory_recall_min_similarity_above_one(
 ) -> None:
     with pytest.raises(ValidationError):
         Settings(_env_file=None)
+
+
+@pytest.fixture
+def environment_without_suggestion_repeat_min_similarity(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("SUGGESTION_REPEAT_MIN_SIMILARITY", raising=False)
+
+
+@pytest.fixture
+def suggestion_repeat_min_similarity_below_zero(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SUGGESTION_REPEAT_MIN_SIMILARITY", "-0.1")
+
+
+def test_suggestion_repeat_min_similarity_defaults_to_the_measured_value(
+    environment_without_suggestion_repeat_min_similarity: None,
+) -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.suggestion_repeat_min_similarity == 0.80
+
+
+def test_rejects_a_suggestion_repeat_min_similarity_below_zero(
+    suggestion_repeat_min_similarity_below_zero: None,
+) -> None:
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None)

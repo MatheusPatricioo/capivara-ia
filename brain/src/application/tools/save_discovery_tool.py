@@ -3,6 +3,7 @@ from collections.abc import Callable
 from datetime import date
 
 from src.application.chalkboard_artist import PinnedDrawing
+from src.application.tools.conversation_discoveries import ConversationDiscoveries
 from src.application.tools.seen_sources import SeenSources
 from src.domain.discovery import Discovery, DiscoveryRepository, DiscoveryStorageError
 from src.domain.language_model import ToolDefinition
@@ -20,12 +21,17 @@ class SaveDiscoveryTool:
         seen_sources: SeenSources,
         today: Callable[[], date] = date.today,
         illustrate: Callable[[Discovery], PinnedDrawing | None] | None = None,
+        saved_discoveries: ConversationDiscoveries | None = None,
     ) -> None:
-        """illustrate is offered every discovery right after it is saved (None: no drawing)."""
+        """illustrate is offered every discovery right after it is saved (None: no drawing).
+
+        saved_discoveries, when given, receives every discovery saved in this conversation.
+        """
         self._repository = repository
         self._seen_sources = seen_sources
         self._today = today
         self._illustrate = illustrate
+        self._saved_discoveries = saved_discoveries
 
     @property
     def definition(self) -> ToolDefinition:
@@ -77,6 +83,8 @@ class SaveDiscoveryTool:
         except DiscoveryStorageError as error:
             raise ToolError(f"could not save the discovery: {error}") from error
         logger.info("Discovery saved: %s (sources: %s)", file_name, ", ".join(discovery.sources))
+        if self._saved_discoveries is not None:
+            self._saved_discoveries.remember(discovery)
         pinned_drawing = self._illustrate(discovery) if self._illustrate else None
         return self._result_message(file_name, pinned_drawing)
 

@@ -8,9 +8,12 @@ from src.application.chalkboard_artist import ChalkboardArtist
 from src.application.doodle_category_chooser import DoodleCategoryChooser
 from src.application.illustrate_discovery import IllustrateDiscovery
 from src.application.remembering_discovery_repository import RememberingDiscoveryRepository
+from src.application.repeated_suggestions import RepeatedSuggestions
+from src.application.tools.conversation_discoveries import ConversationDiscoveries
 from src.application.tools.embodied_tool import EmbodiedTool
 from src.application.tools.save_discovery_tool import SaveDiscoveryTool
 from src.application.tools.seen_sources import SeenSources
+from src.application.tools.suggest_improvement_tool import SuggestImprovementTool
 from src.application.tools.web_search_tool import WebSearchTool
 from src.domain.body import Body, Place
 from src.domain.capybara_hand import CapybaraHand
@@ -24,6 +27,7 @@ from src.infrastructure.json_embedding_cache import JsonEmbeddingCache
 from src.infrastructure.json_search_history import JsonSearchHistory
 from src.infrastructure.jsonl_search_log import JsonlSearchLog
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
+from src.infrastructure.markdown_suggestion_repository import MarkdownSuggestionRepository
 from src.infrastructure.ollama_text_embedder import OllamaTextEmbedder
 from src.infrastructure.png_drawing_repository import PngDrawingRepository
 from src.infrastructure.prompt_loader import load_prompt
@@ -59,10 +63,14 @@ def build_capybara_tools(
 
     With a memory, every saved discovery is also remembered for later cycles.
 
+    After saving a discovery, she may suggest one thing for her world (suggest_improvement),
+    inspired by the discovery she just saved in this same conversation.
+
     There is no draw tool: every saved discovery is offered a drawing automatically, because
     with a draw tool she often said she would draw and never called it.
     """
     seen_sources = SeenSources()
+    saved_discoveries = ConversationDiscoveries()
     web_search_tool = WebSearchTool(
         DuckDuckGoWebSearcher(
             DDGS(),
@@ -87,14 +95,34 @@ def build_capybara_tools(
         _build_discovery_repository(settings, memory),
         seen_sources,
         illustrate=illustrator.illustrate,
+        saved_discoveries=saved_discoveries,
+    )
+    suggest_improvement_tool = _build_suggest_improvement_tool(
+        settings, http_client, saved_discoveries
     )
     if body is None:
-        return [web_search_tool, save_discovery_tool]
+        return [web_search_tool, save_discovery_tool, suggest_improvement_tool]
     return [
         EmbodiedTool(web_search_tool, body, Place.COMPUTER),
-        # Saving a discovery writes a file, and her files live in the computer.
+        # Saving a discovery or a suggestion writes a file, and her files live in the computer.
         EmbodiedTool(save_discovery_tool, body, Place.COMPUTER),
+        EmbodiedTool(suggest_improvement_tool, body, Place.COMPUTER),
     ]
+
+
+def _build_suggest_improvement_tool(
+    settings: Settings, http_client: httpx.Client, saved_discoveries: ConversationDiscoveries
+) -> SuggestImprovementTool:
+    suggestions = MarkdownSuggestionRepository(settings.discoveries_dir)
+    return SuggestImprovementTool(
+        suggestions,
+        RepeatedSuggestions(
+            suggestions,
+            OllamaTextEmbedder(http_client, settings.ollama_embedding_model),
+            settings.suggestion_repeat_min_similarity,
+        ),
+        saved_discoveries,
+    )
 
 
 def _build_discovery_repository(

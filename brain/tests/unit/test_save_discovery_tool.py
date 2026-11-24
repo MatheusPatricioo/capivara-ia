@@ -4,6 +4,7 @@ from datetime import date
 import pytest
 
 from src.application.chalkboard_artist import PinnedDrawing
+from src.application.tools.conversation_discoveries import ConversationDiscoveries
 from src.application.tools.save_discovery_tool import SaveDiscoveryTool
 from src.application.tools.seen_sources import SeenSources
 from src.domain.discovery import Discovery, DiscoveryStorageError
@@ -305,3 +306,16 @@ def test_offers_no_drawing_when_the_discovery_was_not_saved(
         tool.run(arguments_with(sources=[INVENTED_URL]))
 
     assert illustrator_that_draws.offered_discoveries == []
+
+
+def test_shares_the_saved_discovery_with_the_rest_of_the_conversation(
+    repository: InMemoryDiscoveryRepository, seen_sources: SeenSources
+) -> None:
+    saved_discoveries = ConversationDiscoveries()
+    tool = SaveDiscoveryTool(
+        repository, seen_sources, today=lambda: TODAY, saved_discoveries=saved_discoveries
+    )
+
+    tool.run(VALID_ARGUMENTS)
+
+    assert saved_discoveries.latest == repository.saved_discoveries[0]

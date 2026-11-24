@@ -46,14 +46,18 @@ def settings(tmp_path: Path) -> Settings:
     return Settings(_env_file=None, discoveries_dir=tmp_path)
 
 
-def test_offers_only_search_and_save_because_drawing_is_automatic(
+def test_offers_search_save_and_suggest_but_no_draw_tool_because_drawing_is_automatic(
     settings: Settings, http_client: httpx.Client
 ) -> None:
     tools = build_capybara_tools(
         settings, Chalkboard(3), NeverAskedStructuredLanguageModel(), http_client
     )
 
-    assert [tool.definition.name for tool in tools] == ["web_search", "save_discovery"]
+    assert [tool.definition.name for tool in tools] == [
+        "web_search",
+        "save_discovery",
+        "suggest_improvement",
+    ]
 
 
 def test_goes_to_the_computer_to_save_a_discovery(
@@ -67,5 +71,20 @@ def test_goes_to_the_computer_to_save_a_discovery(
 
     with pytest.raises(ToolError):
         save_discovery.run({})
+
+    assert body.visited_places == [Place.COMPUTER]
+
+
+def test_goes_to_the_computer_to_suggest_an_improvement(
+    settings: Settings, http_client: httpx.Client
+) -> None:
+    body = RecordingBody()
+    tools = build_capybara_tools(
+        settings, Chalkboard(3), NeverAskedStructuredLanguageModel(), http_client, body=body
+    )
+    suggest = next(tool for tool in tools if tool.definition.name == "suggest_improvement")
+
+    with pytest.raises(ToolError):
+        suggest.run({})
 
     assert body.visited_places == [Place.COMPUTER]
