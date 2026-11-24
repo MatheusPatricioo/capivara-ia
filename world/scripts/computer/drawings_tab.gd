@@ -2,12 +2,16 @@ class_name DrawingsTab
 extends MarginContainer
 
 ## The Drawings tab: a gallery of the capybara's chalkboard drawings, newest first, and a
-## button that opens the discoveries folder in the system file explorer.
+## button that opens the discoveries folder in the system file explorer. The cards flow
+## like words in a paragraph: as many per row as the screen width fits, centered.
 
 const EMPTY_TEXT: String = "> nenhum desenho ainda."
-const THUMBNAIL_SIZE: Vector2 = Vector2(240, 180)
+const THUMBNAIL_SIZE: Vector2 = Vector2(220, 165)
+## Green like the terminal, so each white sheet sits in a thin frame.
+const FRAME_COLOR: Color = Color(0.2, 0.9, 0.35)
+const FRAME_WIDTH: int = 2
 
-@onready var _drawing_grid: GridContainer = %DrawingGrid
+@onready var _drawing_grid: HFlowContainer = %DrawingGrid
 @onready var _drawing_count: Label = %DrawingCount
 @onready var _open_folder_button: Button = %OpenFolderButton
 
@@ -38,7 +42,7 @@ func _clear_gallery() -> void:
 		card.queue_free()
 
 
-## One gallery card: the drawing scaled to fit, with its name below.
+## One gallery card: the drawing scaled to fit inside a frame, with its title below.
 func _create_card(file_name: String, drawing: ImageTexture) -> VBoxContainer:
 	var picture: TextureRect = TextureRect.new()
 	picture.texture = drawing
@@ -46,14 +50,26 @@ func _create_card(file_name: String, drawing: ImageTexture) -> VBoxContainer:
 	picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	picture.tooltip_text = file_name
+	var frame: PanelContainer = PanelContainer.new()
+	frame.add_theme_stylebox_override("panel", _create_frame_style())
+	frame.add_child(picture)
 	var caption: Label = Label.new()
-	caption.text = file_name.get_basename()
+	caption.text = DiscoveryFiles.title_from_file_name(file_name)
+	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	caption.custom_minimum_size.x = THUMBNAIL_SIZE.x
 	caption.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	var card: VBoxContainer = VBoxContainer.new()
-	card.add_child(picture)
+	card.add_child(frame)
 	card.add_child(caption)
 	return card
+
+
+func _create_frame_style() -> StyleBoxFlat:
+	var frame_style: StyleBoxFlat = StyleBoxFlat.new()
+	frame_style.bg_color = Color.WHITE
+	frame_style.border_color = FRAME_COLOR
+	frame_style.set_border_width_all(FRAME_WIDTH)
+	return frame_style
 
 
 ## The path always comes from DiscoveriesFolder, never from file contents.

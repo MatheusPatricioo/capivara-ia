@@ -46,12 +46,12 @@ static func load_newest_drawings(discoveries_path: String, count: int) -> Array[
 			break
 		var texture: ImageTexture = load_drawing(discoveries_path, file_name)
 		if texture != null:
-			drawings.append({"title": drawing_title(file_name), "texture": texture})
+			drawings.append({"title": title_from_file_name(file_name), "texture": texture})
 	return drawings
 
 
 ## "2026-11-23-gato-dormindo.png" becomes "gato dormindo".
-static func drawing_title(file_name: String) -> String:
+static func title_from_file_name(file_name: String) -> String:
 	var title: String = file_name.get_basename()
 	if title.length() > DATE_PREFIX_LENGTH and title[4] == "-" and title[7] == "-":
 		title = title.substr(DATE_PREFIX_LENGTH)

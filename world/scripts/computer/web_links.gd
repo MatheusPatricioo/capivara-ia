@@ -11,6 +11,8 @@ const ALLOWED_URL_PREFIXES: PackedStringArray = ["http://", "https://"]
 const URL_PATTERN: String = "https?://[^\\s<>()\\[\\]\"']+"
 ## Punctuation that ends a sentence, not the address: "veja https://site.com." keeps the dot out.
 const TRAILING_PUNCTUATION: String = ".,;:!?"
+## Light blue, so links stand out from the green terminal text.
+const LINK_COLOR: String = "#8cd9ff"
 
 
 static func is_web_url(url: String) -> bool:
@@ -36,7 +38,7 @@ static func to_bbcode_with_links(text: String) -> String:
 	for url_match: RegExMatch in url_regex.search_all(text):
 		var url: String = url_match.get_string().rstrip(TRAILING_PUNCTUATION)
 		bbcode += _escape(text.substr(copied_until, url_match.get_start() - copied_until))
-		bbcode += "[url=%s]%s[/url]" % [url, _escape(url)]
+		bbcode += "[color=%s][url=%s]%s[/url][/color]" % [LINK_COLOR, url, _escape(url)]
 		copied_until = url_match.get_start() + url.length()
 	return bbcode + _escape(text.substr(copied_until))
 
