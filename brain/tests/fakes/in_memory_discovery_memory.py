@@ -44,3 +44,21 @@ class WordCountEmbedder:
     def _count_words(self, text: str) -> Embedding:
         words = text.lower().split()
         return tuple(float(words.count(word)) for word in self._vocabulary)
+
+
+class ZeroPaddedEmbedder:
+    """Fills another fake's embeddings with zeros up to `dimensions` numbers.
+
+    The database only stores vectors of one size (768). Trailing zeros change neither
+    the dot product nor the lengths, so the cosine similarity stays the same.
+    """
+
+    def __init__(self, embedder: TextEmbedder, dimensions: int) -> None:
+        self._embedder = embedder
+        self._dimensions = dimensions
+
+    def embed(self, texts: Sequence[str]) -> list[Embedding]:
+        return [self._pad(embedding) for embedding in self._embedder.embed(texts)]
+
+    def _pad(self, embedding: Embedding) -> Embedding:
+        return embedding + (0.0,) * (self._dimensions - len(embedding))

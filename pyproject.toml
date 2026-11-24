@@ -7,6 +7,9 @@ dependencies = [
     "ddgs",
     "httpx",
     "pillow",
+    # PostgreSQL driver (version 3) and its connection pool, for the long-term memory.
+    "psycopg[binary]",
+    "psycopg-pool",
     "pydantic",
     "pydantic-settings",
     "websockets",
@@ -22,6 +25,9 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["brain/tests"]
 pythonpath = ["brain"]
+markers = [
+    "database: needs PostgreSQL from compose.yaml (skipped when it is offline; deselect with -m 'not database')",
+]
 
 [tool.ruff]
 target-version = "py312"

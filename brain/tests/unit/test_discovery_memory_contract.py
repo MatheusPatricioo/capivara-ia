@@ -1,16 +1,26 @@
 """Contract of DiscoveryMemory: every implementation must pass these same tests.
 
-The `memory` fixture is parametrized: today only the in-memory fake; the pgvector
-adapter joins it, so the fake used elsewhere is proven to behave like the database.
+The `memory` fixture is parametrized with the in-memory fake and the pgvector adapter,
+so the fake used elsewhere is proven to behave like the database. The "postgres" cases
+are marked `database` and skipped when PostgreSQL is offline.
 """
 
+from collections.abc import Callable
 from datetime import date
 
 import pytest
 
 from src.domain.discovery import Discovery
 from src.domain.discovery_memory import DiscoveryMemory
-from tests.fakes.in_memory_discovery_memory import InMemoryDiscoveryMemory, WordCountEmbedder
+from src.infrastructure.postgres_discovery_memory import (
+    EMBEDDING_DIMENSIONS,
+    PostgresDiscoveryMemory,
+)
+from tests.fakes.in_memory_discovery_memory import (
+    InMemoryDiscoveryMemory,
+    WordCountEmbedder,
+    ZeroPaddedEmbedder,
+)
 
 VOCABULARY = ("lua", "fases", "estrelas", "constelações", "capivaras", "grupos")
 
@@ -30,9 +40,26 @@ STARS = make_discovery("Constelações", "estrelas", "Estrelas formam constelaç
 CAPYBARAS = make_discovery("Capivaras em grupos", "capivaras", "Capivaras vivem em grupos")
 
 
-@pytest.fixture(params=["in_memory"])
-def memory(request: pytest.FixtureRequest) -> DiscoveryMemory:
+def build_in_memory(request: pytest.FixtureRequest) -> DiscoveryMemory:
     return InMemoryDiscoveryMemory(WordCountEmbedder(VOCABULARY))
+
+
+def build_postgres(request: pytest.FixtureRequest) -> DiscoveryMemory:
+    # Asked for here, not as a fixture argument, so the fake never waits for the database.
+    pool = request.getfixturevalue("empty_memory_pool")
+    embedder = ZeroPaddedEmbedder(WordCountEmbedder(VOCABULARY), EMBEDDING_DIMENSIONS)
+    return PostgresDiscoveryMemory(pool, embedder)
+
+
+MEMORY_BUILDERS: dict[str, Callable[[pytest.FixtureRequest], DiscoveryMemory]] = {
+    "in_memory": build_in_memory,
+    "postgres": build_postgres,
+}
+
+
+@pytest.fixture(params=["in_memory", pytest.param("postgres", marks=pytest.mark.database)])
+def memory(request: pytest.FixtureRequest) -> DiscoveryMemory:
+    return MEMORY_BUILDERS[request.param](request)
 
 
 @pytest.fixture
