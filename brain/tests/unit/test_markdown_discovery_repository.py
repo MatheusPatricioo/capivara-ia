@@ -172,3 +172,96 @@ def test_raises_a_storage_error_when_a_discovery_cannot_be_read(
 
     with pytest.raises(DiscoveryStorageError):
         repository.latest_headlines(limit=5)
+
+
+def test_saved_file_names_lists_only_markdown_files_the_oldest_first(
+    repository: MarkdownDiscoveryRepository, discoveries_dir: Path
+) -> None:
+    repository.save(replace(DISCOVERY, title="Dia 22", discovered_on=date(2026, 11, 22)))
+    repository.save(replace(DISCOVERY, title="Dia 21", discovered_on=date(2026, 11, 21)))
+    (discoveries_dir / "2026-11-22-dia-22.png").write_bytes(b"png")
+    (discoveries_dir / "history").mkdir()
+    (discoveries_dir / "history" / "2026-11-20-antiga.md").write_text("# Antiga", encoding="utf-8")
+
+    assert repository.saved_file_names() == ["2026-11-21-dia-21.md", "2026-11-22-dia-22.md"]
+
+
+def test_saved_file_names_is_empty_when_the_folder_does_not_exist(
+    repository: MarkdownDiscoveryRepository,
+) -> None:
+    assert repository.saved_file_names() == []
+
+
+def test_read_brings_back_the_saved_discovery(
+    repository: MarkdownDiscoveryRepository,
+) -> None:
+    file_name = repository.save(DISCOVERY)
+
+    assert repository.read(file_name) == DISCOVERY
+
+
+def test_read_keeps_every_paragraph_of_the_summary(
+    repository: MarkdownDiscoveryRepository,
+) -> None:
+    discovery = replace(DISCOVERY, summary="Primeiro parágrafo.\n\nSegundo parágrafo.")
+    file_name = repository.save(discovery)
+
+    assert repository.read(file_name).summary == "Primeiro parágrafo.\n\nSegundo parágrafo."
+
+
+def test_read_brings_back_no_sources_when_none_were_saved(
+    repository: MarkdownDiscoveryRepository,
+) -> None:
+    file_name = repository.save(replace(DISCOVERY, sources=()))
+
+    assert repository.read(file_name).sources == ()
+
+
+def test_read_rejects_a_note_without_a_title(
+    repository: MarkdownDiscoveryRepository, discoveries_dir: Path
+) -> None:
+    discoveries_dir.mkdir()
+    (discoveries_dir / "nota-solta.md").write_text("só uma nota", encoding="utf-8")
+
+    with pytest.raises(DiscoveryStorageError, match="it has no title"):
+        repository.read("nota-solta.md")
+
+
+def test_read_rejects_a_discovery_with_an_invalid_date(
+    repository: MarkdownDiscoveryRepository, discoveries_dir: Path
+) -> None:
+    file_name = repository.save(DISCOVERY)
+    file_path = discoveries_dir / file_name
+    content = file_path.read_text(encoding="utf-8")
+    file_path.write_text(content.replace("2026-11-22", "ontem"), encoding="utf-8")
+
+    with pytest.raises(DiscoveryStorageError, match="has no valid date"):
+        repository.read(file_name)
+
+
+def test_read_rejects_a_discovery_without_a_summary(
+    repository: MarkdownDiscoveryRepository, discoveries_dir: Path
+) -> None:
+    discoveries_dir.mkdir()
+    (discoveries_dir / "sem-resumo.md").write_text(
+        "# Sem resumo\n\n- **Data:** 2026-11-22\n", encoding="utf-8"
+    )
+
+    with pytest.raises(DiscoveryStorageError, match="has no summary"):
+        repository.read("sem-resumo.md")
+
+
+def test_read_raises_a_storage_error_for_a_missing_file(
+    repository: MarkdownDiscoveryRepository,
+) -> None:
+    with pytest.raises(DiscoveryStorageError, match="could not read"):
+        repository.read("2026-11-22-nao-existe.md")
+
+
+def test_read_refuses_a_file_outside_the_discoveries_folder(
+    repository: MarkdownDiscoveryRepository, tmp_path: Path
+) -> None:
+    (tmp_path / "secret.md").write_text("# Segredo", encoding="utf-8")
+
+    with pytest.raises(DiscoveryStorageError, match="outside the discoveries folder"):
+        repository.read("../secret.md")

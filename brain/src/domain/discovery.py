@@ -22,6 +22,21 @@ class DiscoveryRepository(Protocol):
         ...
 
 
+class DiscoveryArchive(Protocol):
+    """Reads back, in full, the discoveries that were already saved."""
+
+    def saved_file_names(self) -> list[str]:
+        """Names of every saved discovery, the oldest first."""
+        ...
+
+    def read(self, file_name: str) -> Discovery:
+        """The discovery saved under file_name.
+
+        Raises DiscoveryStorageError when it cannot be read or is not a discovery.
+        """
+        ...
+
+
 @dataclass(frozen=True)
 class DiscoveryHeadline:
     """Just enough of a saved discovery to remind the capybara that she already knows it."""

@@ -1,12 +1,20 @@
 import re
 import unicodedata
+from datetime import date
 from pathlib import Path
 
 from src.domain.discovery import Discovery, DiscoveryHeadline, DiscoveryStorageError
 
 FILE_EXTENSION = ".md"
+# The Markdown layout, shared by writing and reading so both always agree.
 TITLE_PREFIX = "# "
+DATE_PREFIX = "- **Data:** "
 TOPIC_PREFIX = "- **Tema:** "
+SECTION_PREFIX = "## "
+SUMMARY_HEADING = "## O que eu descobri"
+SOURCES_HEADING = "## Fontes"
+LIST_ITEM_PREFIX = "- "
+NO_SOURCES_LINE = "- (nenhuma)"
 FALLBACK_SLUG = "descoberta"
 MAX_SLUG_LENGTH = 60
 NON_SLUG_CHARACTERS = re.compile(r"[^a-z0-9]+")
@@ -28,6 +36,50 @@ def _first_value_after(prefix: str, lines: list[str]) -> str:
         if line.startswith(prefix):
             return line.removeprefix(prefix).strip()
     return ""
+
+
+def _section_lines(heading: str, lines: list[str]) -> list[str]:
+    """The lines under a "## " heading, up to the next "## " heading (empty when missing)."""
+    if heading not in lines:
+        return []
+    section: list[str] = []
+    for line in lines[lines.index(heading) + 1 :]:
+        if line.startswith(SECTION_PREFIX):
+            break
+        section.append(line)
+    return section
+
+
+def _from_markdown(file_name: str, lines: list[str]) -> Discovery:
+    """Reads back a discovery written by _to_markdown; the summary may span paragraphs."""
+    title = _first_value_after(TITLE_PREFIX, lines)
+    if not title:
+        raise DiscoveryStorageError(f"{file_name} is not a discovery: it has no title")
+    date_text = _first_value_after(DATE_PREFIX, lines)
+    try:
+        discovered_on = date.fromisoformat(date_text)
+    except ValueError as error:
+        raise DiscoveryStorageError(
+            f"{file_name} has no valid date (found '{date_text}')"
+        ) from error
+    summary = "\n".join(_section_lines(SUMMARY_HEADING, lines)).strip()
+    if not summary:
+        raise DiscoveryStorageError(f"{file_name} has no summary")
+    return Discovery(
+        title=title,
+        topic=_first_value_after(TOPIC_PREFIX, lines),
+        summary=summary,
+        sources=_sources(_section_lines(SOURCES_HEADING, lines)),
+        discovered_on=discovered_on,
+    )
+
+
+def _sources(source_lines: list[str]) -> tuple[str, ...]:
+    return tuple(
+        line.removeprefix(LIST_ITEM_PREFIX).strip()
+        for line in source_lines
+        if line.startswith(LIST_ITEM_PREFIX) and line != NO_SOURCES_LINE
+    )
 
 
 class MarkdownDiscoveryRepository:
@@ -53,15 +105,8 @@ class MarkdownDiscoveryRepository:
         Markdown files without a title line are skipped, so notes dropped into the
         folder by hand do not break anything.
         """
-        if not self._discoveries_dir.is_dir():
-            return []
-        discovery_files = sorted(
-            self._discoveries_dir.glob(f"*{FILE_EXTENSION}"),
-            key=lambda discovery_file: discovery_file.name,
-            reverse=True,
-        )
         headlines: list[DiscoveryHeadline] = []
-        for discovery_file in discovery_files:
+        for discovery_file in reversed(self._discovery_files()):
             if len(headlines) == limit:
                 break
             headline = self._read_headline(discovery_file)
@@ -69,14 +114,37 @@ class MarkdownDiscoveryRepository:
                 headlines.append(headline)
         return headlines
 
+    def saved_file_names(self) -> list[str]:
+        """Every Markdown file in the folder (not in subfolders), the oldest first.
+
+        Names start with the date, so sorting by name sorts by date.
+        """
+        return [discovery_file.name for discovery_file in self._discovery_files()]
+
+    def read(self, file_name: str) -> Discovery:
+        file_path = self._discoveries_dir / file_name
+        self._ensure_inside_discoveries_dir(file_path)
+        return _from_markdown(file_name, self._read_lines(file_path))
+
+    def _discovery_files(self) -> list[Path]:
+        if not self._discoveries_dir.is_dir():
+            return []
+        return sorted(
+            self._discoveries_dir.glob(f"*{FILE_EXTENSION}"),
+            key=lambda discovery_file: discovery_file.name,
+        )
+
     @staticmethod
-    def _read_headline(discovery_file: Path) -> DiscoveryHeadline | None:
+    def _read_lines(discovery_file: Path) -> list[str]:
         try:
-            lines = discovery_file.read_text(encoding="utf-8").splitlines()
+            return discovery_file.read_text(encoding="utf-8").splitlines()
         except (OSError, UnicodeDecodeError) as error:
             raise DiscoveryStorageError(
                 f"could not read the discovery {discovery_file.name}: {error}"
             ) from error
+
+    def _read_headline(self, discovery_file: Path) -> DiscoveryHeadline | None:
+        lines = self._read_lines(discovery_file)
         title = _first_value_after(TITLE_PREFIX, lines)
         if not title:
             return None
@@ -96,18 +164,18 @@ class MarkdownDiscoveryRepository:
         """Defense in depth: the slug already blocks traversal, this double-checks it."""
         if not file_path.resolve().is_relative_to(self._discoveries_dir):
             raise DiscoveryStorageError(
-                f"refusing to write outside the discoveries folder: {file_path}"
+                f"refusing to touch a file outside the discoveries folder: {file_path}"
             )
 
     @staticmethod
     def _to_markdown(discovery: Discovery) -> str:
-        source_lines = "\n".join(f"- {source}" for source in discovery.sources)
+        source_lines = "\n".join(f"{LIST_ITEM_PREFIX}{source}" for source in discovery.sources)
         return (
             f"{TITLE_PREFIX}{discovery.title}\n\n"
-            f"- **Data:** {discovery.discovered_on.isoformat()}\n"
+            f"{DATE_PREFIX}{discovery.discovered_on.isoformat()}\n"
             f"{TOPIC_PREFIX}{discovery.topic}\n\n"
-            f"## O que eu descobri\n\n"
+            f"{SUMMARY_HEADING}\n\n"
             f"{discovery.summary}\n\n"
-            f"## Fontes\n\n"
-            f"{source_lines or '- (nenhuma)'}\n"
+            f"{SOURCES_HEADING}\n\n"
+            f"{source_lines or NO_SOURCES_LINE}\n"
         )
