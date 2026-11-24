@@ -5,14 +5,17 @@ extends CanvasLayer
 ## discoveries folder: no AI logic lives here. The [X] button or the Esc key closes it.
 ## The game keeps running while it is open, so the brain connection never stops.
 
-const TAB_TITLES: PackedStringArray = ["Histórico", "Descobertas", "Desenhos"]
+const TAB_TITLES: PackedStringArray = ["Histórico", "Descobertas", "Desenhos", "Sugestões"]
+## Where the brain saves her suggestions for the world, inside the discoveries folder.
+const SUGGESTIONS_FOLDER_NAME: String = "sugestoes"
 
 @onready var _tabs: TabContainer = %Tabs
 @onready var _close_button: Button = %CloseButton
 @onready var _folder_label: Label = %FolderLabel
 @onready var _history_tab: HistoryTab = %HistoryTab
-@onready var _discoveries_tab: DiscoveriesTab = %DiscoveriesTab
+@onready var _discoveries_tab: NoteFolderTab = %DiscoveriesTab
 @onready var _drawings_tab: DrawingsTab = %DrawingsTab
+@onready var _suggestions_tab: NoteFolderTab = %SuggestionsTab
 
 
 func _ready() -> void:
@@ -27,8 +30,9 @@ func open() -> void:
 	var discoveries_path: String = DiscoveriesFolder.path()
 	_folder_label.text = "Pasta: %s" % discoveries_path
 	_history_tab.show_history(discoveries_path)
-	_discoveries_tab.show_discoveries(discoveries_path)
+	_discoveries_tab.show_folder(discoveries_path)
 	_drawings_tab.show_drawings(discoveries_path)
+	_suggestions_tab.show_folder(discoveries_path.path_join(SUGGESTIONS_FOLDER_NAME))
 	show()
 
 

@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/computer/computer_screen.gd" id="1_computer_screen"]
 [ext_resource type="Script" path="res://scripts/computer/history_tab.gd" id="2_history_tab"]
-[ext_resource type="Script" path="res://scripts/computer/discoveries_tab.gd" id="3_discoveries_tab"]
+[ext_resource type="Script" path="res://scripts/computer/note_folder_tab.gd" id="3_note_folder_tab"]
 [ext_resource type="Script" path="res://scripts/computer/drawings_tab.gd" id="4_drawings_tab"]
 
 [sub_resource type="SystemFont" id="SystemFont_terminal"]
@@ -174,7 +174,8 @@ theme_override_constants/separation = 14
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-script = ExtResource("3_discoveries_tab")
+script = ExtResource("3_note_folder_tab")
+empty_text = "> nenhuma descoberta ainda."
 metadata/_tab_index = 1
 
 [node name="Split" type="HSplitContainer" parent="Monitor/Layout/Tabs/DiscoveriesTab"]
@@ -182,12 +183,10 @@ layout_mode = 2
 split_offset = 300
 
 [node name="NoteList" type="ItemList" parent="Monitor/Layout/Tabs/DiscoveriesTab/Split"]
-unique_name_in_owner = true
 custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 
 [node name="NoteText" type="RichTextLabel" parent="Monitor/Layout/Tabs/DiscoveriesTab/Split"]
-unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 bbcode_enabled = true
@@ -230,6 +229,28 @@ size_flags_horizontal = 3
 theme_override_constants/h_separation = 20
 theme_override_constants/v_separation = 20
 alignment = 1
+
+[node name="SuggestionsTab" type="MarginContainer" parent="Monitor/Layout/Tabs"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+script = ExtResource("3_note_folder_tab")
+empty_text = "> nenhuma sugestão ainda."
+metadata/_tab_index = 3
+
+[node name="Split" type="HSplitContainer" parent="Monitor/Layout/Tabs/SuggestionsTab"]
+layout_mode = 2
+split_offset = 300
+
+[node name="NoteList" type="ItemList" parent="Monitor/Layout/Tabs/SuggestionsTab/Split"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+
+[node name="NoteText" type="RichTextLabel" parent="Monitor/Layout/Tabs/SuggestionsTab/Split"]
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+selection_enabled = true
 
 [node name="FolderLabel" type="Label" parent="Monitor/Layout"]
 unique_name_in_owner = true

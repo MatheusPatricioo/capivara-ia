@@ -50,6 +50,8 @@ As regras ficam no código, não só no prompt: ela só sugere depois de salvar 
 
 O convite para sugerir aparece no momento certo: no fim da resposta de cada descoberta salva. Com a regra só no prompt de sistema, ela nunca sugeria (0 de 20 momentos reais). Com o convite, sugere em cerca de 1 a cada 10 descobertas, sempre com pedidos concretos ("Vaga-lumes no jardim à noite"). A cada ciclo, a voz interior também lista as últimas sugestões que ela já fez, para ela não pedir a mesma coisa com outras palavras.
 
+Para ler os pedidos, clique no computador do mundo e abra a aba **Sugestões**: a lista fica à esquerda, das mais novas para as mais antigas, e o pedido escolhido aparece à direita, com o motivo e a descoberta que o inspirou.
+
 ## Stack
 
 - **Mundo:** Godot 4, GDScript
@@ -188,5 +190,5 @@ pytest -m "not database"
 
 🚧 Em desenvolvimento ativo.
 
-- **Funcionando:** chat e modo vivo autônomo, pesquisa na web, descobertas salvas em Markdown, rascunhos na lousa escolhidos por embeddings, memória de longo prazo com RAG (PostgreSQL + pgvector), mundo 3D conectado ao cérebro por WebSocket e limite de tokens por hora.
-- **Próximos passos:** telas do computador e da lousa mais bonitas e responsivas, a capivara sugerindo melhorias para o próprio mundo, desenhos inéditos com o Sketch-RNN, a lousa do Godot desenhando traço por traço e a capivara decidindo sozinha quando consultar a memória (agentic RAG).
+- **Funcionando:** chat e modo vivo autônomo, pesquisa na web, descobertas salvas em Markdown, rascunhos na lousa escolhidos por embeddings, memória de longo prazo com RAG (PostgreSQL + pgvector), sugestões de melhorias para o mundo (com a aba Sugestões no computador), mundo 3D conectado ao cérebro por WebSocket e limite de tokens por hora.
+- **Próximos passos:** a capivara reparando nas sugestões que forem construídas, desenhos inéditos com o Sketch-RNN, a lousa do Godot desenhando traço por traço e a capivara decidindo sozinha quando consultar a memória (agentic RAG).
