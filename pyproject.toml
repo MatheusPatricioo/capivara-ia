@@ -15,6 +15,16 @@ dependencies = [
     "websockets",
 ]
 
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+# The brain runs from source (cd brain; python -m src...), so `pip install .` only
+# installs the dependencies. Without this, setuptools guesses the packages, finds
+# brain/, world/ and logs/ side by side and refuses to build.
+packages = []
+
 [dependency-groups]
 dev = [
     "pytest",
