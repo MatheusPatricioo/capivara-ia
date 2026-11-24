@@ -85,3 +85,22 @@ def test_turns_other_ddgs_errors_into_web_search_errors() -> None:
 
     with pytest.raises(WebSearchError, match="Ratelimit"):
         searcher.search(QUERY, MAX_RESULTS)
+
+
+def test_keeps_only_the_first_of_several_glued_titles() -> None:
+    second_title = "Lua: características, fases, origem, formação - Brasil Escola"
+    glued_result = {
+        "title": "Lua: características, fases, eclipse, origem e mais - Toda ..."
+        f"{second_title}Lua: o que é, origem, características, superfície, atmosfera ...",
+        "href": "https://www.todamateria.com.br/caracteristicas-da-lua/",
+        "body": "A Lua é o único satélite natural da Terra.",
+    }
+    second_result = {"title": second_title, "href": "https://example.com/lua", "body": "Fases."}
+    searcher = DuckDuckGoWebSearcher(FakeDDGS([glued_result, second_result]))
+
+    results = searcher.search(QUERY, MAX_RESULTS)
+
+    assert [result.title for result in results] == [
+        "Lua: características, fases, eclipse, origem e mais - Toda ...",
+        second_title,
+    ]

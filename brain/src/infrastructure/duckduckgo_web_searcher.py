@@ -3,6 +3,7 @@ from typing import Any, Protocol
 from ddgs.exceptions import DDGSException
 
 from src.domain.web_search import SearchResult, WebSearchError
+from src.infrastructure.glued_titles import first_title
 
 DEFAULT_BACKEND = "duckduckgo"
 # Brazilian results first, so the pages she reads (and then summarizes) are in Portuguese.
@@ -41,11 +42,12 @@ class DuckDuckGoWebSearcher:
             if str(error) == DDGS_NO_RESULTS_MESSAGE:
                 return []
             raise WebSearchError(str(error)) from error
+        raw_titles = [str(raw_result.get("title", "")) for raw_result in raw_results]
         return [
             SearchResult(
-                title=str(raw_result.get("title", "")),
+                title=first_title(raw_title, raw_titles),
                 url=str(raw_result.get("href", "")),
                 snippet=str(raw_result.get("body", "")),
             )
-            for raw_result in raw_results
+            for raw_title, raw_result in zip(raw_titles, raw_results, strict=True)
         ]
