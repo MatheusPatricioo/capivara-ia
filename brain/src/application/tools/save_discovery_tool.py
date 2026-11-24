@@ -22,16 +22,21 @@ class SaveDiscoveryTool:
         today: Callable[[], date] = date.today,
         illustrate: Callable[[Discovery], PinnedDrawing | None] | None = None,
         saved_discoveries: ConversationDiscoveries | None = None,
+        follow_up: str = "",
     ) -> None:
         """illustrate is offered every discovery right after it is saved (None: no drawing).
 
         saved_discoveries, when given, receives every discovery saved in this conversation.
+        follow_up is added at the end of every successful save result (like the invitation
+        to suggest something for her world): a hint in the right moment works better than a
+        rule in the system prompt, which she reads long before.
         """
         self._repository = repository
         self._seen_sources = seen_sources
         self._today = today
         self._illustrate = illustrate
         self._saved_discoveries = saved_discoveries
+        self._follow_up = follow_up.strip()
 
     @property
     def definition(self) -> ToolDefinition:
@@ -86,7 +91,13 @@ class SaveDiscoveryTool:
         if self._saved_discoveries is not None:
             self._saved_discoveries.remember(discovery)
         pinned_drawing = self._illustrate(discovery) if self._illustrate else None
-        return self._result_message(file_name, pinned_drawing)
+        return self._with_follow_up(self._result_message(file_name, pinned_drawing))
+
+    def _with_follow_up(self, message: str) -> str:
+        """The follow-up comes last, the part of a tool result the model follows best."""
+        if not self._follow_up:
+            return message
+        return f"{message} {self._follow_up}"
 
     def _result_message(self, file_name: str, pinned_drawing: PinnedDrawing | None) -> str:
         """Tells her what already happened, drawing included, so she only has to tell it.

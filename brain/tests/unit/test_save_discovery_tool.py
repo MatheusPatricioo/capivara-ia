@@ -319,3 +319,24 @@ def test_shares_the_saved_discovery_with_the_rest_of_the_conversation(
     tool.run(VALID_ARGUMENTS)
 
     assert saved_discoveries.latest == repository.saved_discoveries[0]
+
+
+def test_ends_the_result_with_the_follow_up(
+    repository: InMemoryDiscoveryRepository, seen_sources: SeenSources
+) -> None:
+    tool = SaveDiscoveryTool(
+        repository, seen_sources, today=lambda: TODAY, follow_up="  Want to suggest something?\n"
+    )
+
+    result = tool.run(VALID_ARGUMENTS)
+
+    assert result == f"Saved as {SAVED_FILE_NAME}. Want to suggest something?"
+
+
+def test_has_no_follow_up_when_the_save_fails(seen_sources: SeenSources) -> None:
+    tool = SaveDiscoveryTool(
+        FullDiskDiscoveryRepository(), seen_sources, follow_up="Want to suggest something?"
+    )
+
+    with pytest.raises(ToolError, match="could not save the discovery"):
+        tool.run(VALID_ARGUMENTS)

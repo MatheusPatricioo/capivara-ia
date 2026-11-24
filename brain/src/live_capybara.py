@@ -18,6 +18,7 @@ from src.domain.chalkboard import Chalkboard
 from src.domain.discovery_memory import DiscoveryMemory
 from src.infrastructure.logging_setup import configure_logging
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
+from src.infrastructure.markdown_suggestion_repository import MarkdownSuggestionRepository
 from src.infrastructure.ollama_language_model import OllamaLanguageModel
 from src.infrastructure.prompt_loader import load_prompt
 from src.infrastructure.settings import Settings
@@ -32,6 +33,7 @@ INNER_VOICE_NAME = "autonomous_cycle"
 MEMORY_TEMPLATE_NAME = "known_discoveries"
 NOTICED_TEMPLATE_NAME = "noticed_things"
 RELATED_TEMPLATE_NAME = "related_discoveries"
+SUGGESTIONS_TEMPLATE_NAME = "known_suggestions"
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +69,8 @@ def build_inner_voice(
         noticed_template=load_prompt(NOTICED_TEMPLATE_NAME),
         related=RelatedDiscoveries(memory, settings.memory_recall_min_similarity),
         related_template=load_prompt(RELATED_TEMPLATE_NAME),
+        suggestions=MarkdownSuggestionRepository(settings.discoveries_dir),
+        suggestions_template=load_prompt(SUGGESTIONS_TEMPLATE_NAME),
     )
 
 

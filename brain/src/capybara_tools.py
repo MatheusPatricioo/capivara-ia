@@ -46,6 +46,10 @@ SEARCH_LOG_RELATIVE_PATH = "history/searches.jsonl"
 # instead of acting. Measured on real moments after a save: 11/20 drawings with it, 16/20 without.
 TOOL_RESULT_REMINDER_OVERRIDES = {"save_discovery": ""}
 CHOOSE_DOODLE_PROMPT_NAME = "choose_doodle"
+# Added to every successful save: the moment a discovery can turn into a wish for her world.
+# Measured on real moments right after a save: 0/20 suggestions with the rule only in the
+# system prompt, about 1 in 10 with this invitation (all concrete and in the right moments).
+SUGGESTION_INVITATION_PROMPT_NAME = "suggestion_invitation"
 
 
 def build_capybara_tools(
@@ -96,6 +100,7 @@ def build_capybara_tools(
         seen_sources,
         illustrate=illustrator.illustrate,
         saved_discoveries=saved_discoveries,
+        follow_up=load_prompt(SUGGESTION_INVITATION_PROMPT_NAME),
     )
     suggest_improvement_tool = _build_suggest_improvement_tool(
         settings, http_client, saved_discoveries

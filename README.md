@@ -48,6 +48,8 @@ Cada sugestão fica num arquivo Markdown em `sugestoes/`, dentro da pasta de des
 
 As regras ficam no código, não só no prompt: ela só sugere depois de salvar uma descoberta no mesmo ciclo (que vira a inspiração), no máximo uma vez por ciclo, e um pedido parecido demais com um que ela já fez é recusado. A comparação usa embeddings, com o limite `SUGGESTION_REPEAT_MIN_SIMILARITY` (0,80 por padrão, medido com o `nomic-embed-text`).
 
+O convite para sugerir aparece no momento certo: no fim da resposta de cada descoberta salva. Com a regra só no prompt de sistema, ela nunca sugeria (0 de 20 momentos reais). Com o convite, sugere em cerca de 1 a cada 10 descobertas, sempre com pedidos concretos ("Vaga-lumes no jardim à noite"). A cada ciclo, a voz interior também lista as últimas sugestões que ela já fez, para ela não pedir a mesma coisa com outras palavras.
+
 ## Stack
 
 - **Mundo:** Godot 4, GDScript

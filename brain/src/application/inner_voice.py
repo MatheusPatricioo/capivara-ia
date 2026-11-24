@@ -9,10 +9,14 @@ from src.domain.discovery import (
     DiscoveryHeadline,
     DiscoveryStorageError,
 )
+from src.domain.world_suggestion import WorldSuggestionArchive
 
 DISCOVERIES_PLACEHOLDER = "{discoveries}"
 NOTICED_PLACEHOLDER = "{noticed}"
 RELATED_PLACEHOLDER = "{related}"
+SUGGESTIONS_PLACEHOLDER = "{suggestions}"
+MAX_REMEMBERED_SUGGESTIONS = 10
+"""Enough to avoid asking twice; older wishes were either built or long forgotten."""
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +34,10 @@ class InnerVoice:
 
     With related discoveries (RAG), the saved discoveries closest in meaning to what she
     noticed come back in full, summary included, so she builds on what she already knows.
+
+    With a suggestion archive, her latest suggestions for the world are listed too, so she
+    does not ask again for the same thing in other words (the repeat check in code only
+    catches requests that share their key words).
     """
 
     def __init__(
@@ -42,6 +50,8 @@ class InnerVoice:
         noticed_template: str = "",
         related: RelatedDiscoveries | None = None,
         related_template: str = "",
+        suggestions: WorldSuggestionArchive | None = None,
+        suggestions_template: str = "",
     ) -> None:
         self._invitation = invitation
         self._catalog = catalog
@@ -51,15 +61,24 @@ class InnerVoice:
         self._noticed_template = noticed_template
         self._related = related
         self._related_template = related_template
+        self._suggestions = suggestions
+        self._suggestions_template = suggestions_template
         self._offered: tuple[PointOfAttention, ...] = ()
 
     def compose(self) -> str:
-        """Memory first, then related discoveries, what she noticed, and the invitation last.
+        """Memory and earlier suggestions first, then related discoveries, what she noticed,
+        and the invitation last.
 
         The end of the message is the part the model follows best.
         """
         self._offered = self._attention.pending() if self._attention is not None else ()
-        parts = [self._memory(), self._related_memories(), self._noticed(), self._invitation]
+        parts = [
+            self._memory(),
+            self._earlier_suggestions(),
+            self._related_memories(),
+            self._noticed(),
+            self._invitation,
+        ]
         return "\n\n".join(part for part in parts if part)
 
     def release_offered(self) -> None:
@@ -84,6 +103,17 @@ class InnerVoice:
             return ""
         discovery_lines = "\n".join(self._format(headline) for headline in headlines)
         return self._memory_template.replace(DISCOVERIES_PLACEHOLDER, discovery_lines)
+
+    def _earlier_suggestions(self) -> str:
+        if self._suggestions is None:
+            return ""
+        newest_first = list(reversed(self._suggestions.saved_requests()))
+        if not newest_first:
+            return ""
+        suggestion_lines = "\n".join(
+            f"- {request}" for request in newest_first[:MAX_REMEMBERED_SUGGESTIONS]
+        )
+        return self._suggestions_template.replace(SUGGESTIONS_PLACEHOLDER, suggestion_lines)
 
     def _related_memories(self) -> str:
         """Only about what she noticed: without a subject there is nothing to compare."""

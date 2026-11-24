@@ -285,3 +285,70 @@ def test_releasing_logs_what_she_thought_about(
     attentive_inner_voice.release_offered()
 
     assert caplog.messages == ["She thought about what she noticed: mushrooms"]
+
+
+SUGGESTIONS_TEMPLATE = "(Você já pediu:\n{suggestions}\nNão peça de novo.)"
+
+
+class ListSuggestionArchive:
+    def __init__(self, requests: list[str]) -> None:
+        self._requests = requests
+
+    def saved_requests(self) -> list[str]:
+        return list(self._requests)
+
+
+def build_inner_voice_with_suggestions(requests: list[str]) -> InnerVoice:
+    return InnerVoice(
+        INVITATION,
+        FakeCatalog([]),
+        MEMORY_TEMPLATE,
+        MAX_REMEMBERED_DISCOVERIES,
+        suggestions=ListSuggestionArchive(requests),
+        suggestions_template=SUGGESTIONS_TEMPLATE,
+    )
+
+
+def test_lists_the_earlier_suggestions_newest_first_before_the_invitation() -> None:
+    composed = build_inner_voice_with_suggestions(
+        ["Um laguinho com vitórias-régias", "Vaga-lumes no jardim"]
+    ).compose()
+
+    assert composed == (
+        "(Você já pediu:\n"
+        "- Vaga-lumes no jardim\n"
+        "- Um laguinho com vitórias-régias\n"
+        "Não peça de novo.)\n\n"
+        f"{INVITATION}"
+    )
+
+
+def test_lists_at_most_the_ten_newest_suggestions() -> None:
+    requests = [f"Pedido {number}" for number in range(1, 13)]
+
+    composed = build_inner_voice_with_suggestions(requests).compose()
+
+    assert "- Pedido 12\n" in composed
+    assert "- Pedido 3\n" in composed
+    assert "- Pedido 2\n" not in composed
+
+
+def test_leaves_the_suggestions_out_when_she_never_suggested_anything() -> None:
+    assert build_inner_voice_with_suggestions([]).compose() == INVITATION
+
+
+def test_puts_the_earlier_suggestions_right_after_the_saved_discoveries(
+    catalog_with_discoveries: FakeCatalog,
+) -> None:
+    inner_voice = InnerVoice(
+        INVITATION,
+        catalog_with_discoveries,
+        MEMORY_TEMPLATE,
+        MAX_REMEMBERED_DISCOVERIES,
+        suggestions=ListSuggestionArchive(["Vaga-lumes no jardim"]),
+        suggestions_template=SUGGESTIONS_TEMPLATE,
+    )
+
+    composed = inner_voice.compose()
+
+    assert composed.index("Você já guardou") < composed.index("Você já pediu")
