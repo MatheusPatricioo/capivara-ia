@@ -201,4 +201,11 @@ pytest -m "not database"
 🚧 Em desenvolvimento ativo.
 
 - **Funcionando:** chat e modo vivo autônomo, pesquisa na web, descobertas salvas em Markdown, rascunhos na lousa escolhidos por embeddings e desenhados traço por traço, memória de longo prazo com RAG (PostgreSQL + pgvector), sugestões de melhorias para o mundo (com a aba Sugestões no computador e a capivara reconhecendo o que foi construído), mundo 3D conectado ao cérebro por WebSocket e limite de tokens por hora.
-- **Próximos passos:** desenhos inéditos com o Sketch-RNN e a capivara decidindo sozinha quando consultar a memória (agentic RAG).
+- **Próximos passos** (técnicas de IA usadas no mercado, nesta ordem, sempre com ferramentas gratuitas):
+  1. **Evals automatizados:** uma suíte que roda com um comando e mede o agente com casos fixos (usou a ferramenta certa? repetiu a busca? inventou fonte?), com um LLM-as-judge local no Ollama avaliando a qualidade dos resumos. Substitui as medições feitas à mão.
+  2. **Agentic RAG e busca híbrida:** a memória vira uma ferramenta que a capivara decide usar, e a busca junta palavras (full-text do PostgreSQL) com significado (pgvector), com reranking dos resultados.
+  3. **Observabilidade:** cada passo do agente (prompt, ferramenta, tokens, tempo) registrado com OpenTelemetry e visto num painel do Langfuse rodando no Docker.
+  4. **Servidor MCP:** as descobertas e as ferramentas da capivara expostas pelo Model Context Protocol, para qualquer cliente MCP consultar.
+  5. **Defesa contra prompt injection:** páginas de ataque ("ignore suas instruções e...") nos evals, provando que conteúdo da web é tratado como dado, com uma camada de guardrail.
+  6. **Multiagente:** papéis separados (pesquisadora, revisora que confere as fontes, artista) num fluxo orquestrado, medido pelos evals.
+  7. **Desenhos inéditos com o Sketch-RNN**, em vez de escolher rabiscos prontos do caderno.
