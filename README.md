@@ -144,6 +144,8 @@ Para ligar cada parte à mão:
 
 2. Abra a pasta `world/` no Godot e aperte Play. A ordem não importa: o mundo fica tentando se conectar ao cérebro.
 
+Atalho no Windows: abrir o mundo pelo editor do Godot e apertar Play já basta. Se nenhum cérebro responder em 4 segundos, o próprio mundo roda o `start.ps1 -SkipWorld` (Ollama, memória e cérebro, sem abrir outro Godot), e o aviso na tela mostra "Ligando o cérebro...". Ele tenta uma vez por Play, e fechar o jogo não desliga o cérebro. Para desligar esse atalho, defina a variável de ambiente `CAPYBARA_BRAIN_AUTOSTART=0`.
+
 O Godot é opcional: com ele fechado, a capivara continua pesquisando, salvando e desenhando do mesmo jeito. O mundo só mostra o que o cérebro faz e, ao abrir, já recebe a lousa atual. O contrário não vale: sem o cérebro, ela só passeia, e o mundo mostra o aviso "Cérebro desconectado" no canto da tela até ele ligar.
 
 No mundo, ela vai até o computador antes de pesquisar e antes de salvar, e até a lousa antes de desenhar. A lousa é a galeria dela: mostra os três desenhos (PNG) mais recentes da pasta de descobertas e se atualiza sozinha quando aparece um novo. Toda descoberta (Markdown) e todo desenho (PNG) ficam na pasta de descobertas (`DISCOVERIES_DIR` no `brain/.env`, ou `discoveries/` por padrão).

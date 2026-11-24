@@ -9,7 +9,8 @@
        opening Docker Desktop first when needed. The memory is optional: when Docker is
        missing or the database fails, it warns and the capybara runs without remembering.
     3. Opens the brain (python -m src.live_capybara) in a new PowerShell window, so its logs stay visible.
-    4. Waits for the brain's WebSocket server, then runs the Godot world.
+    4. Waits for the brain's WebSocket server, then runs the Godot world (skipped with -SkipWorld,
+       which is how the world itself starts the brain when Play is pressed in the Godot editor).
 
     The Godot executable comes from -GodotPath, the GODOT_PATH environment variable or a
     "godot" command on the PATH. Set it once with:
@@ -18,11 +19,14 @@
 .EXAMPLE
     .\start.ps1
     .\start.ps1 -Editor
+    .\start.ps1 -SkipWorld
 #>
 param(
     [string]$GodotPath = $env:GODOT_PATH,
     # Opens the Godot editor instead of running the game.
     [switch]$Editor,
+    # Starts everything but the Godot world (Ollama, memory and brain).
+    [switch]$SkipWorld,
     # 127.0.0.1, not localhost: on Windows, localhost tries IPv6 first, Ollama only listens
     # on IPv4, and the 2-second health check timed out before falling back, so the script
     # thought Ollama was down and stopped before starting the brain.
@@ -196,6 +200,9 @@ else {
 }
 
 # 4. The Godot world.
+if ($SkipWorld) {
+    return
+}
 $resolvedGodotPath = Resolve-GodotPath
 if (-not $resolvedGodotPath) {
     Write-Warning "Godot not found. Pass -GodotPath or set GODOT_PATH; the brain keeps running meanwhile."

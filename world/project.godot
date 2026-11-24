@@ -18,6 +18,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 Brain="*res://scripts/brain/brain_connection.gd"
+BrainLauncher="*res://scripts/brain/brain_launcher.gd"
 BrainStatus="*res://scripts/brain/brain_status_banner.gd"
 
 [display]
