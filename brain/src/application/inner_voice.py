@@ -9,7 +9,7 @@ from src.domain.discovery import (
     DiscoveryHeadline,
     DiscoveryStorageError,
 )
-from src.domain.world_suggestion import WorldSuggestionArchive
+from src.domain.world_suggestion import WorldSuggestion, WorldSuggestionArchive
 
 DISCOVERIES_PLACEHOLDER = "{discoveries}"
 NOTICED_PLACEHOLDER = "{noticed}"
@@ -17,6 +17,8 @@ RELATED_PLACEHOLDER = "{related}"
 SUGGESTIONS_PLACEHOLDER = "{suggestions}"
 MAX_REMEMBERED_SUGGESTIONS = 10
 """Enough to avoid asking twice; older wishes were either built or long forgotten."""
+WAITING_LABEL = "esperando"
+BUILT_LABEL = "o Matheus construiu!"
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +39,9 @@ class InnerVoice:
 
     With a suggestion archive, her latest suggestions for the world are listed too, so she
     does not ask again for the same thing in other words (the repeat check in code only
-    catches requests that share their key words).
+    catches requests that share their key words). Each one says whether it is still
+    waiting or was built. When she notices the thing built for a suggestion (same thing
+    id), that line tells her it is what she asked for.
     """
 
     def __init__(
@@ -72,11 +76,12 @@ class InnerVoice:
         The end of the message is the part the model follows best.
         """
         self._offered = self._attention.pending() if self._attention is not None else ()
+        suggestions = self._saved_suggestions()
         parts = [
             self._memory(),
-            self._earlier_suggestions(),
+            self._earlier_suggestions(suggestions),
             self._related_memories(),
-            self._noticed(),
+            self._noticed(suggestions),
             self._invitation,
         ]
         return "\n\n".join(part for part in parts if part)
@@ -104,14 +109,19 @@ class InnerVoice:
         discovery_lines = "\n".join(self._format(headline) for headline in headlines)
         return self._memory_template.replace(DISCOVERIES_PLACEHOLDER, discovery_lines)
 
-    def _earlier_suggestions(self) -> str:
+    def _saved_suggestions(self) -> list[WorldSuggestion]:
+        """Read once per cycle and shared by the two parts that use them."""
         if self._suggestions is None:
+            return []
+        return [saved.suggestion for saved in self._suggestions.saved_suggestions()]
+
+    def _earlier_suggestions(self, suggestions: list[WorldSuggestion]) -> str:
+        if not suggestions:
             return ""
-        newest_first = list(reversed(self._suggestions.saved_requests()))
-        if not newest_first:
-            return ""
+        newest_first = list(reversed(suggestions))[:MAX_REMEMBERED_SUGGESTIONS]
         suggestion_lines = "\n".join(
-            f"- {request}" for request in newest_first[:MAX_REMEMBERED_SUGGESTIONS]
+            f"- {suggestion.request} ({BUILT_LABEL if suggestion.is_built else WAITING_LABEL})"
+            for suggestion in newest_first
         )
         return self._suggestions_template.replace(SUGGESTIONS_PLACEHOLDER, suggestion_lines)
 
@@ -125,11 +135,29 @@ class InnerVoice:
         related_lines = "\n".join(self._format_related(discovery) for discovery in related)
         return self._related_template.replace(RELATED_PLACEHOLDER, related_lines)
 
-    def _noticed(self) -> str:
+    def _noticed(self, suggestions: list[WorldSuggestion]) -> str:
         if not self._offered:
             return ""
-        noticed_lines = "\n".join(f"- {point.description}" for point in self._offered)
+        built_for_thing = {
+            suggestion.world_thing_id: suggestion
+            for suggestion in suggestions
+            if suggestion.is_built and suggestion.world_thing_id
+        }
+        noticed_lines = "\n".join(
+            self._format_noticed(point.description, built_for_thing.get(point.thing_id))
+            for point in self._offered
+        )
         return self._noticed_template.replace(NOTICED_PLACEHOLDER, noticed_lines)
+
+    @staticmethod
+    def _format_noticed(description: str, built_wish: WorldSuggestion | None) -> str:
+        """A thing built for one of her suggestions says so, so she recognizes her wish."""
+        if built_wish is None:
+            return f"- {description}"
+        return (
+            f'- {description} (é o que você pediu pro Matheus: "{built_wish.request}". '
+            "Ele construiu pra você!)"
+        )
 
     @staticmethod
     def _format(headline: DiscoveryHeadline) -> str:

@@ -6,6 +6,7 @@ import pytest
 from src.domain.world_suggestion import (
     MAX_REQUEST_LENGTH,
     InvalidSuggestionError,
+    SuggestionStatus,
     WorldSuggestion,
 )
 
@@ -45,3 +46,26 @@ def test_rejects_a_blank_reason() -> None:
 def test_rejects_a_suggestion_without_the_discovery_that_inspired_it() -> None:
     with pytest.raises(InvalidSuggestionError, match="discovery that inspired it"):
         replace(SUGGESTION, inspired_by=" ")
+
+
+def test_a_new_suggestion_is_pending() -> None:
+    assert SUGGESTION.status is SuggestionStatus.PENDING
+
+
+def test_built_marks_the_suggestion_as_built() -> None:
+    assert SUGGESTION.built().is_built
+
+
+def test_built_links_the_suggestion_to_the_world_thing() -> None:
+    assert SUGGESTION.built("water_lilies").world_thing_id == "water_lilies"
+
+
+def test_built_keeps_the_original_suggestion_unchanged() -> None:
+    SUGGESTION.built("water_lilies")
+
+    assert not SUGGESTION.is_built
+
+
+def test_rejects_a_world_thing_id_with_spaces_or_capitals() -> None:
+    with pytest.raises(InvalidSuggestionError, match="not a world thing id"):
+        SUGGESTION.built("Water Lilies")

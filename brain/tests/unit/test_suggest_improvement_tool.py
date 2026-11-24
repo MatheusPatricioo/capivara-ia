@@ -10,8 +10,9 @@ from src.application.tools.suggest_improvement_tool import SuggestImprovementToo
 from src.domain.discovery import Discovery
 from src.domain.text_embedding import Embedding, EmbeddingError
 from src.domain.tool import ToolError
-from src.domain.world_suggestion import SuggestionStorageError, WorldSuggestion
+from src.domain.world_suggestion import SavedSuggestion, SuggestionStorageError, WorldSuggestion
 from tests.fakes.in_memory_discovery_memory import WordCountEmbedder
+from tests.fakes.in_memory_suggestions import a_suggestion
 
 TODAY = date(2026, 11, 24)
 SAVED_FILE_NAME = "2026-11-24-vaga-lumes-no-jardim.md"
@@ -32,18 +33,21 @@ VALID_ARGUMENTS: dict[str, object] = {
 
 
 class InMemorySuggestionRepository:
-    """Saves into a list and answers saved_requests from it, like the Markdown folder."""
+    """Saves into a list and reads earlier plus new suggestions back, like the folder."""
 
     def __init__(self, earlier_requests: Sequence[str] = ()) -> None:
-        self._earlier_requests = list(earlier_requests)
-        self.saved_suggestions: list[WorldSuggestion] = []
+        self._earlier = [a_suggestion(request) for request in earlier_requests]
+        self.new_suggestions: list[WorldSuggestion] = []
 
     def save(self, suggestion: WorldSuggestion) -> str:
-        self.saved_suggestions.append(suggestion)
+        self.new_suggestions.append(suggestion)
         return SAVED_FILE_NAME
 
-    def saved_requests(self) -> list[str]:
-        return self._earlier_requests + [saved.request for saved in self.saved_suggestions]
+    def saved_suggestions(self) -> list[SavedSuggestion]:
+        return [
+            SavedSuggestion(f"suggestion-{position}.md", suggestion)
+            for position, suggestion in enumerate(self._earlier + self.new_suggestions)
+        ]
 
 
 class FullDiskSuggestionRepository(InMemorySuggestionRepository):
@@ -104,7 +108,7 @@ def test_saves_the_suggestion_with_the_request_and_reason_trimmed(
 ) -> None:
     tool.run(VALID_ARGUMENTS)
 
-    assert repository.saved_suggestions == [
+    assert repository.new_suggestions == [
         WorldSuggestion(
             request="Vaga-lumes no jardim",
             reason="Aprendi que eles piscam para conversar, e eu queria ver isso à noite.",
@@ -125,7 +129,7 @@ def test_takes_the_latest_discovery_of_the_conversation_as_the_inspiration(
 
     tool.run(VALID_ARGUMENTS)
 
-    assert repository.saved_suggestions[0].inspired_by == "Jardins noturnos"
+    assert repository.new_suggestions[0].inspired_by == "Jardins noturnos"
 
 
 def test_tells_the_model_the_suggestion_is_not_in_the_world_yet(
@@ -170,7 +174,7 @@ def test_a_refused_repeat_still_allows_a_new_suggestion_in_the_cycle(
 
     tool.run(VALID_ARGUMENTS)
 
-    assert [saved.request for saved in repository.saved_suggestions] == ["Vaga-lumes no jardim"]
+    assert [saved.request for saved in repository.new_suggestions] == ["Vaga-lumes no jardim"]
 
 
 def test_saves_anyway_when_repeats_cannot_be_checked(
@@ -180,7 +184,7 @@ def test_saves_anyway_when_repeats_cannot_be_checked(
 
     tool.run(VALID_ARGUMENTS)
 
-    assert len(repository.saved_suggestions) == 1
+    assert len(repository.new_suggestions) == 1
 
 
 def test_logs_a_warning_when_repeats_cannot_be_checked(

@@ -1,4 +1,5 @@
 import logging
+from dataclasses import replace
 from datetime import date
 
 import pytest
@@ -9,6 +10,8 @@ from src.application.related_discoveries import RelatedDiscoveries
 from src.domain.attention import Attention
 from src.domain.discovery import Discovery, DiscoveryHeadline, DiscoveryStorageError
 from src.domain.discovery_memory import RememberedDiscovery
+from src.domain.world_suggestion import WorldSuggestion
+from tests.fakes.in_memory_suggestions import InMemorySuggestionArchive, a_suggestion
 
 INVITATION = "(Você está sozinha. O que quer fazer?)"
 MEMORY_TEMPLATE = "(Você já guardou:\n{discoveries}\nNão repita.)"
@@ -288,49 +291,54 @@ def test_releasing_logs_what_she_thought_about(
 
 
 SUGGESTIONS_TEMPLATE = "(Você já pediu:\n{suggestions}\nNão peça de novo.)"
+LILIES_REQUEST = "Um laguinho com vitórias-régias"
 
 
-class ListSuggestionArchive:
-    def __init__(self, requests: list[str]) -> None:
-        self._requests = requests
-
-    def saved_requests(self) -> list[str]:
-        return list(self._requests)
-
-
-def build_inner_voice_with_suggestions(requests: list[str]) -> InnerVoice:
+def build_inner_voice_with_suggestions(
+    suggestions: list[WorldSuggestion], attention: AttentionInbox | None = None
+) -> InnerVoice:
     return InnerVoice(
         INVITATION,
         FakeCatalog([]),
         MEMORY_TEMPLATE,
         MAX_REMEMBERED_DISCOVERIES,
-        suggestions=ListSuggestionArchive(requests),
+        attention=attention,
+        noticed_template=NOTICED_TEMPLATE,
+        suggestions=InMemorySuggestionArchive(suggestions),
         suggestions_template=SUGGESTIONS_TEMPLATE,
     )
 
 
 def test_lists_the_earlier_suggestions_newest_first_before_the_invitation() -> None:
     composed = build_inner_voice_with_suggestions(
-        ["Um laguinho com vitórias-régias", "Vaga-lumes no jardim"]
+        [a_suggestion(LILIES_REQUEST), a_suggestion("Vaga-lumes no jardim")]
     ).compose()
 
     assert composed == (
         "(Você já pediu:\n"
-        "- Vaga-lumes no jardim\n"
-        "- Um laguinho com vitórias-régias\n"
+        "- Vaga-lumes no jardim (esperando)\n"
+        "- Um laguinho com vitórias-régias (esperando)\n"
         "Não peça de novo.)\n\n"
         f"{INVITATION}"
     )
 
 
+def test_tells_which_earlier_suggestions_were_built() -> None:
+    composed = build_inner_voice_with_suggestions(
+        [a_suggestion(LILIES_REQUEST).built("water_lilies")]
+    ).compose()
+
+    assert "- Um laguinho com vitórias-régias (o Matheus construiu!)" in composed
+
+
 def test_lists_at_most_the_ten_newest_suggestions() -> None:
-    requests = [f"Pedido {number}" for number in range(1, 13)]
+    suggestions = [a_suggestion(f"Pedido {number}") for number in range(1, 13)]
 
-    composed = build_inner_voice_with_suggestions(requests).compose()
+    composed = build_inner_voice_with_suggestions(suggestions).compose()
 
-    assert "- Pedido 12\n" in composed
-    assert "- Pedido 3\n" in composed
-    assert "- Pedido 2\n" not in composed
+    assert "- Pedido 12 (" in composed
+    assert "- Pedido 3 (" in composed
+    assert "- Pedido 2 (" not in composed
 
 
 def test_leaves_the_suggestions_out_when_she_never_suggested_anything() -> None:
@@ -345,10 +353,49 @@ def test_puts_the_earlier_suggestions_right_after_the_saved_discoveries(
         catalog_with_discoveries,
         MEMORY_TEMPLATE,
         MAX_REMEMBERED_DISCOVERIES,
-        suggestions=ListSuggestionArchive(["Vaga-lumes no jardim"]),
+        suggestions=InMemorySuggestionArchive([a_suggestion("Vaga-lumes no jardim")]),
         suggestions_template=SUGGESTIONS_TEMPLATE,
     )
 
     composed = inner_voice.compose()
 
     assert composed.index("Você já guardou") < composed.index("Você já pediu")
+
+
+def test_tells_her_a_noticed_thing_is_the_wish_that_was_built(
+    attention: AttentionInbox,
+) -> None:
+    inner_voice = build_inner_voice_with_suggestions(
+        [a_suggestion(LILIES_REQUEST).built("water_lilies")], attention
+    )
+    attention.notice("water_lilies", "vitórias-régias no laguinho")
+
+    composed = inner_voice.compose()
+
+    assert (
+        '- vitórias-régias no laguinho (é o que você pediu pro Matheus: '
+        '"Um laguinho com vitórias-régias". Ele construiu pra você!)'
+    ) in composed
+
+
+def test_does_not_link_a_noticed_thing_to_a_suggestion_still_waiting(
+    attention: AttentionInbox,
+) -> None:
+    waiting = replace(a_suggestion(LILIES_REQUEST), world_thing_id="water_lilies")
+    inner_voice = build_inner_voice_with_suggestions([waiting], attention)
+    attention.notice("water_lilies", "vitórias-régias no laguinho")
+
+    composed = inner_voice.compose()
+
+    assert "- vitórias-régias no laguinho\n" in composed
+
+
+def test_leaves_other_noticed_things_as_they_are(attention: AttentionInbox) -> None:
+    inner_voice = build_inner_voice_with_suggestions(
+        [a_suggestion(LILIES_REQUEST).built("water_lilies")], attention
+    )
+    attention.notice("mushrooms", "cogumelos vermelhos")
+
+    composed = inner_voice.compose()
+
+    assert "- cogumelos vermelhos\n" in composed

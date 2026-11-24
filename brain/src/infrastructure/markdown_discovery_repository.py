@@ -2,6 +2,7 @@ from datetime import date
 from pathlib import Path
 
 from src.domain.discovery import Discovery, DiscoveryHeadline, DiscoveryStorageError
+from src.infrastructure.markdown_notes import first_value_after, section_lines
 from src.infrastructure.safe_file_names import free_dated_file_path, is_inside
 
 FILE_EXTENSION = ".md"
@@ -9,53 +10,32 @@ FILE_EXTENSION = ".md"
 TITLE_PREFIX = "# "
 DATE_PREFIX = "- **Data:** "
 TOPIC_PREFIX = "- **Tema:** "
-SECTION_PREFIX = "## "
 SUMMARY_HEADING = "## O que eu descobri"
 SOURCES_HEADING = "## Fontes"
 LIST_ITEM_PREFIX = "- "
 NO_SOURCES_LINE = "- (nenhuma)"
 
 
-def _first_value_after(prefix: str, lines: list[str]) -> str:
-    """Returns what follows the prefix on the first line that starts with it, or ''."""
-    for line in lines:
-        if line.startswith(prefix):
-            return line.removeprefix(prefix).strip()
-    return ""
-
-
-def _section_lines(heading: str, lines: list[str]) -> list[str]:
-    """The lines under a "## " heading, up to the next "## " heading (empty when missing)."""
-    if heading not in lines:
-        return []
-    section: list[str] = []
-    for line in lines[lines.index(heading) + 1 :]:
-        if line.startswith(SECTION_PREFIX):
-            break
-        section.append(line)
-    return section
-
-
 def _from_markdown(file_name: str, lines: list[str]) -> Discovery:
     """Reads back a discovery written by _to_markdown; the summary may span paragraphs."""
-    title = _first_value_after(TITLE_PREFIX, lines)
+    title = first_value_after(TITLE_PREFIX, lines)
     if not title:
         raise DiscoveryStorageError(f"{file_name} is not a discovery: it has no title")
-    date_text = _first_value_after(DATE_PREFIX, lines)
+    date_text = first_value_after(DATE_PREFIX, lines)
     try:
         discovered_on = date.fromisoformat(date_text)
     except ValueError as error:
         raise DiscoveryStorageError(
             f"{file_name} has no valid date (found '{date_text}')"
         ) from error
-    summary = "\n".join(_section_lines(SUMMARY_HEADING, lines)).strip()
+    summary = "\n".join(section_lines(SUMMARY_HEADING, lines)).strip()
     if not summary:
         raise DiscoveryStorageError(f"{file_name} has no summary")
     return Discovery(
         title=title,
-        topic=_first_value_after(TOPIC_PREFIX, lines),
+        topic=first_value_after(TOPIC_PREFIX, lines),
         summary=summary,
-        sources=_sources(_section_lines(SOURCES_HEADING, lines)),
+        sources=_sources(section_lines(SOURCES_HEADING, lines)),
         discovered_on=discovered_on,
     )
 
@@ -133,10 +113,10 @@ class MarkdownDiscoveryRepository:
 
     def _read_headline(self, discovery_file: Path) -> DiscoveryHeadline | None:
         lines = self._read_lines(discovery_file)
-        title = _first_value_after(TITLE_PREFIX, lines)
+        title = first_value_after(TITLE_PREFIX, lines)
         if not title:
             return None
-        return DiscoveryHeadline(title=title, topic=_first_value_after(TOPIC_PREFIX, lines))
+        return DiscoveryHeadline(title=title, topic=first_value_after(TOPIC_PREFIX, lines))
 
     def _ensure_inside_discoveries_dir(self, file_path: Path) -> None:
         if not is_inside(self._discoveries_dir, file_path):

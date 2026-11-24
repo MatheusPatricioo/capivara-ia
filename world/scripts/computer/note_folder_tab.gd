@@ -11,9 +11,13 @@ extends MarginContainer
 ## scene can only have one node with each unique name and there are two of these tabs.
 
 const UNREADABLE_TEXT: String = "> não consegui ler este arquivo."
+const DONE_MARK: String = "✔ "
 
 ## Shown when the folder has no notes yet.
 @export var empty_text: String = "> nada por aqui ainda."
+## A note with a line starting with this (ignoring case) gets a check mark in the list.
+## The Suggestions tab uses it for the built ones; empty means no marks.
+@export var done_line_prefix: String = ""
 
 @onready var _note_list: ItemList = $Split/NoteList
 @onready var _note_text: RichTextLabel = $Split/NoteText
@@ -41,13 +45,28 @@ func show_folder(folder_path: String) -> void:
 	_show_note(0)
 
 
+func _list_title(file_name: String) -> String:
+	var lines: PackedStringArray = DiscoveryFiles.read_text(_folder_path, file_name).split("\n")
+	var mark: String = DONE_MARK if _is_done(lines) else ""
+	return mark + _note_title(lines, file_name)
+
+
 ## The note's own "# " title keeps accents and hyphens ("Vaga-lumes no jardim à noite"),
 ## which the file name lost. A note without one falls back to its file name.
-func _list_title(file_name: String) -> String:
-	for line: String in DiscoveryFiles.read_text(_folder_path, file_name).split("\n"):
+func _note_title(lines: PackedStringArray, file_name: String) -> String:
+	for line: String in lines:
 		if line.begins_with(MarkdownText.TITLE_PREFIX):
 			return line.trim_prefix(MarkdownText.TITLE_PREFIX).strip_edges()
 	return DiscoveryFiles.title_from_file_name(file_name)
+
+
+func _is_done(lines: PackedStringArray) -> bool:
+	if done_line_prefix.is_empty():
+		return false
+	for line: String in lines:
+		if line.to_lower().begins_with(done_line_prefix.to_lower()):
+			return true
+	return false
 
 
 func _show_note(item_index: int) -> void:

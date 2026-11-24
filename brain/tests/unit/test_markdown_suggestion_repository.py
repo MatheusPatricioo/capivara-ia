@@ -4,7 +4,13 @@ from pathlib import Path
 
 import pytest
 
-from src.domain.world_suggestion import SuggestionStorageError, WorldSuggestion
+from src.domain.world_suggestion import (
+    InvalidSuggestionError,
+    SavedSuggestion,
+    SuggestionStatus,
+    SuggestionStorageError,
+    WorldSuggestion,
+)
 from src.infrastructure.markdown_suggestion_repository import MarkdownSuggestionRepository
 
 SUGGESTION = WorldSuggestion(
@@ -59,7 +65,8 @@ def test_writes_the_suggestion_as_markdown(
     assert content == (
         "# Um laguinho com vitórias-régias\n\n"
         "- **Data:** 2026-11-24\n"
-        "- **Inspirada em:** Vitórias-régias gigantes\n\n"
+        "- **Inspirada em:** Vitórias-régias gigantes\n"
+        "- **Situação:** pendente\n\n"
         "## Por que eu quero\n\n"
         "Aprendi que as folhas delas aguentam o peso de uma criança!\n"
     )
@@ -93,37 +100,131 @@ def test_raises_a_storage_error_when_the_folder_cannot_be_created(tmp_path: Path
         repository.save(SUGGESTION)
 
 
-def test_saved_requests_lists_every_request_the_oldest_first(
+def requests_of(repository: MarkdownSuggestionRepository) -> list[str]:
+    return [saved.suggestion.request for saved in repository.saved_suggestions()]
+
+
+def test_reads_back_the_saved_suggestion_with_its_file_name(
+    repository: MarkdownSuggestionRepository,
+) -> None:
+    repository.save(SUGGESTION)
+
+    assert repository.saved_suggestions() == [SavedSuggestion(EXPECTED_FILE_NAME, SUGGESTION)]
+
+
+def test_reads_back_a_reason_with_several_paragraphs(
+    repository: MarkdownSuggestionRepository,
+) -> None:
+    long_reason = replace(SUGGESTION, reason="Primeiro motivo.\n\nSegundo motivo.")
+    repository.save(long_reason)
+
+    assert repository.saved_suggestions()[0].suggestion == long_reason
+
+
+def test_lists_the_suggestions_the_oldest_first(
     repository: MarkdownSuggestionRepository,
 ) -> None:
     repository.save(replace(SUGGESTION, request="Vaga-lumes no jardim"))
     repository.save(replace(SUGGESTION, suggested_on=date(2026, 11, 20)))
 
-    assert repository.saved_requests() == [
-        "Um laguinho com vitórias-régias",
-        "Vaga-lumes no jardim",
-    ]
+    assert requests_of(repository) == ["Um laguinho com vitórias-régias", "Vaga-lumes no jardim"]
 
 
-def test_saved_requests_skips_files_without_a_title(
+def test_skips_files_that_are_not_suggestions(
     repository: MarkdownSuggestionRepository, suggestions_dir: Path
 ) -> None:
     repository.save(SUGGESTION)
-    (suggestions_dir / "anotacao.md").write_text("sem título aqui", encoding="utf-8")
+    (suggestions_dir / "anotacao.md").write_text("# Só um título", encoding="utf-8")
 
-    assert repository.saved_requests() == ["Um laguinho com vitórias-régias"]
+    assert requests_of(repository) == ["Um laguinho com vitórias-régias"]
 
 
-def test_saved_requests_ignores_files_that_are_not_markdown(
+def test_ignores_files_that_are_not_markdown(
     repository: MarkdownSuggestionRepository, suggestions_dir: Path
 ) -> None:
     repository.save(SUGGESTION)
     (suggestions_dir / "rascunho.txt").write_text("# Outra coisa", encoding="utf-8")
 
-    assert repository.saved_requests() == ["Um laguinho com vitórias-régias"]
+    assert requests_of(repository) == ["Um laguinho com vitórias-régias"]
 
 
-def test_saved_requests_is_empty_when_nothing_was_suggested_yet(
+def test_lists_nothing_when_nothing_was_suggested_yet(
     repository: MarkdownSuggestionRepository,
 ) -> None:
-    assert repository.saved_requests() == []
+    assert repository.saved_suggestions() == []
+
+
+def test_reads_a_suggestion_without_a_status_line_as_pending(
+    repository: MarkdownSuggestionRepository, suggestions_dir: Path
+) -> None:
+    repository.save(SUGGESTION)
+    file_path = suggestions_dir / EXPECTED_FILE_NAME
+    content = file_path.read_text(encoding="utf-8")
+    file_path.write_text(content.replace("- **Situação:** pendente\n", ""), encoding="utf-8")
+
+    assert repository.saved_suggestions()[0].suggestion.status is SuggestionStatus.PENDING
+
+
+def test_reads_a_status_typed_by_hand_without_the_accent_as_built(
+    repository: MarkdownSuggestionRepository, suggestions_dir: Path
+) -> None:
+    repository.save(SUGGESTION)
+    file_path = suggestions_dir / EXPECTED_FILE_NAME
+    content = file_path.read_text(encoding="utf-8")
+    file_path.write_text(content.replace("pendente", "Construida"), encoding="utf-8")
+
+    assert repository.saved_suggestions()[0].suggestion.is_built
+
+
+def test_mark_built_rewrites_the_file_as_built_and_linked_to_the_world_thing(
+    repository: MarkdownSuggestionRepository, suggestions_dir: Path
+) -> None:
+    repository.save(SUGGESTION)
+
+    repository.mark_built(EXPECTED_FILE_NAME, "water_lilies")
+
+    content = (suggestions_dir / EXPECTED_FILE_NAME).read_text(encoding="utf-8")
+    assert "- **Situação:** construída\n- **No mundo:** water_lilies\n" in content
+
+
+def test_mark_built_returns_the_built_suggestion(
+    repository: MarkdownSuggestionRepository,
+) -> None:
+    repository.save(SUGGESTION)
+
+    saved = repository.mark_built(EXPECTED_FILE_NAME, "water_lilies")
+
+    assert saved == SavedSuggestion(EXPECTED_FILE_NAME, SUGGESTION.built("water_lilies"))
+
+
+def test_mark_built_keeps_the_rest_of_the_suggestion(
+    repository: MarkdownSuggestionRepository,
+) -> None:
+    repository.save(SUGGESTION)
+
+    repository.mark_built(EXPECTED_FILE_NAME)
+
+    assert repository.saved_suggestions()[0].suggestion == SUGGESTION.built()
+
+
+def test_mark_built_raises_a_storage_error_for_a_missing_file(
+    repository: MarkdownSuggestionRepository,
+) -> None:
+    with pytest.raises(SuggestionStorageError, match="could not read"):
+        repository.mark_built("2026-11-24-nao-existe.md")
+
+
+def test_mark_built_refuses_a_file_outside_the_suggestions_folder(
+    repository: MarkdownSuggestionRepository,
+) -> None:
+    with pytest.raises(SuggestionStorageError, match="outside the suggestions folder"):
+        repository.mark_built("../../segredo.md")
+
+
+def test_mark_built_rejects_an_invalid_world_thing_id(
+    repository: MarkdownSuggestionRepository,
+) -> None:
+    repository.save(SUGGESTION)
+
+    with pytest.raises(InvalidSuggestionError, match="not a world thing id"):
+        repository.mark_built(EXPECTED_FILE_NAME, "Vitórias Régias!")

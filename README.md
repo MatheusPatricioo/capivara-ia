@@ -40,7 +40,7 @@ A capivara então pega um rabisco real, feito por uma pessoa, dessa categoria co
 
 **Próxima etapa planejada:** hoje ela reinterpreta um rabisco que já existe. O plano é ela criar desenhos inéditos com o [Sketch-RNN](https://magenta.tensorflow.org/sketch-rnn-demo) (Google Magenta), uma rede neural pequena treinada no Quick, Draw! que desenha traço por traço e pode partir de um rabisco existente para criar uma variação. Ela vai rodar localmente e de graça, como o resto do projeto.
 
-### Ela sugere, eu construo (em construção)
+### Ela sugere, eu construo
 
 À medida que aprende sobre as coisas, a capivara vai **sugerir melhorias para a própria vida** no mundinho. Depois de pesquisar sobre vitórias-régias, por exemplo, ela pode pedir "um laguinho maior, com vitórias-régias de verdade", e depois de aprender sobre vaga-lumes, "luzinhas no jardim à noite".
 
@@ -50,7 +50,17 @@ As regras ficam no código, não só no prompt: ela só sugere depois de salvar 
 
 O convite para sugerir aparece no momento certo: no fim da resposta de cada descoberta salva. Com a regra só no prompt de sistema, ela nunca sugeria (0 de 20 momentos reais). Com o convite, sugere em cerca de 1 a cada 10 descobertas, sempre com pedidos concretos ("Vaga-lumes no jardim à noite"). A cada ciclo, a voz interior também lista as últimas sugestões que ela já fez, para ela não pedir a mesma coisa com outras palavras.
 
-Para ler os pedidos, clique no computador do mundo e abra a aba **Sugestões**: a lista fica à esquerda, das mais novas para as mais antigas, e o pedido escolhido aparece à direita, com o motivo e a descoberta que o inspirou.
+Para ler os pedidos, clique no computador do mundo e abra a aba **Sugestões**: a lista fica à esquerda, das mais novas para as mais antigas, e o pedido escolhido aparece à direita, com o motivo e a descoberta que o inspirou. Os pedidos já construídos ganham um ✔ na lista.
+
+Quando eu construo um pedido, marco a sugestão como construída:
+
+```powershell
+cd brain
+python -m src.mark_suggestion_built                 # lista as sugestões esperando
+python -m src.mark_suggestion_built 2026-11-24-um-laguinho-com-vitorias-regias.md --thing-id water_lilies
+```
+
+Isso troca a linha `- **Situação:** pendente` do arquivo por `construída` (editar a linha à mão também funciona). A partir daí, a voz interior conta a ela quais pedidos o Matheus construiu e quais ainda estão esperando. O `--thing-id` é opcional: é o `thing_id` do `Observable` que coloquei no mundo para o pedido. Quando ela passa perto dele, repara na coisa e fica sabendo que é o que ela pediu.
 
 ## Stack
 
@@ -190,5 +200,5 @@ pytest -m "not database"
 
 🚧 Em desenvolvimento ativo.
 
-- **Funcionando:** chat e modo vivo autônomo, pesquisa na web, descobertas salvas em Markdown, rascunhos na lousa escolhidos por embeddings, memória de longo prazo com RAG (PostgreSQL + pgvector), sugestões de melhorias para o mundo (com a aba Sugestões no computador), mundo 3D conectado ao cérebro por WebSocket e limite de tokens por hora.
-- **Próximos passos:** a capivara reparando nas sugestões que forem construídas, desenhos inéditos com o Sketch-RNN, a lousa do Godot desenhando traço por traço e a capivara decidindo sozinha quando consultar a memória (agentic RAG).
+- **Funcionando:** chat e modo vivo autônomo, pesquisa na web, descobertas salvas em Markdown, rascunhos na lousa escolhidos por embeddings, memória de longo prazo com RAG (PostgreSQL + pgvector), sugestões de melhorias para o mundo (com a aba Sugestões no computador e a capivara reconhecendo o que foi construído), mundo 3D conectado ao cérebro por WebSocket e limite de tokens por hora.
+- **Próximos passos:** desenhos inéditos com o Sketch-RNN, a lousa do Godot desenhando traço por traço e a capivara decidindo sozinha quando consultar a memória (agentic RAG).

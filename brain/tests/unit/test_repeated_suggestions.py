@@ -6,6 +6,7 @@ import pytest
 from src.application.repeated_suggestions import EarlierSuggestion, RepeatedSuggestions
 from src.domain.text_embedding import Embedding, EmbeddingError
 from tests.fakes.in_memory_discovery_memory import WordCountEmbedder
+from tests.fakes.in_memory_suggestions import InMemorySuggestionArchive, a_suggestion
 
 MIN_SIMILARITY = 0.80
 VOCABULARY = ["laguinho", "vitórias-régias", "vaga-lumes", "jardim", "luneta", "noite"]
@@ -13,12 +14,9 @@ EARLIER_REQUESTS = ["Vaga-lumes no jardim", "Um laguinho com vitórias-régias"]
 REPEATED_SUGGESTIONS_LOGGER = "src.application.repeated_suggestions"
 
 
-class ListArchive:
-    def __init__(self, requests: list[str]) -> None:
-        self._requests = requests
-
-    def saved_requests(self) -> list[str]:
-        return list(self._requests)
+def archive_with(requests: list[str]) -> InMemorySuggestionArchive:
+    """An archive with one pending suggestion per request."""
+    return InMemorySuggestionArchive([a_suggestion(request) for request in requests])
 
 
 class OfflineEmbedder:
@@ -29,7 +27,7 @@ class OfflineEmbedder:
 @pytest.fixture
 def repeated_suggestions() -> RepeatedSuggestions:
     return RepeatedSuggestions(
-        ListArchive(EARLIER_REQUESTS), WordCountEmbedder(VOCABULARY), MIN_SIMILARITY
+        archive_with(EARLIER_REQUESTS), WordCountEmbedder(VOCABULARY), MIN_SIMILARITY
     )
 
 
@@ -54,7 +52,7 @@ def test_finds_nothing_below_the_minimum_similarity(
 
 def test_finds_nothing_when_there_are_no_earlier_suggestions() -> None:
     repeated_suggestions = RepeatedSuggestions(
-        ListArchive([]), OfflineEmbedder(), MIN_SIMILARITY
+        archive_with([]), OfflineEmbedder(), MIN_SIMILARITY
     )
 
     assert repeated_suggestions.earlier_version_of("Vaga-lumes no jardim") is None
@@ -62,7 +60,7 @@ def test_finds_nothing_when_there_are_no_earlier_suggestions() -> None:
 
 def test_lets_an_embedding_error_reach_the_caller() -> None:
     repeated_suggestions = RepeatedSuggestions(
-        ListArchive(EARLIER_REQUESTS), OfflineEmbedder(), MIN_SIMILARITY
+        archive_with(EARLIER_REQUESTS), OfflineEmbedder(), MIN_SIMILARITY
     )
 
     with pytest.raises(EmbeddingError):
