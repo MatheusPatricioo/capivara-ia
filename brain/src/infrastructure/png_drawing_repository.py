@@ -10,7 +10,7 @@ from src.domain.drawing import (
     DrawingStorageError,
     Stroke,
 )
-from src.infrastructure.markdown_discovery_repository import slugify
+from src.infrastructure.safe_file_names import free_dated_file_path, is_inside
 
 FILE_EXTENSION = ".png"
 # Like a quick sketch in Paint: a white canvas and a single black brush, always the same width.
@@ -28,7 +28,9 @@ class PngDrawingRepository:
     def save(self, drawing: Drawing, drawn_on: date) -> str:
         try:
             self._discoveries_dir.mkdir(parents=True, exist_ok=True)
-            file_path = self._free_file_path(drawing, drawn_on)
+            file_path = free_dated_file_path(
+                self._discoveries_dir, drawn_on, drawing.title, FILE_EXTENSION
+            )
             self._ensure_inside_discoveries_dir(file_path)
             self._render(drawing).save(file_path, format="PNG")
         except OSError as error:
@@ -48,19 +50,8 @@ class PngDrawingRepository:
         points = [(point.x, point.y) for point in stroke.points]
         pen.line(points, fill=PEN_COLOR, width=STROKE_WIDTH, joint="curve")
 
-    def _free_file_path(self, drawing: Drawing, drawn_on: date) -> Path:
-        """Builds date + slug, adding -2, -3... so an existing file is never overwritten."""
-        base_name = f"{drawn_on.isoformat()}-{slugify(drawing.title)}"
-        file_path = self._discoveries_dir / f"{base_name}{FILE_EXTENSION}"
-        copy_number = 2
-        while file_path.exists():
-            file_path = self._discoveries_dir / f"{base_name}-{copy_number}{FILE_EXTENSION}"
-            copy_number += 1
-        return file_path
-
     def _ensure_inside_discoveries_dir(self, file_path: Path) -> None:
-        """Defense in depth: the slug already blocks traversal, this double-checks it."""
-        if not file_path.resolve().is_relative_to(self._discoveries_dir):
+        if not is_inside(self._discoveries_dir, file_path):
             raise DrawingStorageError(
                 f"refusing to write outside the discoveries folder: {file_path}"
             )

@@ -1,9 +1,8 @@
-import re
-import unicodedata
 from datetime import date
 from pathlib import Path
 
 from src.domain.discovery import Discovery, DiscoveryHeadline, DiscoveryStorageError
+from src.infrastructure.safe_file_names import free_dated_file_path, is_inside
 
 FILE_EXTENSION = ".md"
 # The Markdown layout, shared by writing and reading so both always agree.
@@ -15,19 +14,6 @@ SUMMARY_HEADING = "## O que eu descobri"
 SOURCES_HEADING = "## Fontes"
 LIST_ITEM_PREFIX = "- "
 NO_SOURCES_LINE = "- (nenhuma)"
-FALLBACK_SLUG = "descoberta"
-MAX_SLUG_LENGTH = 60
-NON_SLUG_CHARACTERS = re.compile(r"[^a-z0-9]+")
-
-
-def slugify(text: str) -> str:
-    """Turns any text into lowercase ASCII words joined by hyphens, safe for a file name."""
-    without_accents = (
-        unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
-    )
-    slug = NON_SLUG_CHARACTERS.sub("-", without_accents.lower()).strip("-")
-    shortened_slug = slug[:MAX_SLUG_LENGTH].rstrip("-")
-    return shortened_slug or FALLBACK_SLUG
 
 
 def _first_value_after(prefix: str, lines: list[str]) -> str:
@@ -91,7 +77,9 @@ class MarkdownDiscoveryRepository:
     def save(self, discovery: Discovery) -> str:
         try:
             self._discoveries_dir.mkdir(parents=True, exist_ok=True)
-            file_path = self._free_file_path(discovery)
+            file_path = free_dated_file_path(
+                self._discoveries_dir, discovery.discovered_on, discovery.title, FILE_EXTENSION
+            )
             self._ensure_inside_discoveries_dir(file_path)
             with file_path.open("x", encoding="utf-8") as discovery_file:
                 discovery_file.write(self._to_markdown(discovery))
@@ -150,19 +138,8 @@ class MarkdownDiscoveryRepository:
             return None
         return DiscoveryHeadline(title=title, topic=_first_value_after(TOPIC_PREFIX, lines))
 
-    def _free_file_path(self, discovery: Discovery) -> Path:
-        """Builds date + slug, adding -2, -3... so an existing file is never overwritten."""
-        base_name = f"{discovery.discovered_on.isoformat()}-{slugify(discovery.title)}"
-        file_path = self._discoveries_dir / f"{base_name}{FILE_EXTENSION}"
-        copy_number = 2
-        while file_path.exists():
-            file_path = self._discoveries_dir / f"{base_name}-{copy_number}{FILE_EXTENSION}"
-            copy_number += 1
-        return file_path
-
     def _ensure_inside_discoveries_dir(self, file_path: Path) -> None:
-        """Defense in depth: the slug already blocks traversal, this double-checks it."""
-        if not file_path.resolve().is_relative_to(self._discoveries_dir):
+        if not is_inside(self._discoveries_dir, file_path):
             raise DiscoveryStorageError(
                 f"refusing to touch a file outside the discoveries folder: {file_path}"
             )
