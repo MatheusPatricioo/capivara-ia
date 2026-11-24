@@ -293,3 +293,28 @@ def test_memory_db_conninfo_comes_from_the_memory_db_variables(custom_memory_db:
         "user": "capybara",
         "password": "my secret",
     }
+
+
+@pytest.fixture
+def environment_without_memory_recall_min_similarity(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("MEMORY_RECALL_MIN_SIMILARITY", raising=False)
+
+
+@pytest.fixture
+def memory_recall_min_similarity_above_one(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MEMORY_RECALL_MIN_SIMILARITY", "1.5")
+
+
+def test_memory_recall_min_similarity_defaults_to_the_measured_value(
+    environment_without_memory_recall_min_similarity: None,
+) -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.memory_recall_min_similarity == 0.70
+
+
+def test_rejects_a_memory_recall_min_similarity_above_one(
+    memory_recall_min_similarity_above_one: None,
+) -> None:
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None)

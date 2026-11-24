@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     memory_db_password: SecretStr = SecretStr("")
     # How long a memory call waits for a database connection before giving up.
     memory_db_timeout_seconds: float = Field(default=5.0, gt=0)
+    # RAG: a saved discovery comes back for something she noticed only when its cosine
+    # similarity reaches this. 0.70 was measured with nomic-embed-text; see .env.example.
+    memory_recall_min_similarity: float = Field(default=0.70, ge=0.0, le=1.0)
     log_level: LogLevel = "INFO"
     log_file: Path = PROJECT_ROOT / "logs" / "capybara.log"
 

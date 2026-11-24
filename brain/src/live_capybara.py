@@ -10,10 +10,12 @@ from src.application.autonomous_loop import AutonomousLoop
 from src.application.conversation import Conversation
 from src.application.inner_voice import InnerVoice
 from src.application.metered_language_model import MeteredLanguageModel
+from src.application.related_discoveries import RelatedDiscoveries
 from src.application.token_budget import HourlyTokenBudget
 from src.capybara_tools import TOOL_RESULT_REMINDER_OVERRIDES, build_capybara_tools
 from src.domain.attention import Attention
 from src.domain.chalkboard import Chalkboard
+from src.domain.discovery_memory import DiscoveryMemory
 from src.infrastructure.logging_setup import configure_logging
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
 from src.infrastructure.ollama_language_model import OllamaLanguageModel
@@ -29,6 +31,7 @@ TOOL_RESULT_REMINDER_NAME = "tool_result_reminder"
 INNER_VOICE_NAME = "autonomous_cycle"
 MEMORY_TEMPLATE_NAME = "known_discoveries"
 NOTICED_TEMPLATE_NAME = "noticed_things"
+RELATED_TEMPLATE_NAME = "related_discoveries"
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +55,21 @@ def attention_listener(inbox: AttentionInbox) -> Callable[[NoticedMessage], None
     return notice
 
 
+def build_inner_voice(
+    settings: Settings, attention_inbox: AttentionInbox, memory: DiscoveryMemory
+) -> InnerVoice:
+    return InnerVoice(
+        invitation=load_prompt(INNER_VOICE_NAME),
+        catalog=MarkdownDiscoveryRepository(settings.discoveries_dir),
+        memory_template=load_prompt(MEMORY_TEMPLATE_NAME),
+        max_remembered_discoveries=settings.max_remembered_discoveries,
+        attention=attention_inbox,
+        noticed_template=load_prompt(NOTICED_TEMPLATE_NAME),
+        related=RelatedDiscoveries(memory, settings.memory_recall_min_similarity),
+        related_template=load_prompt(RELATED_TEMPLATE_NAME),
+    )
+
+
 def main() -> None:
     settings = Settings()
     configure_logging(settings.log_file, settings.log_level)
@@ -65,14 +83,6 @@ def main() -> None:
     )
     system_prompt = load_prompt(SYSTEM_PROMPT_NAME)
     tool_result_reminder = load_prompt(TOOL_RESULT_REMINDER_NAME)
-    inner_voice = InnerVoice(
-        invitation=load_prompt(INNER_VOICE_NAME),
-        catalog=MarkdownDiscoveryRepository(settings.discoveries_dir),
-        memory_template=load_prompt(MEMORY_TEMPLATE_NAME),
-        max_remembered_discoveries=settings.max_remembered_discoveries,
-        attention=attention_inbox,
-        noticed_template=load_prompt(NOTICED_TEMPLATE_NAME),
-    )
     with (
         WorldServer(
             settings.world_server_host,
@@ -84,6 +94,7 @@ def main() -> None:
         ) as http_client,
         open_long_term_memory(settings, http_client) as memory,
     ):
+        inner_voice = build_inner_voice(settings, attention_inbox, memory)
         body = WebSocketBody(world_server)
         body.show_chalkboard(chalkboard.drawings)
         language_model = MeteredLanguageModel(

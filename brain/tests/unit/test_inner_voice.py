@@ -1,11 +1,14 @@
 import logging
+from datetime import date
 
 import pytest
 
 from src.application.attention_inbox import AttentionInbox
 from src.application.inner_voice import InnerVoice
+from src.application.related_discoveries import RelatedDiscoveries
 from src.domain.attention import Attention
-from src.domain.discovery import DiscoveryHeadline, DiscoveryStorageError
+from src.domain.discovery import Discovery, DiscoveryHeadline, DiscoveryStorageError
+from src.domain.discovery_memory import RememberedDiscovery
 
 INVITATION = "(Você está sozinha. O que quer fazer?)"
 MEMORY_TEMPLATE = "(Você já guardou:\n{discoveries}\nNão repita.)"
@@ -175,6 +178,99 @@ def test_releasing_twice_does_not_let_go_of_anything_new(
     attentive_inner_voice.release_offered()
 
     assert [point.thing_id for point in attention.pending()] == ["big_oak"]
+
+
+RELATED_TEMPLATE = "(Você já aprendeu:\n{related}\nVá além.)"
+LILIES_DESCRIPTION = "vitórias-régias no laguinho"
+VICTORIA = Discovery(
+    title="Vitória-régia",
+    topic="plantas",
+    summary="As folhas boiam e aguentam peso.\n\nA flor abre à noite.",
+    sources=("https://example.com/vitoria",),
+    discovered_on=date(2026, 11, 24),
+)
+
+
+class FixedRelatedMemory:
+    """Recalls the same discovery, with the same similarity, for any subject."""
+
+    def __init__(self, remembered: list[RememberedDiscovery]) -> None:
+        self._remembered = remembered
+        self.recalled_subjects: list[str] = []
+
+    def remember(self, file_name: str, discovery: Discovery) -> None:
+        raise AssertionError("the inner voice must only recall")
+
+    def recall(self, text: str, limit: int) -> list[RememberedDiscovery]:
+        self.recalled_subjects.append(text)
+        return self._remembered[:limit]
+
+
+def build_inner_voice_with_related(
+    attention: AttentionInbox, memory: FixedRelatedMemory
+) -> InnerVoice:
+    return InnerVoice(
+        INVITATION,
+        FakeCatalog([]),
+        MEMORY_TEMPLATE,
+        MAX_REMEMBERED_DISCOVERIES,
+        attention=attention,
+        noticed_template=NOTICED_TEMPLATE,
+        related=RelatedDiscoveries(memory, min_similarity=0.70),
+        related_template=RELATED_TEMPLATE,
+    )
+
+
+@pytest.fixture
+def related_memory() -> FixedRelatedMemory:
+    return FixedRelatedMemory([RememberedDiscovery(VICTORIA, 0.81)])
+
+
+def test_brings_back_the_related_discoveries_before_what_she_noticed(
+    attention: AttentionInbox, related_memory: FixedRelatedMemory
+) -> None:
+    attention.notice("water_lilies", LILIES_DESCRIPTION)
+
+    composed = build_inner_voice_with_related(attention, related_memory).compose()
+
+    assert composed == (
+        "(Você já aprendeu:\n"
+        "- Vitória-régia: As folhas boiam e aguentam peso. A flor abre à noite.\n"
+        "Vá além.)\n\n"
+        "(Você reparou em:\n"
+        f"- {LILIES_DESCRIPTION}\n"
+        "Pesquise se quiser.)\n\n"
+        f"{INVITATION}"
+    )
+
+
+def test_looks_for_related_discoveries_with_what_she_noticed(
+    attention: AttentionInbox, related_memory: FixedRelatedMemory
+) -> None:
+    attention.notice("water_lilies", LILIES_DESCRIPTION)
+
+    build_inner_voice_with_related(attention, related_memory).compose()
+
+    assert related_memory.recalled_subjects == [LILIES_DESCRIPTION]
+
+
+def test_does_not_look_for_related_discoveries_when_she_noticed_nothing(
+    attention: AttentionInbox, related_memory: FixedRelatedMemory
+) -> None:
+    build_inner_voice_with_related(attention, related_memory).compose()
+
+    assert related_memory.recalled_subjects == []
+
+
+def test_has_no_related_section_when_nothing_saved_is_close_enough(
+    attention: AttentionInbox,
+) -> None:
+    distant_memory = FixedRelatedMemory([RememberedDiscovery(VICTORIA, 0.50)])
+    attention.notice("water_lilies", LILIES_DESCRIPTION)
+
+    composed = build_inner_voice_with_related(attention, distant_memory).compose()
+
+    assert "Você já aprendeu" not in composed
 
 
 def test_releasing_logs_what_she_thought_about(
