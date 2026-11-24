@@ -22,6 +22,7 @@ from src.infrastructure.settings import Settings
 from src.infrastructure.websocket_body import WebSocketBody
 from src.infrastructure.world_messages import NoticedMessage
 from src.infrastructure.world_server import WorldServer
+from src.long_term_memory import open_long_term_memory
 
 SYSTEM_PROMPT_NAME = "capybara"
 TOOL_RESULT_REMINDER_NAME = "tool_result_reminder"
@@ -81,6 +82,7 @@ def main() -> None:
         httpx.Client(
             base_url=settings.ollama_base_url, timeout=settings.ollama_timeout_seconds
         ) as http_client,
+        open_long_term_memory(settings, http_client) as memory,
     ):
         body = WebSocketBody(world_server)
         body.show_chalkboard(chalkboard.drawings)
@@ -97,7 +99,9 @@ def main() -> None:
             return Conversation(
                 language_model,
                 system_prompt,
-                tools=build_capybara_tools(settings, chalkboard, language_model, http_client, body),
+                tools=build_capybara_tools(
+                    settings, chalkboard, language_model, http_client, body, memory
+                ),
                 max_steps=settings.max_tool_steps,
                 tool_result_reminder=tool_result_reminder,
                 tool_result_reminders=TOOL_RESULT_REMINDER_OVERRIDES,

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+from psycopg.conninfo import conninfo_to_dict
 from pydantic import ValidationError
 
 from src.infrastructure.ollama_language_model import OllamaGenerationOptions
@@ -248,3 +249,47 @@ def test_memory_db_password_is_hidden_when_settings_are_printed(
     settings = Settings(_env_file=None)
 
     assert memory_db_password not in repr(settings)
+
+
+@pytest.fixture
+def environment_without_memory_db_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("MEMORY_DB_TIMEOUT_SECONDS", raising=False)
+
+
+@pytest.fixture
+def zero_memory_db_timeout(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MEMORY_DB_TIMEOUT_SECONDS", "0")
+
+
+@pytest.fixture
+def custom_memory_db(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("MEMORY_DB_HOST", "db.local")
+    monkeypatch.setenv("MEMORY_DB_PORT", "6543")
+    monkeypatch.setenv("MEMORY_DB_NAME", "capybara_memory")
+    monkeypatch.setenv("MEMORY_DB_USER", "capybara")
+    monkeypatch.setenv("MEMORY_DB_PASSWORD", "my secret")
+
+
+def test_memory_db_timeout_defaults_to_five_seconds(
+    environment_without_memory_db_timeout: None,
+) -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.memory_db_timeout_seconds == 5.0
+
+
+def test_rejects_a_memory_db_timeout_of_zero(zero_memory_db_timeout: None) -> None:
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None)
+
+
+def test_memory_db_conninfo_comes_from_the_memory_db_variables(custom_memory_db: None) -> None:
+    settings = Settings(_env_file=None)
+
+    assert conninfo_to_dict(settings.memory_db_conninfo()) == {
+        "host": "db.local",
+        "port": "6543",
+        "dbname": "capybara_memory",
+        "user": "capybara",
+        "password": "my secret",
+    }

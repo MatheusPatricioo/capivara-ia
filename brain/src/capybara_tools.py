@@ -7,6 +7,7 @@ from src.application.category_matcher import CategoryMatcher
 from src.application.chalkboard_artist import ChalkboardArtist
 from src.application.doodle_category_chooser import DoodleCategoryChooser
 from src.application.illustrate_discovery import IllustrateDiscovery
+from src.application.remembering_discovery_repository import RememberingDiscoveryRepository
 from src.application.tools.embodied_tool import EmbodiedTool
 from src.application.tools.save_discovery_tool import SaveDiscoveryTool
 from src.application.tools.seen_sources import SeenSources
@@ -14,6 +15,8 @@ from src.application.tools.web_search_tool import WebSearchTool
 from src.domain.body import Body, Place
 from src.domain.capybara_hand import CapybaraHand
 from src.domain.chalkboard import Chalkboard
+from src.domain.discovery import DiscoveryRepository
+from src.domain.discovery_memory import DiscoveryMemory
 from src.domain.language_model import StructuredLanguageModel
 from src.domain.tool import Tool
 from src.infrastructure.duckduckgo_web_searcher import DuckDuckGoWebSearcher
@@ -47,11 +50,14 @@ def build_capybara_tools(
     language_model: StructuredLanguageModel,
     http_client: httpx.Client,
     body: Body | None = None,
+    memory: DiscoveryMemory | None = None,
 ) -> list[Tool]:
     """Creates fresh tools for one conversation. With a body, each tool walks to its place.
 
     The doodle for a discovery is chosen with retrieve and rerank: http_client reaches
     Ollama's embedding model (retrieve) and language_model picks among them (rerank).
+
+    With a memory, every saved discovery is also remembered for later cycles.
 
     There is no draw tool: every saved discovery is offered a drawing automatically, because
     with a draw tool she often said she would draw and never called it.
@@ -78,7 +84,7 @@ def build_capybara_tools(
         ChalkboardArtist(PngDrawingRepository(settings.discoveries_dir), chalkboard, body=body),
     )
     save_discovery_tool = SaveDiscoveryTool(
-        MarkdownDiscoveryRepository(settings.discoveries_dir),
+        _build_discovery_repository(settings, memory),
         seen_sources,
         illustrate=illustrator.illustrate,
     )
@@ -89,6 +95,15 @@ def build_capybara_tools(
         # Saving a discovery writes a file, and her files live in the computer.
         EmbodiedTool(save_discovery_tool, body, Place.COMPUTER),
     ]
+
+
+def _build_discovery_repository(
+    settings: Settings, memory: DiscoveryMemory | None
+) -> DiscoveryRepository:
+    repository = MarkdownDiscoveryRepository(settings.discoveries_dir)
+    if memory is None:
+        return repository
+    return RememberingDiscoveryRepository(repository, memory)
 
 
 def _build_category_matcher(settings: Settings, http_client: httpx.Client) -> CategoryMatcher:

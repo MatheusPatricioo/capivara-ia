@@ -5,6 +5,7 @@ from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from src.infrastructure.ollama_language_model import OllamaGenerationOptions
+from src.infrastructure.postgres_discovery_memory import memory_conninfo
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 ENV_FILE = PROJECT_ROOT / "brain" / ".env"
@@ -42,6 +43,8 @@ class Settings(BaseSettings):
     memory_db_name: str = "capybara_memory"
     memory_db_user: str = "capybara"
     memory_db_password: SecretStr = SecretStr("")
+    # How long a memory call waits for a database connection before giving up.
+    memory_db_timeout_seconds: float = Field(default=5.0, gt=0)
     log_level: LogLevel = "INFO"
     log_file: Path = PROJECT_ROOT / "logs" / "capybara.log"
 
@@ -50,4 +53,13 @@ class Settings(BaseSettings):
             num_predict=self.ollama_num_predict,
             temperature=self.ollama_temperature,
             repeat_penalty=self.ollama_repeat_penalty,
+        )
+
+    def memory_db_conninfo(self) -> str:
+        return memory_conninfo(
+            host=self.memory_db_host,
+            port=self.memory_db_port,
+            database=self.memory_db_name,
+            user=self.memory_db_user,
+            password=self.memory_db_password.get_secret_value(),
         )
