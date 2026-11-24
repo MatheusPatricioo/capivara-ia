@@ -35,6 +35,7 @@ var _current_speed_scale: float = 1.0
 var _point_position: Vector3 = Vector3.ZERO
 var _look_target: Vector3 = Vector3.ZERO
 var _is_going_to_point: bool = false
+var _target_point: InteractionPoint = null
 var _is_taking_final_step: bool = false
 var _final_step_seconds_left: float = 0.0
 var _is_facing_look_target: bool = false
@@ -60,6 +61,7 @@ func walk_to(destination: Vector3, speed_scale: float = 1.0) -> void:
 	_current_speed_scale = speed_scale
 	_is_walking_to_destination = true
 	_is_going_to_point = false
+	_target_point = null
 	_is_taking_final_step = false
 	_is_facing_look_target = false
 
@@ -75,6 +77,7 @@ func go_to_point(point_id: StringName, speed_scale: float = 1.0) -> bool:
 	_point_position = point.global_position
 	_look_target = point.look_target()
 	_is_going_to_point = true
+	_target_point = point
 	return true
 
 
@@ -177,6 +180,9 @@ func _update_final_step(delta: float) -> void:
 	_is_taking_final_step = false
 	_is_going_to_point = false
 	_is_facing_look_target = true
+	if _target_point != null:
+		_target_point.mark_capybara_arrived()
+		_target_point = null
 	destination_reached.emit()
 
 

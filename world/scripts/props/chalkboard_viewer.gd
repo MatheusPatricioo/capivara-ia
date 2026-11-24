@@ -2,16 +2,17 @@ class_name ChalkboardViewer
 extends CanvasLayer
 
 ## A close look at the chalkboard, drawn over the 3D world when the player clicks it:
-## the capybara's 3 newest drawings, big, with their titles. The [X] button or Esc closes it.
+## the capybara's 3 newest drawings, big, without captions (only the drawings, like on the
+## board). The [X] button or Esc closes it.
 ## Like the board itself, it only reads PNG files from the discoveries folder.
 ## The board fills a share of the screen and the drawings share its width, so it fits any
 ## window size instead of a fixed one.
 
 const DRAWING_COUNT: int = 3
 ## The smallest a card gets: below that the window is too small to see anything anyway.
-const MIN_CARD_SIZE: Vector2 = Vector2(160, 150)
-## Width / height of a card: a 4:3 drawing plus one line of title below it.
-const CARD_RATIO: float = 1.17
+const MIN_CARD_SIZE: Vector2 = Vector2(160, 120)
+## Width / height of a card: the drawings are 4:3 (400x300 in the brain).
+const CARD_RATIO: float = 4.0 / 3.0
 ## Chalk white, like the frames on the board in the world.
 const FRAME_COLOR: Color = Color8(240, 240, 235)
 const FRAME_WIDTH: int = 3
@@ -32,7 +33,7 @@ func open() -> void:
 	_clear_drawings()
 	var drawings: Array[Dictionary] = DiscoveryFiles.load_newest_drawings(DiscoveriesFolder.path(), DRAWING_COUNT)
 	for drawing: Dictionary in drawings:
-		_drawing_row.add_child(_create_card(drawing["title"] as String, drawing["texture"] as Texture2D))
+		_drawing_row.add_child(_create_card(drawing["texture"] as Texture2D))
 	_empty_label.text = EMPTY_TEXT
 	_empty_label.visible = drawings.is_empty()
 	show()
@@ -54,24 +55,14 @@ func _clear_drawings() -> void:
 		card.queue_free()
 
 
-## One drawing in a chalk frame, with the title written right below it. Each card takes an
-## equal share of the row, and the AspectRatioContainer keeps its shape at any window size
-## (centered in the space it gets), so the title always stays next to its drawing.
-func _create_card(title: String, texture: Texture2D) -> AspectRatioContainer:
-	var caption: Label = Label.new()
-	caption.text = title
-	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	caption.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	caption.tooltip_text = title
-	caption.mouse_filter = Control.MOUSE_FILTER_PASS
-	var card_layout: VBoxContainer = VBoxContainer.new()
-	card_layout.add_child(_create_framed_picture(texture))
-	card_layout.add_child(caption)
+## One drawing in a chalk frame. Each card takes an equal share of the row, and the
+## AspectRatioContainer keeps its shape at any window size (centered in the space it gets).
+func _create_card(texture: Texture2D) -> AspectRatioContainer:
 	var card: AspectRatioContainer = AspectRatioContainer.new()
 	card.ratio = CARD_RATIO
 	card.custom_minimum_size = MIN_CARD_SIZE
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	card.add_child(card_layout)
+	card.add_child(_create_framed_picture(texture))
 	return card
 
 

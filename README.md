@@ -170,7 +170,7 @@ Atalho no Windows: abrir o mundo pelo editor do Godot e apertar Play já basta. 
 
 O Godot é opcional: com ele fechado, a capivara continua pesquisando, salvando e desenhando do mesmo jeito. O mundo só mostra o que o cérebro faz e, ao abrir, já recebe a lousa atual. O contrário não vale: sem o cérebro, ela só passeia, e o mundo mostra o aviso "Cérebro desconectado" no canto da tela até ele ligar.
 
-No mundo, ela vai até o computador antes de pesquisar e antes de salvar, e até a lousa antes de desenhar. A lousa é a galeria dela: mostra os três desenhos (PNG) mais recentes da pasta de descobertas e se atualiza sozinha quando aparece um novo. Toda descoberta (Markdown) e todo desenho (PNG) ficam na pasta de descobertas (`DISCOVERIES_DIR` no `brain/.env`, ou `discoveries/` por padrão).
+No mundo, ela vai até o computador antes de pesquisar e antes de salvar, e até a lousa antes de desenhar. A lousa é a galeria dela: mostra os três desenhos (PNG) mais recentes da pasta de descobertas, sem legenda, e se atualiza sozinha quando aparece um novo. Um desenho novo não aparece pronto: o espaço dele fica em branco até ela chegar à lousa, e aí o giz percorre os traços na ordem em que ela os fez (de 1,5 a 5 segundos, conforme o tamanho do desenho). Toda descoberta (Markdown) e todo desenho (PNG) ficam na pasta de descobertas (`DISCOVERIES_DIR` no `brain/.env`, ou `discoveries/` por padrão).
 
 Aperte `Ctrl+C` para encerrar. O intervalo entre os ciclos e o limite de tokens por hora ficam no `brain/.env` (`AUTONOMOUS_CYCLE_INTERVAL_SECONDS`, `MAX_TOKENS_PER_HOUR`).
 
@@ -200,5 +200,5 @@ pytest -m "not database"
 
 🚧 Em desenvolvimento ativo.
 
-- **Funcionando:** chat e modo vivo autônomo, pesquisa na web, descobertas salvas em Markdown, rascunhos na lousa escolhidos por embeddings, memória de longo prazo com RAG (PostgreSQL + pgvector), sugestões de melhorias para o mundo (com a aba Sugestões no computador e a capivara reconhecendo o que foi construído), mundo 3D conectado ao cérebro por WebSocket e limite de tokens por hora.
-- **Próximos passos:** desenhos inéditos com o Sketch-RNN, a lousa do Godot desenhando traço por traço e a capivara decidindo sozinha quando consultar a memória (agentic RAG).
+- **Funcionando:** chat e modo vivo autônomo, pesquisa na web, descobertas salvas em Markdown, rascunhos na lousa escolhidos por embeddings e desenhados traço por traço, memória de longo prazo com RAG (PostgreSQL + pgvector), sugestões de melhorias para o mundo (com a aba Sugestões no computador e a capivara reconhecendo o que foi construído), mundo 3D conectado ao cérebro por WebSocket e limite de tokens por hora.
+- **Próximos passos:** desenhos inéditos com o Sketch-RNN e a capivara decidindo sozinha quando consultar a memória (agentic RAG).
