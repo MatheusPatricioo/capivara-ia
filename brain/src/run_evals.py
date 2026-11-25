@@ -8,6 +8,7 @@ capybara's real memory is never touched.
     python -m src.run_evals                       # everything, each scenario 3 times
     python -m src.run_evals --suite retrieval     # only the RAG metrics (fast)
     python -m src.run_evals --suite agent --repeats 5 --label tool-calling
+    python -m src.run_evals --suite feelings      # does what she writes match how she feels?
 """
 
 import argparse
@@ -27,6 +28,9 @@ from src.evals.agent_run import GradedRun
 from src.evals.agent_scenarios import AgentScenarioSet
 from src.evals.eval_report import ReportHeader, render_report
 from src.evals.faithfulness_judge import FaithfulnessJudge
+from src.evals.feeling_eval import FeelingPrompts, FeelingRun, run_feeling_scenario
+from src.evals.feeling_judge import ToneJudge
+from src.evals.feeling_scenarios import FeelingScenarioSet
 from src.evals.retrieval_eval import RetrievalDataset
 from src.evals.retrieval_variants import (
     CachedRewriter,
@@ -42,6 +46,7 @@ from src.infrastructure.postgres_discovery_memory import SearchMode, create_memo
 from src.infrastructure.prompt_loader import load_prompt
 from src.infrastructure.settings import PROJECT_ROOT, Settings
 from src.live_capybara import (
+    FEELINGS_TEMPLATE_NAME,
     INNER_VOICE_NAME,
     MEMORY_TEMPLATE_NAME,
     NOTICED_TEMPLATE_NAME,
@@ -61,7 +66,10 @@ JUDGE_PROMPT_NAME = "judge_faithfulness"
 EVAL_DATABASE_SUFFIX = "eval"
 RECALL_LIMIT = 5
 DEFAULT_REPEATS = 3
-SUITES = ("all", "retrieval", "agent")
+SUITES = ("all", "retrieval", "agent", "feelings")
+FEELING_SCENARIOS = EVALS_DIR / "datasets" / "feeling_scenarios.json"
+TONE_JUDGE_PROMPT_NAME = "judge_feeling_tone"
+FEELING_DIARY_PROMPT_NAME = "feeling_diary"
 EXPAND_MEMORY_QUERY_PROMPT_NAME = "expand_memory_query"
 CHOOSE_RELATED_MEMORY_PROMPT_NAME = "choose_related_memory"
 RETRIEVAL_VARIANTS = (
@@ -94,11 +102,16 @@ def main(arguments: Sequence[str] | None = None) -> None:
             if options.suite in ("all", "agent")
             else []
         )
+        feeling_runs = (
+            _run_feelings(settings, http_client, options.repeats, options.scenario)
+            if options.suite in ("all", "feelings")
+            else []
+        )
     title = f"Evals {date.today().isoformat()}" + (f" — {options.label}" if options.label else "")
     header = ReportHeader(
         title, settings.ollama_model, settings.ollama_embedding_model, options.repeats
     )
-    report = render_report(header, retrieval, graded_runs)
+    report = render_report(header, retrieval, graded_runs, feeling_runs)
     report_file = _write_report(report, options.label)
     print(report)
     print(f"Relatório salvo em {report_file}")
@@ -193,6 +206,33 @@ def _run_agent(
             run = run_scenario(scenario, setup)
             graded_runs.append(grade_run(run, scenario, judge))
     return graded_runs
+
+
+def _run_feelings(
+    settings: Settings, http_client: httpx.Client, repeats: int, only_scenario: str | None
+) -> list[FeelingRun]:
+    language_model = OllamaLanguageModel(
+        client=http_client,
+        model=settings.ollama_model,
+        generation_options=settings.ollama_generation_options(),
+    )
+    judge = ToneJudge(language_model, load_prompt(TONE_JUDGE_PROMPT_NAME, EVAL_PROMPTS_DIR))
+    prompts = FeelingPrompts(
+        system=load_prompt(SYSTEM_PROMPT_NAME),
+        feelings_template=load_prompt(FEELINGS_TEMPLATE_NAME),
+        diary_invitation=load_prompt(FEELING_DIARY_PROMPT_NAME, EVAL_PROMPTS_DIR),
+    )
+    scenarios = [
+        scenario
+        for scenario in FeelingScenarioSet.load(FEELING_SCENARIOS).scenarios
+        if only_scenario is None or scenario.name == only_scenario
+    ]
+    runs: list[FeelingRun] = []
+    for scenario in scenarios:
+        for attempt in range(1, repeats + 1):
+            print(f"Sentimentos: {scenario.name} ({attempt}/{repeats})...", flush=True)
+            runs.append(run_feeling_scenario(scenario, language_model, judge, prompts))
+    return runs
 
 
 def _load_capybara_prompts() -> CapybaraPrompts:

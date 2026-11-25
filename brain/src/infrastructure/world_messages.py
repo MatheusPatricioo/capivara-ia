@@ -9,6 +9,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field, StringConstraints, ValidationError
 
 from src.domain.drawing import Drawing, Stroke
+from src.domain.feelings.emotion import EmotionalState
 
 
 class GoToMessage(BaseModel):
@@ -35,7 +36,25 @@ class ChalkboardMessage(BaseModel):
     drawings: list[DrawingMessage]
 
 
-WorldMessage = GoToMessage | ChalkboardMessage
+CALM_EMOTION = "calm"
+"""Sent as the emotion when nothing she feels is strong enough to show."""
+SHOWN_EMOTION_MIN_INTENSITY = 0.2
+
+
+class FeelingsMessage(BaseModel):
+    """How she feels, for the body to show it: posture, pace and a small symbol."""
+
+    type: Literal["feelings"] = "feelings"
+    emotion: str
+    """Her strongest emotion, like "joy" or "loneliness", or "calm"."""
+    intensity: float = Field(ge=0.0, le=1.0)
+    valence: float = Field(ge=-1.0, le=1.0)
+    """From -1 (all bad) to 1 (all good)."""
+    arousal: float = Field(ge=0.0, le=1.0)
+    """From 0 (calm, slow) to 1 (agitated)."""
+
+
+WorldMessage = GoToMessage | ChalkboardMessage | FeelingsMessage
 
 MAX_THING_ID_LENGTH = 64
 MAX_DESCRIPTION_LENGTH = 200
@@ -74,6 +93,17 @@ def chalkboard_message(drawings: tuple[Drawing, ...]) -> ChalkboardMessage:
             )
             for drawing in drawings
         ]
+    )
+
+
+def feelings_message(emotions: EmotionalState) -> FeelingsMessage:
+    strongest = emotions.strongest(limit=1, minimum=SHOWN_EMOTION_MIN_INTENSITY)
+    emotion, intensity = strongest[0] if strongest else (CALM_EMOTION, 0.0)
+    return FeelingsMessage(
+        emotion=str(emotion),
+        intensity=round(intensity, 3),
+        valence=round(emotions.valence, 3),
+        arousal=round(emotions.arousal, 3),
     )
 
 

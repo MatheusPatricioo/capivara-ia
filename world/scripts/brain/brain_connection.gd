@@ -7,6 +7,9 @@ extends Node
 
 signal go_to_requested(point_id: StringName)
 signal chalkboard_changed(drawings: Array)
+## How the capybara feels: her strongest emotion ("joy", "loneliness"... or "calm"), how strong
+## it is (0 to 1), valence (-1 bad to 1 good) and arousal (0 calm to 1 agitated).
+signal feelings_changed(emotion: StringName, intensity: float, valence: float, arousal: float)
 signal connection_changed(is_connected: bool)
 
 const DEFAULT_URL: String = "ws://127.0.0.1:8765"
@@ -77,6 +80,13 @@ func _handle_message(text: String) -> void:
 		"chalkboard":
 			var drawings: Variant = message.get("drawings", [])
 			chalkboard_changed.emit(drawings if drawings is Array else [])
+		"feelings":
+			feelings_changed.emit(
+				StringName(str(message.get("emotion", "calm"))),
+				float(message.get("intensity", 0.0)),
+				float(message.get("valence", 0.0)),
+				float(message.get("arousal", 0.3)),
+			)
 		_:
 			push_warning("Unknown message type from the brain: %s" % message.get("type"))
 

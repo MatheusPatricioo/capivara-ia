@@ -11,6 +11,7 @@ from src.domain.language_model import ChatMessage, StructuredReply
 from src.domain.tool import ToolError
 from src.infrastructure.settings import Settings
 from tests.fakes.in_memory_discovery_memory import InMemoryDiscoveryMemory, WordCountEmbedder
+from tests.fakes.in_memory_emotional_memory import RecordingFeeler
 
 
 class NeverAskedStructuredLanguageModel:
@@ -112,3 +113,21 @@ def test_goes_to_the_computer_to_suggest_an_improvement(
         suggest.run({})
 
     assert body.visited_places == [Place.COMPUTER]
+
+
+def test_with_a_heart_she_keeps_the_same_tools(
+    settings: Settings, http_client: httpx.Client
+) -> None:
+    tools = build_capybara_tools(
+        settings,
+        Chalkboard(3),
+        NeverAskedStructuredLanguageModel(),
+        http_client,
+        heart=RecordingFeeler(),
+    )
+
+    assert [tool.definition.name for tool in tools] == [
+        "web_search",
+        "save_discovery",
+        "suggest_improvement",
+    ]

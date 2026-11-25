@@ -9,7 +9,7 @@ enum ControlMode { AUTONOMOUS, MANUAL }
 ## Walking speed with the keyboard (manual mode), in meters per second.
 @export var manual_speed: float = 5.0
 ## Base walking speed when following a navigation path, in meters per second.
-@export var navigation_speed: float = 3.2
+@export var navigation_speed: float = 2.2
 ## How quickly the capybara speeds up, in m/s². Lower feels softer, like a cat starting to walk.
 @export var acceleration: float = 7.0
 ## How quickly the capybara slows down, in m/s².

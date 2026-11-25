@@ -24,6 +24,12 @@ extends Node3D
 ## How much the body grows on each breath, as a fraction of its size.
 @export var breathing_amount: float = 0.02
 
+## Extra forward tilt from her mood, in degrees: positive droops her head (sad),
+## negative lifts it (happy). Set by CapybaraFeelings.
+var mood_droop_degrees: float = 0.0
+## Multiplies the breathing speed: slower when calm or sad, faster when agitated.
+var mood_breathing_scale: float = 1.0
+
 var _step_phase: float = 0.0
 var _idle_time: float = 0.0
 var _body_base_position: Vector3
@@ -51,10 +57,14 @@ func _process(delta: float) -> void:
 func _animate_body(gait_strength: float) -> void:
 	position.y = _body_base_position.y + absf(sin(_step_phase)) * step_bob_height * gait_strength
 	rotation.z = deg_to_rad(weight_shift_degrees) * sin(_step_phase) * gait_strength
-	rotation.x = -deg_to_rad(forward_lean_degrees) * gait_strength
+	rotation.x = -deg_to_rad(forward_lean_degrees * gait_strength + mood_droop_degrees)
 
 
 ## Scales the model, not the Body, so the scale set in the editor is kept as the base.
 func _animate_breathing(gait_strength: float) -> void:
-	var breath: float = sin(_idle_time * breathing_speed) * breathing_amount * (1.0 - gait_strength)
+	var breath: float = (
+		sin(_idle_time * breathing_speed * mood_breathing_scale)
+		* breathing_amount
+		* (1.0 - gait_strength)
+	)
 	_model.scale = _model_base_scale * Vector3(1.0, 1.0 + breath, 1.0)

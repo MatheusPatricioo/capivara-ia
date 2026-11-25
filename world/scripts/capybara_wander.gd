@@ -13,11 +13,16 @@ const ALL_NAVIGATION_LAYERS: int = 1
 ## Chance (0 to 1) that a walk is a trot instead of a calm stroll.
 @export var trot_chance: float = 0.3
 ## Speed multiplier used when trotting.
-@export var trot_speed_scale: float = 1.5
+@export var trot_speed_scale: float = 1.3
 ## How many random points to try before giving up until the next rest.
 @export var max_destination_attempts: int = 10
 ## How close the end of a path must be to the picked point to count as reachable.
 @export var reachable_tolerance: float = 0.5
+
+## Multiplies the walking speed. Set by CapybaraFeelings: below 1 when she is down.
+var mood_pace: float = 1.0
+## Multiplies the rests between walks. Set by CapybaraFeelings: above 1 when she is down.
+var mood_rest: float = 1.0
 
 var _rest_timer: Timer = Timer.new()
 var _is_paused: bool = false
@@ -48,7 +53,7 @@ func resume() -> void:
 func _start_rest() -> void:
 	if _is_paused:
 		return
-	_rest_timer.start(randf_range(min_rest_seconds, max_rest_seconds))
+	_rest_timer.start(randf_range(min_rest_seconds, max_rest_seconds) * mood_rest)
 
 
 func _walk_to_random_point() -> void:
@@ -68,7 +73,8 @@ func _walk_to_random_point() -> void:
 
 
 func _pick_pace() -> float:
-	return trot_speed_scale if randf() < trot_chance else 1.0
+	var base_pace: float = trot_speed_scale if randf() < trot_chance else 1.0
+	return base_pace * mood_pace
 
 
 ## Random points may land on an island the capybara cannot reach (like the top of a rock),

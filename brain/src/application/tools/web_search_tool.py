@@ -25,8 +25,9 @@ NO_RESULTS_MESSAGE = (
     "No results found, so there is nothing from this search to save. Try other words, or move on."
 )
 ELLIPSIS = "..."
+ALREADY_SEARCHED_PREFIX = "You already searched"
 ALREADY_SEARCHED_MESSAGE = (
-    "You already searched '{query}' on {searched_on}, so you know this already. "
+    ALREADY_SEARCHED_PREFIX + " '{query}' on {searched_on}, so you know this already. "
     "Search for something different or a neighbouring subject, or move on."
 )
 

@@ -108,6 +108,40 @@ def attentive_inner_voice(attention: AttentionInbox) -> InnerVoice:
     )
 
 
+FEELINGS = "(Por dentro: você está muito curiosa.)"
+
+
+def test_tells_how_she_feels_before_what_she_noticed(attention: AttentionInbox) -> None:
+    inner_voice = InnerVoice(
+        INVITATION,
+        FakeCatalog([]),
+        MEMORY_TEMPLATE,
+        MAX_REMEMBERED_DISCOVERIES,
+        attention=attention,
+        noticed_template=NOTICED_TEMPLATE,
+        feelings=lambda: FEELINGS,
+    )
+    attention.notice("mushrooms", "cogumelos vermelhos")
+
+    assert inner_voice.compose() == (
+        f"{FEELINGS}\n\n"
+        "(Você reparou em:\n- cogumelos vermelhos\nPesquise se quiser.)\n\n"
+        f"{INVITATION}"
+    )
+
+
+def test_tells_how_she_feels_even_when_she_noticed_nothing() -> None:
+    inner_voice = InnerVoice(
+        INVITATION,
+        FakeCatalog([]),
+        MEMORY_TEMPLATE,
+        MAX_REMEMBERED_DISCOVERIES,
+        feelings=lambda: FEELINGS,
+    )
+
+    assert inner_voice.compose() == f"{FEELINGS}\n\n{INVITATION}"
+
+
 def test_lists_what_she_noticed_before_the_invitation(
     attentive_inner_voice: InnerVoice, attention: AttentionInbox
 ) -> None:
