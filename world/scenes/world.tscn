@@ -108,6 +108,7 @@
 [ext_resource type="Script" path="res://scripts/world_sky.gd" id="world_sky"]
 [ext_resource type="PackedScene" path="res://scenes/props/mailbox.tscn" id="mailbox"]
 [ext_resource type="PackedScene" path="res://scenes/props/writing_desk.tscn" id="writing_desk"]
+[ext_resource type="PackedScene" path="res://scenes/props/lamp_post.tscn" id="lamp_post"]
 [ext_resource type="Script" path="res://scripts/writing_desk/writing_desk_viewer.gd" id="writing_desk_viewer"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
@@ -951,7 +952,21 @@ transform = Transform3D(1.288247, 0, -1.2571474, 0, 1.8, 0, 1.2571474, 0, 1.2882
 transform = Transform3D(0.4740882, 0, -0.88047737, 0, 1, 0, 0.88047737, 0, 0.4740882, 3.9, 0, -2.1)
 
 [node name="Mailbox" parent="Home" instance=ExtResource("mailbox")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 5.4, 0, -0.8)
+transform = Transform3D(0.559, 0, -0.829, 0, 1, 0, 0.829, 0, 0.559, 2.2, 0, -3.3)
+
+[node name="GardenLights" type="Node3D" parent="." groups=["navigation_source"]]
+
+[node name="LampPostByTheDoor" parent="GardenLights" instance=ExtResource("lamp_post")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 0, -2.7)
+
+[node name="LampPostMidPath" parent="GardenLights" instance=ExtResource("lamp_post")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0, -0.55)
+
+[node name="LampPostByThePond" parent="GardenLights" instance=ExtResource("lamp_post")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 0, 1.0)
+
+[node name="LampPostByTheGarden" parent="GardenLights" instance=ExtResource("lamp_post")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 0, 2.2)
 
 [node name="NavigationRegion" type="NavigationRegion3D" parent="." unique_id=1730609506]
 navigation_mesh = SubResource("NavigationMesh_walkable_area")
