@@ -9,6 +9,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, ValidationError
 
 from src.application.world_sky import SkyView
+from src.domain.diary import DiaryDay
 from src.domain.feelings.emotion import EmotionalState
 from src.domain.letter import MAX_LETTER_LENGTH, Reply, SavedLetter
 
@@ -73,7 +74,27 @@ class MailboxMessage(BaseModel):
     letters: list[LetterMessage]
 
 
-WorldMessage = GoToMessage | FeelingsMessage | SkyMessage | MailboxMessage
+class DiaryEntryMessage(BaseModel):
+    written_at: str
+    """Local date and time, like "2026-11-25T14:30"."""
+    text: str
+
+
+class DiaryDayMessage(BaseModel):
+    day: str
+    """Like "2026-11-25"."""
+    entries: list[DiaryEntryMessage]
+    """The earliest first, as she wrote them."""
+
+
+class DiaryMessage(BaseModel):
+    """The latest pages of her diary, the newest day first."""
+
+    type: Literal["diary"] = "diary"
+    days: list[DiaryDayMessage]
+
+
+WorldMessage = GoToMessage | FeelingsMessage | SkyMessage | MailboxMessage | DiaryMessage
 
 MAX_THING_ID_LENGTH = 64
 MAX_DESCRIPTION_LENGTH = 200
@@ -153,6 +174,23 @@ def mailbox_message(letters: list[SavedLetter]) -> MailboxMessage:
                 reply=saved.letter.reply.text if saved.letter.reply else None,
             )
             for saved in reversed(letters)
+        ]
+    )
+
+
+def diary_message(days: list[DiaryDay]) -> DiaryMessage:
+    return DiaryMessage(
+        days=[
+            DiaryDayMessage(
+                day=diary_day.day.isoformat(),
+                entries=[
+                    DiaryEntryMessage(
+                        written_at=entry.written_at.strftime(WORLD_DATE_FORMAT), text=entry.text
+                    )
+                    for entry in diary_day.entries
+                ],
+            )
+            for diary_day in days
         ]
     )
 

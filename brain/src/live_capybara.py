@@ -8,6 +8,7 @@ import httpx
 from src.application.attention_inbox import AttentionInbox
 from src.application.autonomous_loop import AutonomousLoop
 from src.application.conversation import Conversation
+from src.application.diary_keeper import DiaryKeeper
 from src.application.feelings_voice import FeelingsVoice
 from src.application.heart import Heart
 from src.application.inner_voice import InnerVoice
@@ -18,6 +19,7 @@ from src.application.related_discoveries import RelatedDiscoveries
 from src.application.related_memory_chooser import RelatedMemoryChooser
 from src.application.reply_reader import ReplyReader
 from src.application.self_care import SelfCare
+from src.application.shown_diary import ShownDiary
 from src.application.shown_mailbox import ShownMailbox
 from src.application.token_budget import HourlyTokenBudget
 from src.capybara_heart import build_heart
@@ -30,6 +32,7 @@ from src.domain.feelings.appraisal import EmotionalEvent, EventKind
 from src.domain.feelings.behavior import cycle_pace
 from src.domain.language_model import LanguageModel, StructuredLanguageModel
 from src.infrastructure.logging_setup import configure_logging
+from src.infrastructure.markdown_diary import MarkdownDiary
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
 from src.infrastructure.markdown_mailbox import MarkdownMailbox
 from src.infrastructure.markdown_suggestion_repository import MarkdownSuggestionRepository
@@ -38,6 +41,7 @@ from src.infrastructure.prompt_loader import load_prompt
 from src.infrastructure.settings import Settings
 from src.infrastructure.sky_broadcaster import SkyBroadcaster
 from src.infrastructure.websocket_body import WebSocketBody
+from src.infrastructure.websocket_diary_display import WebSocketDiaryDisplay
 from src.infrastructure.websocket_mailbox_display import WebSocketMailboxDisplay
 from src.infrastructure.world_event_router import WorldEventRouter
 from src.infrastructure.world_messages import NoticedMessage
@@ -208,6 +212,27 @@ def build_reply_reader(
     return ReplyReader(mailbox, heart, load_prompt(LETTER_REPLIES_TEMPLATE_NAME), body=body)
 
 
+def build_diary_keeper(settings: Settings, world_server: WorldServer) -> DiaryKeeper:
+    """Her diary, shown in the world right away and after every new entry."""
+    diary = ShownDiary(
+        MarkdownDiary(settings.discoveries_dir),
+        WebSocketDiaryDisplay(world_server),
+        shown_days=settings.diary_shown_days,
+    )
+    diary.show()
+    return DiaryKeeper(diary)
+
+
+def think_aloud_and_write(diary_keeper: DiaryKeeper) -> Callable[[str], None]:
+    """Each thought of a cycle is printed in the terminal and kept in her diary."""
+
+    def print_and_keep(thought: str) -> None:
+        print_thought(thought)
+        diary_keeper.keep(thought)
+
+    return print_and_keep
+
+
 def with_letters(
     before_cycle: Callable[[], None],
     letter_writer: LetterWriter | None,
@@ -311,7 +336,7 @@ def main() -> None:
             budget,
             inner_voice.compose,
             settings.autonomous_cycle_interval_seconds,
-            on_thought=print_thought,
+            on_thought=think_aloud_and_write(build_diary_keeper(settings, world_server)),
             on_cycle_finished=after_cycle(inner_voice, reply_reader),
             before_cycle=before_cycle,
             pace=pace,

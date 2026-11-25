@@ -84,6 +84,8 @@ class Settings(BaseSettings):
     letters_enabled: bool = True
     letter_min_hours_between: float = Field(default=20.0, ge=0)
     letter_max_unread: int = Field(default=3, gt=0)
+    # Her diary (one file per day in "diario"): how many of the latest days the world shows.
+    diary_shown_days: int = Field(default=14, gt=0)
     # Day and night in her world: "real" follows the wall clock, "fast" squeezes a whole
     # day into world_fast_day_minutes real minutes, for quick tests.
     world_clock_mode: ClockMode = ClockMode.REAL
