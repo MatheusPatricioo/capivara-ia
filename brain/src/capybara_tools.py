@@ -1,11 +1,14 @@
 """Builds the capybara's tools. Shared by the chat and by the autonomous (live) mode."""
 
+import logging
+
 import httpx
 from ddgs import DDGS
 
 from src.application.category_matcher import CategoryMatcher
 from src.application.doodle_category_chooser import DoodleCategoryChooser
 from src.application.drawing_artist import DrawingArtist
+from src.application.fallback_web_searcher import FallbackWebSearcher
 from src.application.illustrate_discovery import IllustrateDiscovery
 from src.application.remembering_discovery_repository import RememberingDiscoveryRepository
 from src.application.repeated_suggestions import RepeatedSuggestions
@@ -24,6 +27,7 @@ from src.domain.discovery_memory import DiscoveryMemory
 from src.domain.feelings.appraisal import EventKind
 from src.domain.language_model import StructuredLanguageModel
 from src.domain.tool import Tool
+from src.domain.web_search import WebSearcher
 from src.infrastructure.duckduckgo_web_searcher import DuckDuckGoWebSearcher
 from src.infrastructure.json_embedding_cache import JsonEmbeddingCache
 from src.infrastructure.json_search_history import JsonSearchHistory
@@ -39,6 +43,9 @@ from src.infrastructure.quickdraw_doodles import (
     load_doodle_library,
 )
 from src.infrastructure.settings import Settings
+from src.infrastructure.wikipedia_web_searcher import WikipediaWebSearcher
+
+logger = logging.getLogger(__name__)
 
 SEARCH_HISTORY_FILE_NAME = "search-history.json"
 # Every search with its results, one JSON per line; read by the computer screen in Godot.
@@ -82,11 +89,7 @@ def build_capybara_tools(
     seen_sources = SeenSources()
     saved_discoveries = ConversationDiscoveries()
     web_search_tool = WebSearchTool(
-        DuckDuckGoWebSearcher(
-            DDGS(),
-            backend=settings.web_search_backend,
-            region=settings.web_search_region,
-        ),
+        _build_web_searcher(settings, http_client),
         seen_sources=seen_sources,
         search_history=JsonSearchHistory(settings.discoveries_dir / SEARCH_HISTORY_FILE_NAME),
         search_log=JsonlSearchLog(settings.discoveries_dir / SEARCH_LOG_RELATIVE_PATH),
@@ -140,6 +143,25 @@ def _build_suggest_improvement_tool(
         ),
         saved_discoveries,
     )
+
+
+def _build_web_searcher(settings: Settings, http_client: httpx.Client) -> WebSearcher:
+    """DuckDuckGo (through ddgs) first; Wikipedia when it finds nothing, if a contact is set."""
+    main_searcher = DuckDuckGoWebSearcher(
+        DDGS(),
+        backend=settings.web_search_backend,
+        region=settings.web_search_region,
+    )
+    if not settings.wikipedia_contact:
+        logger.warning("WIKIPEDIA_CONTACT is empty: the Wikipedia fallback search is off")
+        return main_searcher
+    wikipedia_searcher = WikipediaWebSearcher(
+        http_client,
+        contact=settings.wikipedia_contact,
+        language=settings.wikipedia_language,
+        timeout_seconds=settings.wikipedia_timeout_seconds,
+    )
+    return FallbackWebSearcher(main_searcher, wikipedia_searcher)
 
 
 def _build_discovery_repository(

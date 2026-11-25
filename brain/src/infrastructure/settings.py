@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     web_search_backend: str = "duckduckgo"
     # DuckDuckGo region code; "br-pt" brings Brazilian pages first.
     web_search_region: str = "br-pt"
+    # When the search finds nothing, she tries Wikipedia. Its robot policy asks for a
+    # contact (a link or e-mail) in the User-Agent; while empty, the fallback stays off.
+    wikipedia_contact: str = ""
+    wikipedia_language: str = "pt"
+    wikipedia_timeout_seconds: float = Field(default=10.0, gt=0)
     discoveries_dir: Path = PROJECT_ROOT / "discoveries"
     world_server_host: str = "127.0.0.1"
     world_server_port: int = Field(default=8765, gt=0, lt=65536)
