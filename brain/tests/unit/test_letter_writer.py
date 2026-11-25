@@ -19,7 +19,7 @@ from tests.fakes.emotional_lives import NOW, a_life
 from tests.fakes.in_memory_mailbox import BrokenMailbox, InMemoryMailbox
 
 WRITTEN_AT = datetime(2026, 11, 25, 14, 0)
-LETTER_TEXT = "Oi, Matheus! Senti sua falta hoje no laguinho. Volta logo? Capivara"
+LETTER_TEXT = "Oi, criador! Senti sua falta hoje no laguinho. Volta logo? Capivara"
 LETTER_PROMPT = "Carta.\n{feelings}\n{mailbox}\n{discoveries}"
 CONNECTED_RUNG = 0
 MISSING_HIM_RUNG = 1

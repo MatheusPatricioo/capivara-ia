@@ -15,7 +15,7 @@ TRUST_GAIN_PER_WISH_GRANTED = 0.05
 
 @dataclass(frozen=True)
 class Bond:
-    """Her trust in Matheus, from 0 to 1. It moves over days, not minutes.
+    """Her trust in her creator, from 0 to 1. It moves over days, not minutes.
 
     High trust is resilience: she misses him more slowly and recovers faster when he is
     back. Long absences, again and again, wear it down.

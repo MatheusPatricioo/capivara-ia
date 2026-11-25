@@ -23,7 +23,7 @@ class MailboxDisplay(Protocol):
 class ShownMailbox:
     """Decorator: a mailbox whose every change is shown in the world right away.
 
-    A new letter raises the flag of the mailbox; a letter opened by Matheus lowers it, and
+    A new letter raises the flag of the mailbox; a letter opened by her creator lowers it, and
     his reply shows up under the letter.
     Letters are posted from the agent loop and opened from the world server thread, so a
     lock keeps the two from touching the files at the same time.
@@ -68,7 +68,7 @@ class ShownMailbox:
             return self._mailbox.mark_reply_seen(file_name)
 
     def reply_to_letter(self, file_name: str, text: str) -> None:
-        """Matheus answered a letter in the world. A bad reply is only logged: the world
+        """Her creator answered a letter in the world. A bad reply is only logged: the world
         keeps showing the letter without it, so he can try again."""
         try:
             self.answer(file_name, Reply(self._now(), text))
@@ -76,17 +76,17 @@ class ShownMailbox:
             logger.warning("Could not keep the reply to %s: %s", file_name, error)
             self.show()
             return
-        logger.info("Matheus answered the letter %s", file_name)
+        logger.info("Her creator answered the letter %s", file_name)
 
     def show(self) -> None:
         with self._lock:
             self._display.show_mailbox(self._mailbox.saved_letters())
 
     def open_letter(self, file_name: str) -> None:
-        """Matheus opened a letter in the world. An unknown letter is only logged."""
+        """Her creator opened a letter in the world. An unknown letter is only logged."""
         try:
             self.mark_read(file_name)
         except LetterStorageError as error:
             logger.warning("Could not mark the letter as read: %s", error)
             return
-        logger.info("Matheus read the letter %s", file_name)
+        logger.info("Her creator read the letter %s", file_name)

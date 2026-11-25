@@ -64,7 +64,7 @@ class LetterMessage(BaseModel):
     text: str
     unread: bool
     replied_at: str | None = None
-    """When Matheus answered, like "written_at"; None while unanswered."""
+    """When her creator answered, like "written_at"; None while unanswered."""
     reply: str | None = None
 
 
@@ -130,7 +130,7 @@ LetterFileName = Annotated[
 
 
 class LetterOpenedMessage(BaseModel):
-    """Sent by the world when Matheus opens a letter in the mailbox."""
+    """Sent by the world when her creator opens a letter in the mailbox."""
 
     type: Literal["letter_opened"] = "letter_opened"
     letter: LetterFileName
@@ -143,7 +143,7 @@ ReplyText = Annotated[
 
 
 class LetterRepliedMessage(BaseModel):
-    """Sent by the world when Matheus writes back to a letter."""
+    """Sent by the world when her creator writes back to a letter."""
 
     type: Literal["letter_replied"] = "letter_replied"
     letter: LetterFileName

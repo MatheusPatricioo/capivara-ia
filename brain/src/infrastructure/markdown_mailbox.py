@@ -19,10 +19,10 @@ logger = logging.getLogger(__name__)
 LETTERS_FOLDER_NAME = "cartas"
 """A subfolder, so letters never mix with the discoveries (which are only top-level files)."""
 FILE_EXTENSION = ".md"
-FILE_TITLE = "carta para o matheus"
+FILE_TITLE = "carta para o criador"
 WRITTEN_AT_FORMAT = "%Y-%m-%d %H:%M"
 # The Markdown layout, shared by writing and reading so both always agree.
-TITLE_LINE = "# Carta para o Matheus"
+TITLE_LINE = "# Carta para o criador"
 WRITTEN_AT_PREFIX = "- **Escrita em:** "
 STATUS_PREFIX = "- **Situação:** "
 REPLIED_AT_PREFIX = "- **Respondida em:** "
@@ -30,7 +30,7 @@ REPLY_SEEN_PREFIX = "- **Ela leu a resposta:** "
 YES_WORD = "sim"
 NO_WORD = "não"
 LETTER_HEADING = "## Carta"
-REPLY_HEADING = "## Resposta do Matheus"
+REPLY_HEADING = "## Resposta do criador"
 STATUS_WORDS = {LetterStatus.UNREAD: "não lida", LetterStatus.READ: "lida"}
 # Typed by hand, the accent is easy to forget: "nao lida" counts as unread too.
 UNREAD_SPELLINGS = frozenset({"não lida", "nao lida"})
@@ -39,7 +39,7 @@ UNREAD_SPELLINGS = frozenset({"não lida", "nao lida"})
 class MarkdownMailbox:
     """The mailbox of her world: one Markdown file per letter in the "cartas" folder.
 
-    Easy to read in the Explorer too. A letter becomes read when Matheus opens it in the
+    Easy to read in the Explorer too. A letter becomes read when her creator opens it in the
     mailbox of the world (or when its "Situação" line is changed to "lida" by hand), and
     his reply is kept in the same file, under its own heading.
     """

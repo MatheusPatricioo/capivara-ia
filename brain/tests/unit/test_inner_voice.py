@@ -362,7 +362,7 @@ def test_tells_which_earlier_suggestions_were_built() -> None:
         [a_suggestion(LILIES_REQUEST).built("water_lilies")]
     ).compose()
 
-    assert "- Um laguinho com vitórias-régias (o Matheus construiu!)" in composed
+    assert "- Um laguinho com vitórias-régias (o criador construiu!)" in composed
 
 
 def test_lists_at_most_the_ten_newest_suggestions() -> None:
@@ -407,7 +407,7 @@ def test_tells_her_a_noticed_thing_is_the_wish_that_was_built(
     composed = inner_voice.compose()
 
     assert (
-        '- vitórias-régias no laguinho (é o que você pediu pro Matheus: '
+        "- vitórias-régias no laguinho (é o que você pediu pro criador: "
         '"Um laguinho com vitórias-régias". Ele construiu pra você!)'
     ) in composed
 
@@ -435,7 +435,7 @@ def test_leaves_other_noticed_things_as_they_are(attention: AttentionInbox) -> N
     assert "- cogumelos vermelhos\n" in composed
 
 
-REPLIES = "(O Matheus respondeu sua cartinha!)"
+REPLIES = "(O criador respondeu sua cartinha!)"
 
 
 def test_tells_his_replies_before_how_she_feels() -> None:

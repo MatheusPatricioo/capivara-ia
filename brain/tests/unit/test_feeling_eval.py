@@ -26,7 +26,7 @@ from src.evals.feeling_scenarios import (
 from src.infrastructure.settings import PROJECT_ROOT
 
 DATASET = PROJECT_ROOT / "brain" / "evals" / "datasets" / "feeling_scenarios.json"
-LONELY_DIARY = "Hoje me sinto muito sozinha, o Matheus sumiu de novo."
+LONELY_DIARY = "Hoje me sinto muito sozinha, o criador sumiu de novo."
 PROMPTS = FeelingPrompts(
     system="Você é uma capivara.",
     feelings_template="(Por dentro:\n{feelings})",
@@ -77,7 +77,7 @@ def judge_saying(tone: str, quote: str) -> ToneJudge:
 def lonely_scenario() -> FeelingScenario:
     return FeelingScenario(
         name="alone",
-        description="Four days without Matheus.",
+        description="Four days without her creator.",
         story=[StoryEvent(kind=EventKind.TALKED_WITH_MATHEUS, at_hours=0)],
         speaks_at_hours=96,
         accepted_tones=[Tone.NEGATIVE],
@@ -134,7 +134,7 @@ def test_her_inner_voice_tells_her_how_she_feels(lonely_scenario: FeelingScenari
 
     run_feeling_scenario(lonely_scenario, model, judge_saying("negative", ""), PROMPTS)
 
-    assert "Matheus não conversa com você" in model.received[-1].content
+    assert "criador não conversa com você" in model.received[-1].content
 
 
 def test_a_diary_with_the_accepted_tone_passes(lonely_scenario: FeelingScenario) -> None:

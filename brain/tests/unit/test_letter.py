@@ -15,7 +15,7 @@ NOW = datetime(2026, 11, 25, 14, 0)
 
 
 def letter_written(hours_ago: float, status: LetterStatus = LetterStatus.READ) -> Letter:
-    return Letter(NOW - timedelta(hours=hours_ago), "Oi, Matheus!", status)
+    return Letter(NOW - timedelta(hours=hours_ago), "Oi, criador!", status)
 
 
 @pytest.fixture
@@ -24,11 +24,11 @@ def rhythm() -> LetterRhythm:
 
 
 def test_a_new_letter_is_unread() -> None:
-    assert Letter(NOW, "Oi, Matheus!").is_unread
+    assert Letter(NOW, "Oi, criador!").is_unread
 
 
 def test_trims_spaces_around_the_text() -> None:
-    assert Letter(NOW, "  Oi, Matheus!\n").text == "Oi, Matheus!"
+    assert Letter(NOW, "  Oi, criador!\n").text == "Oi, criador!"
 
 
 def test_rejects_an_empty_letter() -> None:
@@ -68,27 +68,27 @@ def test_rejects_a_rhythm_without_room_for_unread_letters() -> None:
 
 
 def test_an_opened_letter_is_read() -> None:
-    assert not Letter(NOW, "Oi, Matheus!").opened().is_unread
+    assert not Letter(NOW, "Oi, criador!").opened().is_unread
 
 
 def test_opening_keeps_the_text() -> None:
-    assert Letter(NOW, "Oi, Matheus!").opened().text == "Oi, Matheus!"
+    assert Letter(NOW, "Oi, criador!").opened().text == "Oi, criador!"
 
 
 def test_an_answered_letter_keeps_the_reply() -> None:
     reply = Reply(NOW, "Oi, capivara! Volto amanhã.")
 
-    assert Letter(NOW, "Oi, Matheus!").answered(reply).reply == reply
+    assert Letter(NOW, "Oi, criador!").answered(reply).reply == reply
 
 
 def test_an_answered_letter_is_read() -> None:
-    letter = Letter(NOW, "Oi, Matheus!").answered(Reply(NOW, "Oi!"))
+    letter = Letter(NOW, "Oi, criador!").answered(Reply(NOW, "Oi!"))
 
     assert not letter.is_unread
 
 
 def test_a_letter_gets_only_one_reply() -> None:
-    letter = Letter(NOW, "Oi, Matheus!").answered(Reply(NOW, "Oi!"))
+    letter = Letter(NOW, "Oi, criador!").answered(Reply(NOW, "Oi!"))
 
     with pytest.raises(InvalidLetterError):
         letter.answered(Reply(NOW, "Oi de novo!"))
@@ -100,21 +100,21 @@ def test_rejects_an_empty_reply() -> None:
 
 
 def test_a_fresh_reply_is_new_to_her() -> None:
-    letter = Letter(NOW, "Oi, Matheus!").answered(Reply(NOW, "Oi!"))
+    letter = Letter(NOW, "Oi, criador!").answered(Reply(NOW, "Oi!"))
 
     assert letter.has_a_new_reply
 
 
 def test_a_reply_she_read_is_no_longer_new() -> None:
-    letter = Letter(NOW, "Oi, Matheus!").answered(Reply(NOW, "Oi!")).reply_seen()
+    letter = Letter(NOW, "Oi, criador!").answered(Reply(NOW, "Oi!")).reply_seen()
 
     assert not letter.has_a_new_reply
 
 
 def test_an_unanswered_letter_has_no_new_reply() -> None:
-    assert not Letter(NOW, "Oi, Matheus!").has_a_new_reply
+    assert not Letter(NOW, "Oi, criador!").has_a_new_reply
 
 
 def test_cannot_read_the_reply_of_an_unanswered_letter() -> None:
     with pytest.raises(InvalidLetterError):
-        Letter(NOW, "Oi, Matheus!").reply_seen()
+        Letter(NOW, "Oi, criador!").reply_seen()

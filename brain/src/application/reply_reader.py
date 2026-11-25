@@ -1,4 +1,4 @@
-"""When Matheus answers one of her letters, she finds the reply in the mailbox and reads it."""
+"""When her creator answers one of her letters, she finds the reply in the mailbox and reads it."""
 
 import logging
 from typing import Protocol
@@ -56,7 +56,7 @@ class ReplyReader:
             if saved.file_name not in self._already_felt:
                 self._heart.feel(EmotionalEvent(EventKind.LETTER_ANSWERED))
                 self._already_felt.add(saved.file_name)
-                logger.info("She read Matheus's reply to %s", saved.file_name)
+                logger.info("She read her creator's reply to %s", saved.file_name)
 
     def compose(self) -> str:
         """The replies she found, for her inner voice; empty when there are none."""

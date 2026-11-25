@@ -45,7 +45,7 @@ def life() -> EmotionalLife:
 
 @pytest.fixture
 def neglected_life(life: EmotionalLife) -> EmotionalLife:
-    """Talked with Matheus once, then four days alone."""
+    """Talked with her creator once, then four days alone."""
     feel(life, EventKind.TALKED_WITH_MATHEUS, 0.0)
     stay_awake(life, 0.0, FOUR_DAYS)
     return life

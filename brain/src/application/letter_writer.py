@@ -1,4 +1,4 @@
-"""When she misses Matheus, she writes him a letter and leaves it in the mailbox."""
+"""When she misses her creator, she writes him a letter and leaves it in the mailbox."""
 
 import logging
 import time
@@ -89,9 +89,9 @@ class LetterWriter:
                 self._body.go_to(Place.MAILBOX)
             file_name = self._mailbox.post(letter)
         except (LanguageModelError, InvalidLetterError, LetterStorageError) as error:
-            logger.warning("Could not write a letter to Matheus: %s", error)
+            logger.warning("Could not write a letter to her creator: %s", error)
             return None
-        logger.info("She wrote a letter to Matheus: %s", file_name)
+        logger.info("She wrote a letter to her creator: %s", file_name)
         return file_name
 
     def _write(self, life: EmotionalLife, letters: list[Letter]) -> str:

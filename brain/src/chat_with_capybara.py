@@ -24,7 +24,7 @@ FEELINGS_TEMPLATE_NAME = "feelings"
 
 def system_prompt_with_feelings(settings: Settings, heart: Heart | None) -> str:
     """How she feels when the chat opens, before the first message: after days alone she
-    greets Matheus with what those days did to her. Read once, at the start."""
+    greets her creator with what those days did to her. Read once, at the start."""
     system_prompt = load_prompt(SYSTEM_PROMPT_NAME)
     if heart is None:
         return system_prompt

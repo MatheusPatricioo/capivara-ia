@@ -138,7 +138,7 @@ def test_tells_the_model_the_suggestion_is_not_in_the_world_yet(
     result = tool.run(VALID_ARGUMENTS)
 
     assert result == (
-        f"Suggestion saved as {SAVED_FILE_NAME}. Matheus reads your suggestions and may "
+        f"Suggestion saved as {SAVED_FILE_NAME}. Your creator reads your suggestions and may "
         "build this one someday: it is not in your world yet."
     )
 

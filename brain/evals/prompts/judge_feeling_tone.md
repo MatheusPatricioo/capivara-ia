@@ -10,5 +10,5 @@ Do this:
 
 Judge only what the diary says, not what you imagine she might feel.
 
-Example. DIARY: "O Matheus finalmente voltou! Fiquei tão feliz... mas confesso que ainda tô meio chateada por ele ter sumido."
+Example. DIARY: "O criador finalmente voltou! Fiquei tão feliz... mas confesso que ainda tô meio chateada por ele ter sumido."
 Answer: {"quote": "Fiquei tão feliz... mas confesso que ainda tô meio chateada", "tone": "mixed"}

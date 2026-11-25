@@ -51,7 +51,7 @@ SEARCH_HISTORY_FILE_NAME = "search-history.json"
 # Every search with its results, one JSON per line; read by the computer screen in Godot.
 SEARCH_LOG_RELATIVE_PATH = "history/searches.jsonl"
 # Tools whose results skip the general reminder. After save_discovery, the reminder ("call
-# save_discovery now... then tell Matheus") buried what had just happened and made her narrate
+# save_discovery now... then tell your creator") buried what had just happened and made her narrate
 # instead of acting. Measured on real moments after a save: 11/20 drawings with it, 16/20 without.
 TOOL_RESULT_REMINDER_OVERRIDES = {"save_discovery": ""}
 CHOOSE_DOODLE_PROMPT_NAME = "choose_doodle"

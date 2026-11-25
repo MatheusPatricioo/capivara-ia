@@ -16,7 +16,7 @@ from src.infrastructure.world_messages import (
 OLD_LETTER = SavedLetter(
     "carta-1.md", Letter(datetime(2026, 11, 24, 9, 5), "Bom dia!", LetterStatus.READ)
 )
-NEW_LETTER = SavedLetter("carta-2.md", Letter(datetime(2026, 11, 25, 14, 30), "Oi, Matheus!"))
+NEW_LETTER = SavedLetter("carta-2.md", Letter(datetime(2026, 11, 25, 14, 30), "Oi, criador!"))
 
 
 class RecordingHandlers:
@@ -47,7 +47,7 @@ def test_mailbox_message_carries_each_letter_with_its_date_and_status() -> None:
         LetterMessage(
             file_name="carta-2.md",
             written_at="2026-11-25T14:30",
-            text="Oi, Matheus!",
+            text="Oi, criador!",
             unread=True,
         )
     ]

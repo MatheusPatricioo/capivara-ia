@@ -18,7 +18,7 @@ from src.infrastructure.world_server import WorldServer
 LOCAL_HOST = "127.0.0.1"
 ANY_FREE_PORT = 0
 WAIT_TIMEOUT_SECONDS = 2.0
-LETTER = Letter(datetime(2026, 11, 25, 14, 30), "Oi, Matheus! Senti sua falta.")
+LETTER = Letter(datetime(2026, 11, 25, 14, 30), "Oi, criador! Senti sua falta.")
 
 
 def ignore_noticed(event: object) -> None:

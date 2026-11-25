@@ -25,7 +25,7 @@ class SelfCare:
     """When she needs it, she walks to a comfort place (pond, food bowl, dog house).
 
     It is coping, not a cure: it soothes frustration and sadness and refills comfort, but
-    missing Matheus only ends when he comes back.
+    missing her creator only ends when he comes back.
     """
 
     def __init__(

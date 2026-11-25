@@ -11,7 +11,7 @@ from src.infrastructure.prompt_loader import PROMPTS_DIR, load_prompt
 OLLAMA_URL = "http://ollama.test"
 MODEL_NAME = "llama3.1:8b"
 GREETING = "Oi, capivara!"
-REPLY = "Oi, Matheus!"
+REPLY = "Oi, criador!"
 
 
 class RecordingOllamaServer:

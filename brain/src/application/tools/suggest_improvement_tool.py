@@ -65,7 +65,7 @@ class SuggestImprovementTool:
             description=(
                 "Right after saving a discovery, suggests one concrete thing to add to your "
                 "world because of what you learned (for example, after learning about "
-                "fireflies: 'Vaga-lumes no jardim à noite'). Matheus reads your suggestions "
+                "fireflies: 'Vaga-lumes no jardim à noite'). Your creator reads your suggestions "
                 "and may build them someday: suggesting does not change your world now. "
                 "At most one per cycle. Written in Brazilian Portuguese."
             ),
@@ -83,7 +83,7 @@ class SuggestImprovementTool:
         self._has_suggested = True
         logger.info("Suggestion saved: %s (inspired by '%s')", file_name, suggestion.inspired_by)
         return (
-            f"Suggestion saved as {file_name}. Matheus reads your suggestions and may build "
+            f"Suggestion saved as {file_name}. Your creator reads your suggestions and may build "
             "this one someday: it is not in your world yet."
         )
 

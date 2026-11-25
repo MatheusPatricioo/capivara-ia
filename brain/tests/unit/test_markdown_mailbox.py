@@ -14,8 +14,8 @@ from src.domain.letter import (
 from src.infrastructure.markdown_mailbox import LETTERS_FOLDER_NAME, MarkdownMailbox
 
 WRITTEN_AT = datetime(2026, 11, 25, 14, 30)
-LETTER = Letter(WRITTEN_AT, "Oi, Matheus!\n\nSenti sua falta.\nCapivara")
-FILE_NAME = "2026-11-25-carta-para-o-matheus.md"
+LETTER = Letter(WRITTEN_AT, "Oi, criador!\n\nSenti sua falta.\nCapivara")
+FILE_NAME = "2026-11-25-carta-para-o-criador.md"
 
 
 @pytest.fixture
@@ -36,7 +36,7 @@ def test_names_the_file_with_the_date(mailbox: MarkdownMailbox) -> None:
 def test_two_letters_on_the_same_day_get_different_files(mailbox: MarkdownMailbox) -> None:
     mailbox.post(LETTER)
 
-    assert mailbox.post(LETTER) == "2026-11-25-carta-para-o-matheus-2.md"
+    assert mailbox.post(LETTER) == "2026-11-25-carta-para-o-criador-2.md"
 
 
 def test_reads_back_the_letter_it_saved(mailbox: MarkdownMailbox) -> None:
@@ -103,7 +103,7 @@ def test_writes_the_reply_under_its_own_heading(mailbox: MarkdownMailbox, tmp_pa
     mailbox.answer(file_name, Reply(datetime(2026, 11, 26, 10, 0), "Volto amanhã."))
 
     letter_text = (tmp_path / LETTERS_FOLDER_NAME / file_name).read_text(encoding="utf-8")
-    assert letter_text.endswith("## Resposta do Matheus\n\nVolto amanhã.\n")
+    assert letter_text.endswith("## Resposta do criador\n\nVolto amanhã.\n")
 
 
 def test_refuses_a_second_reply(mailbox: MarkdownMailbox) -> None:

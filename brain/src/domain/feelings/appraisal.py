@@ -31,7 +31,7 @@ class EventKind(StrEnum):
     NOTICED_SOMETHING = "noticed_something"
     VISITED_COMFORT_PLACE = "visited_comfort_place"
     LETTER_ANSWERED = "letter_answered"
-    """She read Matheus's reply to one of her letters."""
+    """She read her creator's reply to one of her letters."""
 
 
 @dataclass(frozen=True)

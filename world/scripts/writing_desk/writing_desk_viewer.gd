@@ -2,7 +2,7 @@ class_name WritingDeskViewer
 extends CanvasLayer
 
 ## Her writing desk, drawn over the 3D world like a sheet of paper, with two tabs: the
-## letters she wrote to Matheus (he can answer them here) and her personal diary.
+## letters she wrote to her creator (he can answer them here) and her personal diary.
 ## The game keeps running while it is open, so the brain connection never stops.
 ## [X] or Esc closes it.
 

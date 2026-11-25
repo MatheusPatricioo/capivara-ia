@@ -1,4 +1,4 @@
-"""Builds her letters: the mailbox in the world, the letters she writes and Matheus's replies."""
+"""Builds her letters: the mailbox in the world, the letters she writes and the replies to them."""
 
 from dataclasses import dataclass
 

@@ -6,7 +6,7 @@ from src.application.shown_mailbox import ShownMailbox
 from src.domain.letter import Letter, Reply, SavedLetter
 from tests.fakes.in_memory_mailbox import InMemoryMailbox
 
-LETTER = Letter(datetime(2026, 11, 25, 14, 30), "Oi, Matheus!")
+LETTER = Letter(datetime(2026, 11, 25, 14, 30), "Oi, criador!")
 
 
 class RecordingDisplay:

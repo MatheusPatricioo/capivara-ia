@@ -11,7 +11,7 @@ from tests.fakes.in_memory_mailbox import BrokenMailbox, InMemoryMailbox
 
 TEMPLATE = "Ele respondeu!\n{replies}"
 WRITTEN_AT = datetime(2026, 11, 25, 14, 30)
-UNANSWERED = Letter(WRITTEN_AT, "Oi, Matheus! Achei uma estrela nova.")
+UNANSWERED = Letter(WRITTEN_AT, "Oi, criador! Achei uma estrela nova.")
 ANSWERED = UNANSWERED.answered(Reply(datetime(2026, 11, 26, 10, 0), "Que legal! Me conta mais."))
 LETTER_ANSWERED = EmotionalEvent(EventKind.LETTER_ANSWERED)
 
@@ -70,7 +70,7 @@ def test_her_inner_voice_tells_her_letter_and_his_reply(reader: ReplyReader) -> 
 
     assert reader.compose() == (
         "Ele respondeu!\n"
-        'Sua cartinha de 25/11: "Oi, Matheus! Achei uma estrela nova."\n'
+        'Sua cartinha de 25/11: "Oi, criador! Achei uma estrela nova."\n'
         'A resposta dele: "Que legal! Me conta mais."'
     )
 

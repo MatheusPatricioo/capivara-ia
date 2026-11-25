@@ -1,4 +1,4 @@
-"""Letters she writes to Matheus while he is away, left in the mailbox of her world."""
+"""Letters she writes to her creator while he is away, left in the mailbox of her world."""
 
 from collections.abc import Sequence
 from dataclasses import dataclass, replace
@@ -20,7 +20,7 @@ class LetterStorageError(Exception):
 
 class LetterStatus(StrEnum):
     UNREAD = "unread"
-    """Waiting in the mailbox: Matheus has not opened it yet."""
+    """Waiting in the mailbox: her creator has not opened it yet."""
     READ = "read"
 
 
@@ -38,7 +38,7 @@ def _checked_text(text: str, what: str) -> str:
 
 @dataclass(frozen=True)
 class Reply:
-    """What Matheus wrote back to one of her letters."""
+    """What her creator wrote back to one of her letters."""
 
     written_at: datetime
     text: str
@@ -68,7 +68,7 @@ class Letter:
         return replace(self, status=LetterStatus.READ)
 
     def answered(self, reply: Reply) -> "Letter":
-        """The same letter with Matheus's reply (answering it also means he read it).
+        """The same letter with her creator's reply (answering it also means he read it).
 
         Each letter gets one reply: answering again raises InvalidLetterError.
         """
@@ -78,7 +78,7 @@ class Letter:
 
     @property
     def has_a_new_reply(self) -> bool:
-        """Matheus answered and she has not read the answer yet."""
+        """Her creator answered and she has not read the answer yet."""
         return self.reply is not None and not self.reply.seen_by_her
 
     def reply_seen(self) -> "Letter":
@@ -111,7 +111,7 @@ class Mailbox(Protocol):
         ...
 
     def answer(self, file_name: str, reply: Reply) -> SavedLetter:
-        """Keeps Matheus's reply with the letter.
+        """Keeps her creator's reply with the letter.
 
         Raises LetterStorageError when there is no such letter and InvalidLetterError when
         it was already answered.

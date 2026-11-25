@@ -2,7 +2,7 @@ class_name MailboxFlag
 extends StaticBody3D
 
 ## The red flag of the mailbox: up while a letter from the capybara waits unread, down when
-## Matheus has read them all. The brain sends the letters; this only shows them.
+## her creator has read them all. The brain sends the letters; this only shows them.
 
 const FLAG_UP_DEGREES: float = 0.0
 const FLAG_DOWN_DEGREES: float = -90.0

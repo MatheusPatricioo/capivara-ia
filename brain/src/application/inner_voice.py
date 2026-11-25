@@ -19,7 +19,7 @@ SUGGESTIONS_PLACEHOLDER = "{suggestions}"
 MAX_REMEMBERED_SUGGESTIONS = 10
 """Enough to avoid asking twice; older wishes were either built or long forgotten."""
 WAITING_LABEL = "esperando"
-BUILT_LABEL = "o Matheus construiu!"
+BUILT_LABEL = "o criador construiu!"
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class InnerVoice:
     With feelings, a short description of how she feels (and why) comes right before
     what she noticed, so her mood colours what she picks and how she tells it.
 
-    With replies, Matheus's answers to her letters come right before her feelings, which
+    With replies, her creator's answers to her letters come right before her feelings, which
     already carry the joy of reading them.
     """
 
@@ -81,7 +81,7 @@ class InnerVoice:
         self._offered: tuple[PointOfAttention, ...] = ()
 
     def compose(self) -> str:
-        """Memory and earlier suggestions first, then related discoveries, Matheus's replies
+        """Memory and earlier suggestions first, then related discoveries, her creator's replies
         to her letters, how she feels, what she noticed, and the invitation last.
 
         The end of the message is the part the model follows best.
@@ -168,7 +168,7 @@ class InnerVoice:
         if built_wish is None:
             return f"- {description}"
         return (
-            f'- {description} (é o que você pediu pro Matheus: "{built_wish.request}". '
+            f'- {description} (é o que você pediu pro criador: "{built_wish.request}". '
             "Ele construiu pra você!)"
         )
 

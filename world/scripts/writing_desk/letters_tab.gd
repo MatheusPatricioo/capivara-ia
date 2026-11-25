@@ -1,9 +1,9 @@
 class_name LettersTab
 extends HSplitContainer
 
-## The letters she wrote to Matheus: the list on the left (newest first, a dot on the
+## The letters she wrote to her creator: the list on the left (newest first, a dot on the
 ## unread ones) and the chosen letter on the right. Opening a letter tells the brain, which
-## marks it as read. Under a letter Matheus can write one reply: it goes to the brain,
+## marks it as read. Under a letter her creator can write one reply: it goes to the brain,
 ## which keeps it with the letter and sends the letters back with the reply in it.
 ## The letters come from the brain (Brain.mailbox_changed); this only shows them.
 
@@ -81,7 +81,7 @@ func _open_letter(letter_index: int) -> void:
 	_letter_list.set_item_text(letter_index, _list_title(letter))
 
 
-## The letter, with Matheus's reply under it, or the box to write one when it has none.
+## The letter, with her creator's reply under it, or the box to write one when it has none.
 func _show_letter(letter: Dictionary) -> void:
 	var reply: Variant = letter.get("reply")
 	var text: String = str(letter.get("text", ""))

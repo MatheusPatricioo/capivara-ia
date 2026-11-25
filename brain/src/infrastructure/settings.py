@@ -80,7 +80,7 @@ class Settings(BaseSettings):
     temperament_patience: float = Field(default=0.6, ge=0.0, le=1.0)
     temperament_sensitivity: float = Field(default=0.5, ge=0.0, le=1.0)
     temperament_resilience: float = Field(default=0.7, ge=0.0, le=1.0)
-    # Letters: when she misses Matheus, she writes to him (needs FEELINGS_ENABLED).
+    # Letters: when she misses her creator, she writes to him (needs FEELINGS_ENABLED).
     letters_enabled: bool = True
     letter_min_hours_between: float = Field(default=20.0, ge=0)
     letter_max_unread: int = Field(default=3, gt=0)
