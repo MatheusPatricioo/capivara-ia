@@ -8,6 +8,7 @@ from src.domain.letter import (
     Letter,
     LetterRhythm,
     LetterStatus,
+    Reply,
 )
 
 NOW = datetime(2026, 11, 25, 14, 0)
@@ -72,3 +73,27 @@ def test_an_opened_letter_is_read() -> None:
 
 def test_opening_keeps_the_text() -> None:
     assert Letter(NOW, "Oi, Matheus!").opened().text == "Oi, Matheus!"
+
+
+def test_an_answered_letter_keeps_the_reply() -> None:
+    reply = Reply(NOW, "Oi, capivara! Volto amanhã.")
+
+    assert Letter(NOW, "Oi, Matheus!").answered(reply).reply == reply
+
+
+def test_an_answered_letter_is_read() -> None:
+    letter = Letter(NOW, "Oi, Matheus!").answered(Reply(NOW, "Oi!"))
+
+    assert not letter.is_unread
+
+
+def test_a_letter_gets_only_one_reply() -> None:
+    letter = Letter(NOW, "Oi, Matheus!").answered(Reply(NOW, "Oi!"))
+
+    with pytest.raises(InvalidLetterError):
+        letter.answered(Reply(NOW, "Oi de novo!"))
+
+
+def test_rejects_an_empty_reply() -> None:
+    with pytest.raises(InvalidLetterError):
+        Reply(NOW, "  ")

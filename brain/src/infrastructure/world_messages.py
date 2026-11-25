@@ -10,7 +10,9 @@ from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, Validatio
 
 from src.application.world_sky import SkyView
 from src.domain.feelings.emotion import EmotionalState
-from src.domain.letter import SavedLetter
+from src.domain.letter import MAX_LETTER_LENGTH, Reply, SavedLetter
+
+WORLD_DATE_FORMAT = "%Y-%m-%dT%H:%M"
 
 
 class GoToMessage(BaseModel):
@@ -59,6 +61,9 @@ class LetterMessage(BaseModel):
     """Local date and time, like "2026-11-25T14:30"."""
     text: str
     unread: bool
+    replied_at: str | None = None
+    """When Matheus answered, like "written_at"; None while unanswered."""
+    reply: str | None = None
 
 
 class MailboxMessage(BaseModel):
@@ -105,7 +110,21 @@ class LetterOpenedMessage(BaseModel):
     letter: LetterFileName
 
 
-WorldEvent = NoticedMessage | LetterOpenedMessage
+ReplyText = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=MAX_LETTER_LENGTH),
+]
+
+
+class LetterRepliedMessage(BaseModel):
+    """Sent by the world when Matheus writes back to a letter."""
+
+    type: Literal["letter_replied"] = "letter_replied"
+    letter: LetterFileName
+    text: ReplyText
+
+
+WorldEvent = NoticedMessage | LetterOpenedMessage | LetterRepliedMessage
 _WORLD_EVENT_ADAPTER: TypeAdapter[WorldEvent] = TypeAdapter(
     Annotated[WorldEvent, Field(discriminator="type")]
 )
@@ -127,13 +146,19 @@ def mailbox_message(letters: list[SavedLetter]) -> MailboxMessage:
         letters=[
             LetterMessage(
                 file_name=saved.file_name,
-                written_at=saved.letter.written_at.strftime("%Y-%m-%dT%H:%M"),
+                written_at=saved.letter.written_at.strftime(WORLD_DATE_FORMAT),
                 text=saved.letter.text,
                 unread=saved.letter.is_unread,
+                replied_at=_replied_at(saved.letter.reply),
+                reply=saved.letter.reply.text if saved.letter.reply else None,
             )
             for saved in reversed(letters)
         ]
     )
+
+
+def _replied_at(reply: Reply | None) -> str | None:
+    return reply.written_at.strftime(WORLD_DATE_FORMAT) if reply else None
 
 
 def feelings_message(emotions: EmotionalState) -> FeelingsMessage:

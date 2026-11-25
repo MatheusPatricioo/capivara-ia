@@ -72,3 +72,17 @@ def test_opening_a_letter_in_the_world_marks_it_as_read(
         letters = next_mailbox(world)
 
     assert letters[0]["unread"] is False
+
+
+def test_a_reply_written_in_the_world_comes_back_under_the_letter(
+    server: WorldServer, mailbox: ShownMailbox, router: WorldEventRouter
+) -> None:
+    router.when_letter_replied(mailbox.reply_to_letter)
+    file_name = mailbox.post(LETTER)
+
+    with connect(f"ws://{LOCAL_HOST}:{server.port}") as world:
+        next_mailbox(world)
+        world.send(json.dumps({"type": "letter_replied", "letter": file_name, "text": "Volto já!"}))
+        letters = next_mailbox(world)
+
+    assert letters[0]["reply"] == "Volto já!"

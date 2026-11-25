@@ -4,13 +4,28 @@ extends CanvasLayer
 ## The inside of the mailbox, drawn over the 3D world like a sheet of letter paper: the
 ## letters on the left (newest first, a dot on the unread ones) and the chosen letter on
 ## the right. Opening a letter tells the brain, which marks it as read. The letters come
-## from the brain (Brain.mailbox_changed); this only shows them. [X] or Esc closes it.
+## from the brain (Brain.mailbox_changed); this only shows them. Under a letter Matheus
+## can write one reply: it is sent to the brain, which keeps it with the letter and sends
+## the mailbox back with the reply in it. [X] or Esc closes it.
 
 const LAYER: int = 10
 const UNREAD_MARK: String = "● "
 const READ_MARK: String = "    "
 const EMPTY_TEXT: String = "A caixa está vazia. Quando ela sentir saudade, uma cartinha aparece aqui."
 const CHOOSE_TEXT: String = "Escolha uma carta na lista."
+const REPLY_HEADING: String = "
+
+— Sua resposta (%s):
+
+"
+const REPLY_PLACEHOLDER: String = "Escreva sua resposta para ela..."
+const SENDING_TEXT: String = "Enviando..."
+const REFUSED_TEXT: String = "Não deu para guardar a resposta. Veja o log do cérebro."
+const OFFLINE_TEXT: String = "O cérebro está desligado. Tente de novo quando ele voltar."
+const TOO_LONG_TEXT: String = "Muito longa: no máximo %d caracteres."
+## The same limit the brain puts on a letter and on a reply.
+const MAX_REPLY_LENGTH: int = 1500
+const REPLY_BOX_HEIGHT: float = 110.0
 const PAPER_COLOR: Color = Color(0.98, 0.95, 0.86)
 const LIST_COLOR: Color = Color(0.93, 0.88, 0.76)
 const INK_COLOR: Color = Color(0.25, 0.17, 0.1)
@@ -25,6 +40,10 @@ const SCREEN_MARGIN: float = 0.12
 var _letters: Array = []
 var _letter_list: ItemList
 var _letter_text: RichTextLabel
+var _reply_box: VBoxContainer
+var _reply_input: TextEdit
+var _send_button: Button
+var _reply_status: Label
 
 
 func _ready() -> void:
@@ -66,10 +85,10 @@ func _fill_list() -> void:
 		_letter_list.add_item(_list_title(letter))
 		if str(letter.get("file_name", "")) == chosen_file_name:
 			_letter_list.select(letter_index)
-	if _letters.is_empty():
-		_letter_text.text = EMPTY_TEXT
-	elif chosen_file_name.is_empty():
-		_letter_text.text = CHOOSE_TEXT
+			_show_letter(letter)
+	if _letter_list.get_selected_items().is_empty():
+		_letter_text.text = EMPTY_TEXT if _letters.is_empty() else CHOOSE_TEXT
+		_reply_box.hide()
 
 
 func _chosen_file_name() -> String:
@@ -98,12 +117,44 @@ func _readable_date(written_at: String) -> String:
 
 func _open_letter(letter_index: int) -> void:
 	var letter: Dictionary = _letters[letter_index]
-	_letter_text.text = str(letter.get("text", ""))
+	_reply_input.clear()
+	_show_letter(letter)
 	if not bool(letter.get("unread", false)):
 		return
 	Brain.report_letter_opened(str(letter.get("file_name", "")))
 	letter["unread"] = false
 	_letter_list.set_item_text(letter_index, _list_title(letter))
+
+
+## The letter, with Matheus's reply under it, or the box to write one when it has none.
+func _show_letter(letter: Dictionary) -> void:
+	var reply: Variant = letter.get("reply")
+	var text: String = str(letter.get("text", ""))
+	if reply is String:
+		var replied_at: String = _readable_date(str(letter.get("replied_at", "")))
+		text += (REPLY_HEADING % replied_at) + str(reply)
+	_letter_text.text = text
+	_reply_box.visible = not reply is String
+	# The mailbox came back still without the reply: the brain refused it.
+	var was_refused: bool = _reply_status.text == SENDING_TEXT and not reply is String
+	_reply_status.text = REFUSED_TEXT if was_refused else ""
+	_send_button.disabled = false
+
+
+func _send_reply() -> void:
+	var file_name: String = _chosen_file_name()
+	var text: String = _reply_input.text.strip_edges()
+	if file_name.is_empty() or text.is_empty():
+		return
+	if text.length() > MAX_REPLY_LENGTH:
+		_reply_status.text = TOO_LONG_TEXT % MAX_REPLY_LENGTH
+		return
+	if not Brain.report_letter_replied(file_name, text):
+		_reply_status.text = OFFLINE_TEXT
+		return
+	# The brain answers with the whole mailbox, now with the reply: _show_letter hides the box.
+	_send_button.disabled = true
+	_reply_status.text = SENDING_TEXT
 
 
 func _build() -> void:
@@ -130,8 +181,14 @@ func _build() -> void:
 	column.add_child(split)
 	_letter_list = _letter_list_control()
 	split.add_child(_letter_list)
+	var letter_column: VBoxContainer = VBoxContainer.new()
+	letter_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	letter_column.add_theme_constant_override("separation", 10)
+	split.add_child(letter_column)
 	_letter_text = _letter_text_control()
-	split.add_child(_letter_text)
+	letter_column.add_child(_letter_text)
+	_reply_box = _reply_box_control()
+	letter_column.add_child(_reply_box)
 
 
 func _header() -> HBoxContainer:
@@ -170,6 +227,32 @@ func _letter_text_control() -> RichTextLabel:
 	letter_text.add_theme_color_override("default_color", INK_COLOR)
 	letter_text.add_theme_font_size_override("normal_font_size", TEXT_FONT_SIZE)
 	return letter_text
+
+
+func _reply_box_control() -> VBoxContainer:
+	var reply_box: VBoxContainer = VBoxContainer.new()
+	_reply_input = TextEdit.new()
+	_reply_input.custom_minimum_size.y = REPLY_BOX_HEIGHT
+	_reply_input.placeholder_text = REPLY_PLACEHOLDER
+	_reply_input.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	_reply_input.add_theme_stylebox_override("normal", _paper_style(LIST_COLOR, 1, 8))
+	_reply_input.add_theme_stylebox_override("focus", _paper_style(LIST_COLOR, 2, 8))
+	_reply_input.add_theme_color_override("font_color", INK_COLOR)
+	_reply_input.add_theme_font_size_override("font_size", TEXT_FONT_SIZE)
+	reply_box.add_child(_reply_input)
+
+	var footer: HBoxContainer = HBoxContainer.new()
+	_reply_status = Label.new()
+	_reply_status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_reply_status.add_theme_color_override("font_color", BORDER_COLOR)
+	footer.add_child(_reply_status)
+	_send_button = Button.new()
+	_send_button.text = " Enviar resposta "
+	_send_button.pressed.connect(_send_reply)
+	footer.add_child(_send_button)
+	reply_box.add_child(footer)
+	reply_box.hide()
+	return reply_box
 
 
 func _paper_style(color: Color, border_width: int, margin: float) -> StyleBoxFlat:

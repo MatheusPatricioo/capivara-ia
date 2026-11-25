@@ -11,7 +11,7 @@ SECONDS_PER_HOUR = 3600.0
 
 
 class InvalidLetterError(ValueError):
-    """Raised when a letter breaks a rule (empty, too long)."""
+    """Raised when a letter or a reply breaks a rule (empty, too long, answered twice)."""
 
 
 class LetterStorageError(Exception):
@@ -24,21 +24,38 @@ class LetterStatus(StrEnum):
     READ = "read"
 
 
+def _checked_text(text: str, what: str) -> str:
+    """The text without spaces around it. Raises InvalidLetterError when empty or too long."""
+    stripped = text.strip()
+    if not stripped:
+        raise InvalidLetterError(f"a {what} needs some text")
+    if len(stripped) > MAX_LETTER_LENGTH:
+        raise InvalidLetterError(
+            f"a {what} has at most {MAX_LETTER_LENGTH} characters, got {len(stripped)}"
+        )
+    return stripped
+
+
+@dataclass(frozen=True)
+class Reply:
+    """What Matheus wrote back to one of her letters."""
+
+    written_at: datetime
+    text: str
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "text", _checked_text(self.text, "reply"))
+
+
 @dataclass(frozen=True)
 class Letter:
     written_at: datetime
     text: str
     status: LetterStatus = LetterStatus.UNREAD
+    reply: Reply | None = None
 
     def __post_init__(self) -> None:
-        text = self.text.strip()
-        if not text:
-            raise InvalidLetterError("a letter needs some text")
-        if len(text) > MAX_LETTER_LENGTH:
-            raise InvalidLetterError(
-                f"a letter has at most {MAX_LETTER_LENGTH} characters, got {len(text)}"
-            )
-        object.__setattr__(self, "text", text)
+        object.__setattr__(self, "text", _checked_text(self.text, "letter"))
 
     @property
     def is_unread(self) -> bool:
@@ -47,6 +64,15 @@ class Letter:
     def opened(self) -> "Letter":
         """The same letter, now read."""
         return replace(self, status=LetterStatus.READ)
+
+    def answered(self, reply: Reply) -> "Letter":
+        """The same letter with Matheus's reply (answering it also means he read it).
+
+        Each letter gets one reply: answering again raises InvalidLetterError.
+        """
+        if self.reply is not None:
+            raise InvalidLetterError("this letter was already answered")
+        return replace(self, status=LetterStatus.READ, reply=reply)
 
 
 @dataclass(frozen=True)
@@ -68,6 +94,14 @@ class Mailbox(Protocol):
 
     def mark_read(self, file_name: str) -> SavedLetter:
         """Marks the letter as read. Raises LetterStorageError when there is no such letter."""
+        ...
+
+    def answer(self, file_name: str, reply: Reply) -> SavedLetter:
+        """Keeps Matheus's reply with the letter.
+
+        Raises LetterStorageError when there is no such letter and InvalidLetterError when
+        it was already answered.
+        """
         ...
 
 

@@ -3,7 +3,14 @@ from pathlib import Path
 
 import pytest
 
-from src.domain.letter import Letter, LetterStatus, LetterStorageError, SavedLetter
+from src.domain.letter import (
+    InvalidLetterError,
+    Letter,
+    LetterStatus,
+    LetterStorageError,
+    Reply,
+    SavedLetter,
+)
 from src.infrastructure.markdown_mailbox import LETTERS_FOLDER_NAME, MarkdownMailbox
 
 WRITTEN_AT = datetime(2026, 11, 25, 14, 30)
@@ -80,3 +87,28 @@ def test_mark_read_fails_for_a_letter_that_does_not_exist(mailbox: MarkdownMailb
 def test_mark_read_refuses_a_file_outside_the_letters_folder(mailbox: MarkdownMailbox) -> None:
     with pytest.raises(LetterStorageError):
         mailbox.mark_read("../segredo.md")
+
+
+def test_keeps_the_reply_with_the_letter(mailbox: MarkdownMailbox) -> None:
+    reply = Reply(datetime(2026, 11, 26, 10, 0), "Oi, capivara!\n\nVolto amanhã.")
+
+    mailbox.answer(mailbox.post(LETTER), reply)
+
+    assert mailbox.saved_letters()[0].letter.reply == reply
+
+
+def test_writes_the_reply_under_its_own_heading(mailbox: MarkdownMailbox, tmp_path: Path) -> None:
+    file_name = mailbox.post(LETTER)
+
+    mailbox.answer(file_name, Reply(datetime(2026, 11, 26, 10, 0), "Volto amanhã."))
+
+    letter_text = (tmp_path / LETTERS_FOLDER_NAME / file_name).read_text(encoding="utf-8")
+    assert letter_text.endswith("## Resposta do Matheus\n\nVolto amanhã.\n")
+
+
+def test_refuses_a_second_reply(mailbox: MarkdownMailbox) -> None:
+    file_name = mailbox.post(LETTER)
+    mailbox.answer(file_name, Reply(datetime(2026, 11, 26, 10, 0), "Volto amanhã."))
+
+    with pytest.raises(InvalidLetterError):
+        mailbox.answer(file_name, Reply(datetime(2026, 11, 26, 11, 0), "Mudei de ideia."))

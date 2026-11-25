@@ -1,4 +1,6 @@
-from src.domain.letter import Letter, LetterStorageError, SavedLetter
+from collections.abc import Callable
+
+from src.domain.letter import Letter, LetterStorageError, Reply, SavedLetter
 
 
 class InMemoryMailbox:
@@ -22,9 +24,15 @@ class InMemoryMailbox:
         return list(self._saved)
 
     def mark_read(self, file_name: str) -> SavedLetter:
+        return self._change(file_name, Letter.opened)
+
+    def answer(self, file_name: str, reply: Reply) -> SavedLetter:
+        return self._change(file_name, lambda letter: letter.answered(reply))
+
+    def _change(self, file_name: str, change: Callable[[Letter], Letter]) -> SavedLetter:
         for index, saved in enumerate(self._saved):
             if saved.file_name == file_name:
-                self._saved[index] = SavedLetter(file_name, saved.letter.opened())
+                self._saved[index] = SavedLetter(file_name, change(saved.letter))
                 return self._saved[index]
         raise LetterStorageError(f"no letter named {file_name}")
 
@@ -39,4 +47,7 @@ class BrokenMailbox:
         return []
 
     def mark_read(self, file_name: str) -> SavedLetter:
+        raise LetterStorageError("disk is full")
+
+    def answer(self, file_name: str, reply: Reply) -> SavedLetter:
         raise LetterStorageError("disk is full")

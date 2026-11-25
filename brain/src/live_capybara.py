@@ -159,7 +159,7 @@ def build_mailbox(
     world_server: WorldServer,
     world_events: WorldEventRouter,
 ) -> ShownMailbox | None:
-    """The mailbox of the world, shown right away and listening for opened letters.
+    """The mailbox of the world, shown right away and listening for opened and answered letters.
 
     None without feelings (she cannot miss anyone) or with LETTERS_ENABLED off.
     """
@@ -169,6 +169,7 @@ def build_mailbox(
         MarkdownMailbox(settings.discoveries_dir), WebSocketMailboxDisplay(world_server)
     )
     world_events.when_letter_opened(mailbox.open_letter)
+    world_events.when_letter_replied(mailbox.reply_to_letter)
     mailbox.show()
     return mailbox
 

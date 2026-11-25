@@ -14,7 +14,8 @@ signal feelings_changed(emotion: StringName, intensity: float, valence: float, a
 ## "cloudy", "fog", "rain", "storm" or "unknown").
 signal sky_changed(day_fraction: float, day_length_seconds: float, weather: StringName)
 ## Every letter in the mailbox, the newest first. Each one is a Dictionary with file_name,
-## written_at ("2026-11-25T14:30"), text and unread.
+## written_at ("2026-11-25T14:30"), text, unread, and reply and replied_at (null while
+## Matheus has not answered).
 signal mailbox_changed(letters: Array)
 signal connection_changed(is_connected: bool)
 
@@ -75,6 +76,15 @@ func report_letter_opened(file_name: String) -> void:
 	if not _is_connected:
 		return
 	_socket.send_text(JSON.stringify({"type": "letter_opened", "letter": file_name}))
+
+
+## Sends Matheus's reply to a letter. False while the brain is offline: nothing was sent,
+## so the text stays in the box for him to send again later.
+func report_letter_replied(file_name: String, text: String) -> bool:
+	if not _is_connected:
+		return false
+	_socket.send_text(JSON.stringify({"type": "letter_replied", "letter": file_name, "text": text}))
+	return true
 
 
 func _read_messages() -> void:
