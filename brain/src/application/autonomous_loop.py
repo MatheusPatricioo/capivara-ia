@@ -31,6 +31,8 @@ class AutonomousLoop:
     before_cycle runs before every cycle that is not skipped (she may take care of herself).
     pace multiplies the interval before the next cycle: above 1 when she is down and slow,
     below 1 when she is in a good tide.
+    wait_for_turn runs first in every cycle and may block, like while her creator is
+    talking with her: the conversation comes first.
     """
 
     def __init__(
@@ -44,6 +46,7 @@ class AutonomousLoop:
         sleep: Callable[[float], None] = time.sleep,
         before_cycle: Callable[[], None] = _do_nothing,
         pace: Callable[[], float] = _steady_pace,
+        wait_for_turn: Callable[[], None] = _do_nothing,
     ) -> None:
         self._start_conversation = start_conversation
         self._budget = budget
@@ -54,6 +57,7 @@ class AutonomousLoop:
         self._sleep = sleep
         self._before_cycle = before_cycle
         self._pace = pace
+        self._wait_for_turn = wait_for_turn
 
     def run(self, cycles: int | None = None) -> None:
         """Runs the given number of cycles, or forever when cycles is None."""
@@ -66,6 +70,7 @@ class AutonomousLoop:
 
     def run_cycle(self) -> str | None:
         """Returns what the capybara thought, or None when the cycle was skipped or failed."""
+        self._wait_for_turn()
         if not self._budget.has_room():
             logger.info(
                 "Cycle skipped: %d tokens used in the last hour",

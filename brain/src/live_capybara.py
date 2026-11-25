@@ -18,6 +18,12 @@ from src.application.related_discoveries import RelatedDiscoveries
 from src.application.related_memory_chooser import RelatedMemoryChooser
 from src.application.self_care import SelfCare
 from src.application.token_budget import HourlyTokenBudget
+from src.capybara_chat import (
+    build_world_creator_chat,
+    creator_presence,
+    listen_to_creator,
+    start_creator_conversation,
+)
 from src.capybara_diary import build_diary_keeper
 from src.capybara_heart import build_heart
 from src.capybara_letters import CapybaraLetters, build_letters
@@ -34,6 +40,7 @@ from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRe
 from src.infrastructure.markdown_suggestion_repository import MarkdownSuggestionRepository
 from src.infrastructure.ollama_language_model import OllamaLanguageModel
 from src.infrastructure.prompt_loader import load_prompt
+from src.infrastructure.serial_worker import SerialWorker
 from src.infrastructure.settings import Settings
 from src.infrastructure.sky_broadcaster import SkyBroadcaster
 from src.infrastructure.websocket_body import WebSocketBody
@@ -249,6 +256,14 @@ def main() -> None:
             replies=letters.reply_reader.compose if letters is not None else None,
         )
 
+        presence = creator_presence(settings)
+        creator_chat = build_world_creator_chat(
+            start_creator_conversation(settings, language_model, http_client, memory, heart),
+            presence,
+            world_server,
+            heart,
+        )
+
         def start_conversation() -> Conversation:
             return Conversation(
                 language_model,
@@ -259,6 +274,7 @@ def main() -> None:
                 max_steps=settings.max_tool_steps,
                 tool_result_reminder=tool_result_reminder,
                 tool_result_reminders=TOOL_RESULT_REMINDER_OVERRIDES,
+                before_step=presence.wait_while_talking,
             )
 
         self_care, pace = feeling_hooks(heart, body)
@@ -271,6 +287,7 @@ def main() -> None:
             on_cycle_finished=after_each_cycle(inner_voice, letters),
             before_cycle=before_each_cycle(self_care, letters),
             pace=pace,
+            wait_for_turn=presence.wait_while_talking,
         )
         print(
             f"A capivara está viva. Abra o mundo no Godot (ws://{settings.world_server_host}:"
@@ -278,7 +295,11 @@ def main() -> None:
         )
         world_sky = build_world_sky(settings, weather_client)
         print(describe_sky(settings, world_sky.look()) + "\n")
-        with SkyBroadcaster(world_sky, world_server, SKY_PUBLISH_INTERVAL_SECONDS):
+        with (
+            SkyBroadcaster(world_sky, world_server, SKY_PUBLISH_INTERVAL_SECONDS),
+            SerialWorker("creator-chat") as chat_worker,
+        ):
+            world_events.when_creator_said(listen_to_creator(creator_chat, chat_worker))
             try:
                 loop.run()
             except KeyboardInterrupt:

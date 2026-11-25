@@ -109,6 +109,7 @@
 [ext_resource type="PackedScene" path="res://scenes/props/waterfall.tscn" id="waterfall"]
 [ext_resource type="Script" uid="uid://cfp3tmwrvk1xx" path="res://scripts/world_sky.gd" id="world_sky"]
 [ext_resource type="PackedScene" path="res://scenes/props/writing_desk.tscn" id="writing_desk"]
+[ext_resource type="Script" path="res://scripts/chat/creator_chat_box.gd" id="creator_chat_box"]
 [ext_resource type="Script" uid="uid://np7fn8eueqpg" path="res://scripts/writing_desk/writing_desk_viewer.gd" id="writing_desk_viewer"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
@@ -976,6 +977,9 @@ script = ExtResource("8_world_navigation")
 
 [node name="WritingDeskViewer" type="CanvasLayer" parent="." unique_id=976436633]
 script = ExtResource("writing_desk_viewer")
+
+[node name="CreatorChatBox" type="CanvasLayer" parent="."]
+script = ExtResource("creator_chat_box")
 
 [node name="Observables" type="Node3D" parent="." unique_id=188773998]
 

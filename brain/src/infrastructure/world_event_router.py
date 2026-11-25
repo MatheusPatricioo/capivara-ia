@@ -2,6 +2,7 @@ import logging
 from collections.abc import Callable
 
 from src.infrastructure.world_messages import (
+    CreatorSaidMessage,
     LetterOpenedMessage,
     LetterRepliedMessage,
     NoticedMessage,
@@ -22,6 +23,7 @@ class WorldEventRouter:
         self._on_noticed = on_noticed
         self._on_letter_opened: Callable[[str], None] | None = None
         self._on_letter_replied: Callable[[str, str], None] | None = None
+        self._on_creator_said: Callable[[str], None] | None = None
 
     def when_letter_opened(self, handler: Callable[[str], None]) -> None:
         self._on_letter_opened = handler
@@ -29,6 +31,10 @@ class WorldEventRouter:
     def when_letter_replied(self, handler: Callable[[str, str], None]) -> None:
         """The handler gets the file name of the letter and the text of the reply."""
         self._on_letter_replied = handler
+
+    def when_creator_said(self, handler: Callable[[str], None]) -> None:
+        """The handler gets what her creator typed to her in the world."""
+        self._on_creator_said = handler
 
     def route(self, event: WorldEvent) -> None:
         match event:
@@ -38,6 +44,8 @@ class WorldEventRouter:
                 self._letter_opened(event.letter)
             case LetterRepliedMessage():
                 self._letter_replied(event.letter, event.text)
+            case CreatorSaidMessage():
+                self._creator_said(event.text)
 
     def _letter_opened(self, file_name: str) -> None:
         if self._on_letter_opened is None:
@@ -50,3 +58,9 @@ class WorldEventRouter:
             logger.warning("A letter was answered, but there is no mailbox: %s", file_name)
             return
         self._on_letter_replied(file_name, text)
+
+    def _creator_said(self, text: str) -> None:
+        if self._on_creator_said is None:
+            logger.warning("Her creator talked to her, but nobody is listening: %.80s", text)
+            return
+        self._on_creator_said(text)

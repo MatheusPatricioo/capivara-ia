@@ -81,6 +81,18 @@ func go_to_point(point_id: StringName, speed_scale: float = 1.0) -> bool:
 	return true
 
 
+## Stops where she is, dropping any walk in progress, and keeps facing the given point,
+## like the camera while her creator talks with her. She turns smoothly, as when she
+## arrives at a place. A later walk_to() or go_to_point() makes her move again.
+func stop_and_face(target: Vector3) -> void:
+	_is_walking_to_destination = false
+	_is_going_to_point = false
+	_is_taking_final_step = false
+	_target_point = null
+	_look_target = target
+	_is_facing_look_target = true
+
+
 func _find_interaction_point(point_id: StringName) -> InteractionPoint:
 	for node: Node in get_tree().get_nodes_in_group(InteractionPoint.GROUP):
 		var point: InteractionPoint = node as InteractionPoint

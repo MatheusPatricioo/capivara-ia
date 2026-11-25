@@ -6,17 +6,14 @@ from typing import TYPE_CHECKING
 import httpx
 
 from src.application.conversation import Conversation, StepLimitReachedError
-from src.application.feelings_voice import FeelingsVoice
 from src.application.heart import Heart
+from src.capybara_chat import start_creator_conversation
 from src.capybara_heart import build_heart
-from src.capybara_tools import TOOL_RESULT_REMINDER_OVERRIDES, build_capybara_tools
 from src.domain.feelings.appraisal import EmotionalEvent, EventKind
 from src.domain.language_model import LanguageModelError
 from src.domain.speech import SpeechError
 from src.infrastructure.logging_setup import configure_logging
-from src.infrastructure.markdown_suggestion_repository import MarkdownSuggestionRepository
 from src.infrastructure.ollama_language_model import OllamaLanguageModel
-from src.infrastructure.prompt_loader import load_prompt
 from src.infrastructure.settings import Settings
 from src.long_term_memory import open_long_term_memory
 
@@ -24,10 +21,7 @@ if TYPE_CHECKING:
     # Only for the type checker: at run time the voice is imported when --voz asks for it.
     from src.capybara_voice import CapybaraVoice
 
-SYSTEM_PROMPT_NAME = "capybara"
-TOOL_RESULT_REMINDER_NAME = "tool_result_reminder"
 EXIT_COMMAND = "sair"
-FEELINGS_TEMPLATE_NAME = "feelings"
 TEXT_PROMPT = "Você: "
 VOICE_PROMPT = "Você (ou Enter vazio para falar): "
 LISTENING_PROMPT = "[ouvindo... aperte Enter quando terminar de falar]"
@@ -46,20 +40,6 @@ def parse_arguments(arguments: Sequence[str]) -> argparse.Namespace:
         help="ela fala as respostas em voz alta, e um Enter vazio grava a sua fala no microfone",
     )
     return parser.parse_args(arguments)
-
-
-def system_prompt_with_feelings(settings: Settings, heart: Heart | None) -> str:
-    """How she feels when the chat opens, before the first message: after days alone she
-    greets her creator with what those days did to her. Read once, at the start."""
-    system_prompt = load_prompt(SYSTEM_PROMPT_NAME)
-    if heart is None:
-        return system_prompt
-    feelings = FeelingsVoice(
-        heart,
-        load_prompt(FEELINGS_TEMPLATE_NAME),
-        MarkdownSuggestionRepository(settings.discoveries_dir),
-    )
-    return f"{system_prompt}\n\n{feelings.compose()}"
 
 
 def load_voice(settings: Settings) -> "CapybaraVoice | None":
@@ -140,19 +120,8 @@ def main() -> None:
             model=settings.ollama_model,
             generation_options=settings.ollama_generation_options(),
         )
-        conversation = Conversation(
-            language_model,
-            system_prompt_with_feelings(settings, heart),
-            tools=build_capybara_tools(
-                settings,
-                language_model,
-                http_client,
-                memory=memory,
-                heart=heart,
-            ),
-            max_steps=settings.max_tool_steps,
-            tool_result_reminder=load_prompt(TOOL_RESULT_REMINDER_NAME),
-            tool_result_reminders=TOOL_RESULT_REMINDER_OVERRIDES,
+        conversation = start_creator_conversation(
+            settings, language_model, http_client, memory, heart
         )
         chat(conversation, heart, voice)
 

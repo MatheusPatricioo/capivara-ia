@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 
 from src.domain.language_model import ChatMessage, LanguageModel, Role, ToolCall
 from src.domain.tool import Tool, ToolError
@@ -13,6 +13,10 @@ class StepLimitReachedError(Exception):
     """Raised when the model keeps asking for tools beyond the allowed number of steps."""
 
 
+def _go_on_at_once() -> None:
+    pass
+
+
 class Conversation:
     def __init__(
         self,
@@ -22,9 +26,13 @@ class Conversation:
         max_steps: int = DEFAULT_MAX_STEPS,
         tool_result_reminder: str = "",
         tool_result_reminders: Mapping[str, str] | None = None,
+        before_step: Callable[[], None] = _go_on_at_once,
     ) -> None:
         """tool_result_reminder goes after every tool result, unless tool_result_reminders
         has an entry for that tool name: then that text is used instead ('' means none).
+        before_step runs before each call to the model and may block, like her own
+        thoughts waiting while her creator talks with her. A call already running is
+        never cut in the middle.
         """
         self._language_model = language_model
         self._history = [ChatMessage(role=Role.SYSTEM, content=system_prompt)]
@@ -32,6 +40,7 @@ class Conversation:
         self._max_steps = max_steps
         self._tool_result_reminder = tool_result_reminder
         self._tool_result_reminders = dict(tool_result_reminders or {})
+        self._before_step = before_step
 
     @property
     def history(self) -> tuple[ChatMessage, ...]:
@@ -41,6 +50,7 @@ class Conversation:
         turn_messages = [ChatMessage(role=Role.USER, content=user_message)]
         tool_definitions = [tool.definition for tool in self._tools_by_name.values()]
         for step in range(1, self._max_steps + 1):
+            self._before_step()
             reply = self._language_model.chat([*self._history, *turn_messages], tool_definitions)
             turn_messages.append(reply)
             if not reply.tool_calls:

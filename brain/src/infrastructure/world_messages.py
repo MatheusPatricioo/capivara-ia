@@ -99,7 +99,33 @@ class DiaryMessage(BaseModel):
     days: list[DiaryDayMessage]
 
 
-WorldMessage = GoToMessage | FeelingsMessage | SkyMessage | MailboxMessage | DiaryMessage
+class ListeningMessage(BaseModel):
+    """She stops, faces her creator and listens for the given seconds. Sent again on every
+    exchange, so the world only extends the time and never needs an "it is over" message."""
+
+    type: Literal["listening"] = "listening"
+    seconds: float = Field(gt=0.0)
+
+
+class SpeechMessage(BaseModel):
+    """Something she says, shown in a speech balloon above her. Never remembered: a world
+    that connects later must not hear old replies."""
+
+    type: Literal["speech"] = "speech"
+    speech_id: int = Field(ge=1)
+    """Grows with every speech: the world drops one older than the speech it is showing."""
+    caption: str = Field(min_length=1)
+
+
+WorldMessage = (
+    GoToMessage
+    | FeelingsMessage
+    | SkyMessage
+    | MailboxMessage
+    | DiaryMessage
+    | ListeningMessage
+    | SpeechMessage
+)
 
 MAX_THING_ID_LENGTH = 64
 MAX_DESCRIPTION_LENGTH = 200
@@ -150,7 +176,22 @@ class LetterRepliedMessage(BaseModel):
     text: ReplyText
 
 
-WorldEvent = NoticedMessage | LetterOpenedMessage | LetterRepliedMessage
+MAX_CREATOR_MESSAGE_LENGTH = 2000
+
+CreatorMessageText = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=MAX_CREATOR_MESSAGE_LENGTH),
+]
+
+
+class CreatorSaidMessage(BaseModel):
+    """Sent by the world when her creator talks to her (typed in the chat box)."""
+
+    type: Literal["creator_said"] = "creator_said"
+    text: CreatorMessageText
+
+
+WorldEvent = NoticedMessage | LetterOpenedMessage | LetterRepliedMessage | CreatorSaidMessage
 _WORLD_EVENT_ADAPTER: TypeAdapter[WorldEvent] = TypeAdapter(
     Annotated[WorldEvent, Field(discriminator="type")]
 )

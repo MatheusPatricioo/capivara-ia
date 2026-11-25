@@ -99,6 +99,9 @@ class Settings(BaseSettings):
     weather_refresh_minutes: float = Field(default=15.0, gt=0)
     # A fixed sky (like "rain") instead of the real one, to test without waiting for rain.
     weather_override: Sky | None = None
+    # Talking with her in the world comes first: her own thoughts pause at their next step
+    # and she stops to listen, until this many minutes pass without a new exchange.
+    conversation_quiet_minutes: float = Field(default=2.0, gt=0)
     # Voice in the chat (python -m src.chat_with_capybara --voz), all local and offline:
     # Piper speaks with the voice file below, faster-whisper listens with a Whisper model.
     voice_model_path: Path = PROJECT_ROOT / "brain" / "voices" / "pt_BR-faber-medium.onnx"

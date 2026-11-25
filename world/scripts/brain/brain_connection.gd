@@ -21,6 +21,14 @@ signal mailbox_changed(letters: Array)
 ## ("2026-11-25") and entries, an Array of Dictionaries with written_at and text, the
 ## earliest first.
 signal diary_changed(days: Array)
+## She stops, faces her creator and listens for the given seconds. Sent again on every
+## exchange: each one only extends the time.
+signal listening_requested(seconds: float)
+## Something she says, for the speech balloon. speech_id grows with every speech, so an
+## older one that arrives late can be dropped.
+signal speech_received(speech_id: int, caption: String)
+## Her creator sent her a message, so the world can show she is thinking about it.
+signal creator_message_sent(text: String)
 signal connection_changed(is_connected: bool)
 
 const DEFAULT_URL: String = "ws://127.0.0.1:8765"
@@ -91,6 +99,16 @@ func report_letter_replied(file_name: String, text: String) -> bool:
 	return true
 
 
+## Sends what her creator typed to her. False while the brain is offline: nothing was
+## sent, so the text stays in the box for him to send again.
+func send_creator_message(text: String) -> bool:
+	if not _is_connected:
+		return false
+	_socket.send_text(JSON.stringify({"type": "creator_said", "text": text}))
+	creator_message_sent.emit(text)
+	return true
+
+
 func _read_messages() -> void:
 	while _socket.get_available_packet_count() > 0:
 		_handle_message(_socket.get_packet().get_string_from_utf8())
@@ -124,6 +142,10 @@ func _handle_message(text: String) -> void:
 				float(message.get("day_length_seconds", 86400.0)),
 				StringName(str(message.get("weather", "unknown"))),
 			)
+		"listening":
+			listening_requested.emit(float(message.get("seconds", 0.0)))
+		"speech":
+			speech_received.emit(int(message.get("speech_id", 0)), str(message.get("caption", "")))
 		_:
 			push_warning("Unknown message type from the brain: %s" % message.get("type"))
 

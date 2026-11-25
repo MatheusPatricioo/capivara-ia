@@ -212,7 +212,7 @@ Para falar, aperte Enter com a linha vazia, fale e aperte Enter de novo. Na prim
 
 ### Ver a capivara viva
 
-No modo vivo ninguém fala com a capivara: a cada poucos minutos ela decide sozinha o que fazer (pesquisar algo, salvar uma descoberta e rabiscar um desenho dela, ou só descansar), e o corpo dela acompanha no mundo 3D.
+No modo vivo, a cada poucos minutos ela decide sozinha o que fazer (pesquisar algo, salvar uma descoberta e rabiscar um desenho dela, ou só descansar), e o corpo dela acompanha no mundo 3D.
 
 No Windows, um comando liga tudo: o Ollama (se ainda não estiver rodando), a memória no Docker (abrindo o Docker Desktop se precisar, e esperando o banco ficar pronto), o cérebro numa janela própria do PowerShell, com os logs visíveis, e o mundo no Godot:
 
@@ -238,6 +238,8 @@ Para ligar cada parte à mão:
 Atalho no Windows: abrir o mundo pelo editor do Godot e apertar Play já basta. Se nenhum cérebro responder em 4 segundos, o próprio mundo roda o `start.ps1 -SkipWorld` (Ollama, memória e cérebro, sem abrir outro Godot), e o aviso na tela mostra "Ligando o cérebro...". Ele tenta uma vez por Play, e fechar o jogo não desliga o cérebro. Para desligar esse atalho, defina a variável de ambiente `CAPYBARA_BRAIN_AUTOSTART=0`.
 
 O Godot é opcional: com ele fechado, a capivara continua pesquisando, salvando e desenhando do mesmo jeito. O mundo só mostra o que o cérebro faz e, ao abrir, já recebe como ela está se sentindo e o céu do momento. O contrário não vale: sem o cérebro, ela só passeia, e o mundo mostra o aviso "Cérebro desconectado" no canto da tela até ele ligar.
+
+Para conversar com ela no mundo, aperte **Enter**, escreva e aperte Enter de novo (Esc fecha a caixa). A resposta aparece num balão em cima dela. Enquanto vocês conversam, ela para de andar, vira para a câmera e pausa os próprios pensamentos antes do próximo passo. Ela volta à rotina depois de `CONVERSATION_QUIET_MINUTES` (2 por padrão) sem mensagem nova.
 
 No mundo, ela vai até o computador antes de pesquisar e antes de salvar, e o desenho de cada descoberta sai ali mesmo. Para ver os desenhos, clique no computador e abra a aba **Desenhos**. Toda descoberta (Markdown) e todo desenho (PNG) ficam na pasta de descobertas (`DISCOVERIES_DIR` no `brain/.env`, ou `discoveries/` por padrão).
 
