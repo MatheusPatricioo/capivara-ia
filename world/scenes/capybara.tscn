@@ -37,6 +37,7 @@ script = ExtResource("6_capybara_feelings")
 
 [node name="Emote" type="Label3D" parent="."]
 position = Vector3(0, 1.35, 0)
+visible = false
 billboard = 1
 no_depth_test = true
 modulate = Color(1, 1, 1, 0)

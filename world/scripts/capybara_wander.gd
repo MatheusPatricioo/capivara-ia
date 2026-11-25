@@ -13,7 +13,7 @@ const ALL_NAVIGATION_LAYERS: int = 1
 ## Chance (0 to 1) that a walk is a trot instead of a calm stroll.
 @export var trot_chance: float = 0.3
 ## Speed multiplier used when trotting.
-@export var trot_speed_scale: float = 1.5
+@export var trot_speed_scale: float = 1.3
 ## How many random points to try before giving up until the next rest.
 @export var max_destination_attempts: int = 10
 ## How close the end of a path must be to the picked point to count as reachable.

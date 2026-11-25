@@ -5,6 +5,8 @@ extends Node3D
 ## Small, flat, light stones laid along a path, drawn as one MultiMesh.
 ## Decoration only: there is no collision, so the capybara walks right over them.
 ## The path goes through path_points in order; a stone is placed every spacing meters.
+## With more than one row, the rows run side by side and are staggered by half a stone,
+## like a laid path, not two lines of soldiers.
 
 const STONE_THICKNESS: float = 0.04
 const STONE_SIDES: int = 7
@@ -36,6 +38,18 @@ const COLOR_JITTER: float = 0.08
 @export var side_jitter: float = 0.08:
 	set(value):
 		side_jitter = maxf(value, 0.0)
+		_rebuild()
+
+## How many rows of stones run side by side along the path.
+@export var rows: int = 1:
+	set(value):
+		rows = maxi(value, 1)
+		_rebuild()
+
+## Distance between the centers of two neighbor rows, in meters.
+@export var row_gap: float = 0.22:
+	set(value):
+		row_gap = maxf(value, 0.0)
 		_rebuild()
 
 @export var color: Color = Color(0.7, 0.63, 0.53):
@@ -72,29 +86,20 @@ func _rebuild() -> void:
 	add_child(_stones)
 
 
-## Walks the path and drops a stone every spacing meters, each one turned, sized and
-## shifted a little at random (with a fixed seed, so the path looks the same every time).
+## Walks the path once per row and drops a stone every spacing meters, each one turned,
+## sized and shifted a little at random (with a fixed seed, so the path looks the same
+## every time).
 func _stone_spots() -> Array[Transform3D]:
 	var spots: Array[Transform3D] = []
-	if path_points.size() < 2:
-		return spots
 	var random: RandomNumberGenerator = RandomNumberGenerator.new()
 	random.seed = random_seed
-	var distance_to_next_stone: float = 0.0
-	for segment_index: int in path_points.size() - 1:
-		var segment_start: Vector3 = _flat(path_points[segment_index])
-		var segment_end: Vector3 = _flat(path_points[segment_index + 1])
-		var segment_length: float = segment_start.distance_to(segment_end)
-		if segment_length <= 0.0:
-			continue
-		var direction: Vector3 = (segment_end - segment_start) / segment_length
-		var side: Vector3 = Vector3(-direction.z, 0.0, direction.x)
-		var walked: float = distance_to_next_stone
-		while walked <= segment_length:
-			var center: Vector3 = segment_start + direction * walked + side * random.randf_range(-side_jitter, side_jitter)
-			spots.append(_stone_transform(center, random))
-			walked += spacing
-		distance_to_next_stone = walked - segment_length
+	for row_index: int in rows:
+		# Rows are centered on the path line; every other row starts half a stone later.
+		var row_offset: float = (row_index - (rows - 1) / 2.0) * row_gap
+		var stagger: float = spacing / 2.0 if row_index % 2 == 1 else 0.0
+		for frame: Transform3D in PathSampler.frames_along(path_points, spacing, stagger):
+			var sideways: float = row_offset + random.randf_range(-side_jitter, side_jitter)
+			spots.append(_stone_transform(frame.origin + frame.basis.x * sideways, random))
 	return spots
 
 
@@ -136,7 +141,3 @@ func _create_stone_mesh() -> CylinderMesh:
 	stone_mesh.rings = 1
 	stone_mesh.material = material
 	return stone_mesh
-
-
-static func _flat(point: Vector3) -> Vector3:
-	return Vector3(point.x, 0.0, point.z)

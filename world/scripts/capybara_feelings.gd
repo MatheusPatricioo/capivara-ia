@@ -7,7 +7,7 @@ extends Node
 ## Walking speed multiplier when she is as low as she gets (sad, apathetic).
 @export var low_pace: float = 0.65
 ## Walking speed multiplier when she is as lively as she gets (joy, flow).
-@export var lively_pace: float = 1.25
+@export var lively_pace: float = 1.1
 ## Rest multiplier when low: longer pauses between walks.
 @export var low_rest: float = 2.2
 ## Rest multiplier when lively: short, eager pauses.
