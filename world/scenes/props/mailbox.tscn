@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" path="res://scripts/props/mailbox_flag.gd" id="1_mailbox_flag"]
 [ext_resource type="Script" path="res://scripts/interaction_point.gd" id="2_interaction_point"]
-[ext_resource type="Script" path="res://scripts/props/clickable_area.gd" id="3_clickable_area"]
 
 ; The capybara's mailbox, built from simple shapes: a wooden post, a red box with a round
 ; top and a flag that goes up while a letter waits unread. Its front faces local +Z.
@@ -46,9 +45,6 @@ size = Vector3(0.02, 0.08, 0.1)
 [sub_resource type="BoxShape3D" id="BoxShape3D_mailbox"]
 size = Vector3(0.3, 1.1, 0.45)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_click"]
-size = Vector3(0.45, 0.5, 0.6)
-
 [node name="Mailbox" type="StaticBody3D"]
 input_ray_pickable = false
 script = ExtResource("1_mailbox_flag")
@@ -84,10 +80,3 @@ shape = SubResource("BoxShape3D_mailbox")
 position = Vector3(0, 0, 0.7)
 script = ExtResource("2_interaction_point")
 point_id = &"mailbox"
-
-[node name="ClickArea" type="Area3D" parent="."]
-script = ExtResource("3_clickable_area")
-
-[node name="ClickShape" type="CollisionShape3D" parent="ClickArea"]
-position = Vector3(0, 0.95, 0)
-shape = SubResource("BoxShape3D_click")

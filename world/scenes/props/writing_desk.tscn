@@ -1,0 +1,60 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://assets/furniture/Models/GLTF format/sideTableDrawers.glb" id="1_side_table"]
+[ext_resource type="PackedScene" path="res://assets/furniture/Models/GLTF format/books.glb" id="2_books"]
+[ext_resource type="PackedScene" path="res://assets/furniture/Models/GLTF format/lampRoundTable.glb" id="3_table_lamp"]
+[ext_resource type="Script" path="res://scripts/props/clickable_area.gd" id="4_clickable_area"]
+[ext_resource type="Script" path="res://scripts/props/night_light.gd" id="5_night_light"]
+
+; Her writing desk: a small table with drawers, a pile of books (her diary among them),
+; a letter being written and a lamp that turns on at night. Clicking it opens her letters
+; and her diary. The Kenney models have their origin at a corner, so each one is moved
+; to center the desk on this node. Its front faces local +Z.
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_letter_paper"]
+albedo_color = Color(0.98, 0.95, 0.86, 1)
+roughness = 1.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_letter"]
+material = SubResource("StandardMaterial3D_letter_paper")
+size = Vector3(0.13, 0.004, 0.09)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_table"]
+size = Vector3(0.54, 0.39, 0.39)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_click"]
+size = Vector3(0.6, 0.75, 0.45)
+
+[node name="WritingDesk" type="StaticBody3D"]
+input_ray_pickable = false
+
+[node name="SideTable" parent="." instance=ExtResource("1_side_table")]
+position = Vector3(-0.257, 0, 0.017)
+
+[node name="Books" parent="." instance=ExtResource("2_books")]
+transform = Transform3D(0.9659258, 0, 0.25881904, 0, 1, 0, -0.25881904, 0, 0.9659258, -0.2, 0.384, 0.05)
+
+[node name="Letter" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.9848077, 0, -0.17364818, 0, 1, 0, 0.17364818, 0, 0.9848077, 0.0, 0.386, 0.08)
+mesh = SubResource("BoxMesh_letter")
+
+[node name="TableLamp" parent="." instance=ExtResource("3_table_lamp")]
+position = Vector3(0.1, 0.384, 0.01)
+
+[node name="LampLight" type="OmniLight3D" parent="."]
+position = Vector3(0.17, 0.62, -0.05)
+light_color = Color(1, 0.82, 0.55, 1)
+omni_range = 1.6
+script = ExtResource("5_night_light")
+night_energy = 0.9
+
+[node name="TableCollision" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.195, 0)
+shape = SubResource("BoxShape3D_table")
+
+[node name="ClickArea" type="Area3D" parent="."]
+script = ExtResource("4_clickable_area")
+
+[node name="ClickShape" type="CollisionShape3D" parent="ClickArea"]
+position = Vector3(0, 0.375, 0)
+shape = SubResource("BoxShape3D_click")

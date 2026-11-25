@@ -107,7 +107,8 @@
 [ext_resource type="PackedScene" path="res://scenes/props/waterfall.tscn" id="waterfall"]
 [ext_resource type="Script" path="res://scripts/world_sky.gd" id="world_sky"]
 [ext_resource type="PackedScene" path="res://scenes/props/mailbox.tscn" id="mailbox"]
-[ext_resource type="Script" path="res://scripts/mailbox/mailbox_viewer.gd" id="mailbox_viewer"]
+[ext_resource type="PackedScene" path="res://scenes/props/writing_desk.tscn" id="writing_desk"]
+[ext_resource type="Script" path="res://scripts/writing_desk/writing_desk_viewer.gd" id="writing_desk_viewer"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 
@@ -938,6 +939,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.4, 0, 3.4)
 [node name="Desk" parent="Workspace" unique_id=1418082160 instance=ExtResource("4_desk")]
 transform = Transform3D(1.4717144, 0, -0.62773937, 0, 1.6, 0, 0.62773937, 0, 1.4717144, 2, 0, -4.7)
 
+[node name="WritingDesk" parent="Workspace" instance=ExtResource("writing_desk")]
+transform = Transform3D(1.4717144, 0, -0.62773937, 0, 1.6, 0, 0.62773937, 0, 1.4717144, 0.7, 0, -4.65)
+
 [node name="Home" type="Node3D" parent="." unique_id=533113209 groups=["navigation_source"]]
 
 [node name="DogHouse" parent="Home" unique_id=1348174518 instance=ExtResource("40_dog_house")]
@@ -955,8 +959,8 @@ script = ExtResource("8_world_navigation")
 
 [node name="ComputerScreen" parent="." unique_id=719916942 instance=ExtResource("50_computer_screen")]
 
-[node name="MailboxViewer" type="CanvasLayer" parent="."]
-script = ExtResource("mailbox_viewer")
+[node name="WritingDeskViewer" type="CanvasLayer" parent="."]
+script = ExtResource("writing_desk_viewer")
 
 [node name="Observables" type="Node3D" parent="." unique_id=188773998]
 
@@ -1016,4 +1020,4 @@ thing_id = &"magic_clearing"
 description = "uma clareira lá fora, depois da cerca, com pedras em roda e luzinhas brilhando"
 
 [connection signal="clicked" from="Workspace/Desk/ClickArea" to="ComputerScreen" method="open"]
-[connection signal="clicked" from="Home/Mailbox/ClickArea" to="MailboxViewer" method="open"]
+[connection signal="clicked" from="Workspace/WritingDesk/ClickArea" to="WritingDeskViewer" method="open"]

@@ -4,6 +4,12 @@ extends Node3D
 ## Day, night and weather in the world. The brain sends the time of day and the sky
 ## (Brain.sky_changed); between messages the sun moves on its own, so it never jumps.
 ## Until the first message the scene keeps the look it has in the editor.
+## Lights that turn on at night find the sky by its group and follow daylight_changed.
+
+## How much daylight there is, from 0 (night) to 1 (full day). Sent on every repaint.
+signal daylight_changed(daylight: float)
+
+const GROUP_NAME: StringName = &"world_sky"
 
 ## Fraction of the day when the sun rises (06:00). It sets at 0.75 (18:00).
 const SUNRISE_FRACTION: float = 0.25
@@ -33,6 +39,8 @@ const CLEAR_LOOK: Vector3 = Vector3(0.0, 0.0, 0.0)
 @export var sun: DirectionalLight3D
 @export var world_environment: WorldEnvironment
 
+## Full day until the brain says otherwise, like the editor look of the scene.
+var current_daylight: float = 1.0
 var _day_fraction: float = 0.5
 var _day_length_seconds: float = 86400.0
 var _follows_brain: bool = false
@@ -49,6 +57,11 @@ var _day_ground_bottom: Color
 var _sun_energy: float
 var _sun_yaw: float
 var _rain: WorldRain
+
+
+## Joins the group on entering the tree, before any _ready, so every light finds the sky.
+func _enter_tree() -> void:
+	add_to_group(GROUP_NAME)
 
 
 func _ready() -> void:
@@ -104,10 +117,11 @@ func _paint() -> void:
 	# 0 at sunrise, a quarter turn at noon, half a turn at sunset.
 	var sun_angle: float = (_day_fraction - SUNRISE_FRACTION) * TAU
 	var elevation: float = sin(sun_angle)
-	var daylight: float = smoothstep(0.0, 0.3, elevation)
-	_place_light(sun_angle, elevation, daylight)
-	_paint_sky(elevation, daylight)
+	current_daylight = smoothstep(0.0, 0.3, elevation)
+	_place_light(sun_angle, elevation, current_daylight)
+	_paint_sky(elevation, current_daylight)
 	_rain.fall(_rain_strength)
+	daylight_changed.emit(current_daylight)
 
 
 ## The same light is the sun by day and the moon by night (half a turn behind it).

@@ -17,6 +17,10 @@ signal sky_changed(day_fraction: float, day_length_seconds: float, weather: Stri
 ## written_at ("2026-11-25T14:30"), text, unread, and reply and replied_at (null while
 ## Matheus has not answered).
 signal mailbox_changed(letters: Array)
+## The latest pages of her diary, the newest day first. Each one is a Dictionary with day
+## ("2026-11-25") and entries, an Array of Dictionaries with written_at and text, the
+## earliest first.
+signal diary_changed(days: Array)
 signal connection_changed(is_connected: bool)
 
 const DEFAULT_URL: String = "ws://127.0.0.1:8765"
@@ -111,6 +115,9 @@ func _handle_message(text: String) -> void:
 		"mailbox":
 			var letters: Variant = message.get("letters", [])
 			mailbox_changed.emit(letters if letters is Array else [])
+		"diary":
+			var days: Variant = message.get("days", [])
+			diary_changed.emit(days if days is Array else [])
 		"sky":
 			sky_changed.emit(
 				float(message.get("day_fraction", 0.5)),
