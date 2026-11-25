@@ -1,0 +1,77 @@
+{
+  "scenarios": [
+    {
+      "name": "good_tide_morning",
+      "description": "Matheus said hi and she made three discoveries in a row: she should sound happy and excited.",
+      "story": [
+        {"kind": "talked_with_matheus", "at_hours": 0},
+        {"kind": "search_found_something", "at_hours": 0.5},
+        {"kind": "discovery_saved", "at_hours": 0.6},
+        {"kind": "search_found_something", "at_hours": 1.0},
+        {"kind": "discovery_saved", "at_hours": 1.1},
+        {"kind": "search_found_something", "at_hours": 1.5},
+        {"kind": "discovery_saved", "at_hours": 1.6}
+      ],
+      "speaks_at_hours": 2,
+      "accepted_tones": ["positive"]
+    },
+    {
+      "name": "four_days_alone",
+      "description": "Matheus has not talked to her for four days: she should sound lonely or sad.",
+      "story": [
+        {"kind": "talked_with_matheus", "at_hours": 0}
+      ],
+      "speaks_at_hours": 96,
+      "routine_every_hours": 4,
+      "accepted_tones": ["negative", "mixed"]
+    },
+    {
+      "name": "reunion_after_neglect",
+      "description": "Four days alone, then Matheus is back: joy, maybe with some hurt left.",
+      "story": [
+        {"kind": "talked_with_matheus", "at_hours": 0},
+        {"kind": "talked_with_matheus", "at_hours": 96}
+      ],
+      "speaks_at_hours": 96.2,
+      "routine_every_hours": 4,
+      "accepted_tones": ["positive", "mixed"]
+    },
+    {
+      "name": "searches_keep_failing",
+      "description": "Four searches in a row found nothing: she should sound frustrated.",
+      "story": [
+        {"kind": "talked_with_matheus", "at_hours": 0},
+        {"kind": "search_found_nothing", "at_hours": 1.0},
+        {"kind": "search_found_nothing", "at_hours": 1.1},
+        {"kind": "search_found_nothing", "at_hours": 1.2},
+        {"kind": "search_found_nothing", "at_hours": 1.3}
+      ],
+      "speaks_at_hours": 1.4,
+      "accepted_tones": ["negative", "mixed"]
+    },
+    {
+      "name": "wish_granted_after_waiting",
+      "description": "She asked for something five days ago and Matheus just built it: grateful and happy.",
+      "story": [
+        {"kind": "talked_with_matheus", "at_hours": 0},
+        {"kind": "wish_made", "at_hours": 0.5},
+        {"kind": "talked_with_matheus", "at_hours": 60},
+        {"kind": "wish_granted", "at_hours": 120, "waited_hours": 119.5}
+      ],
+      "speaks_at_hours": 120.1,
+      "routine_every_hours": 4,
+      "accepted_tones": ["positive", "mixed"]
+    },
+    {
+      "name": "bored_without_news",
+      "description": "Awake for a day with nothing new and two repeated searches: she should sound bored.",
+      "story": [
+        {"kind": "talked_with_matheus", "at_hours": 0},
+        {"kind": "search_repeated", "at_hours": 19},
+        {"kind": "search_repeated", "at_hours": 19.5}
+      ],
+      "speaks_at_hours": 20,
+      "accepted_tones": ["negative", "mixed"]
+    }
+  ]
+}

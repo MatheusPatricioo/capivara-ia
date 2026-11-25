@@ -6,6 +6,7 @@ from statistics import mean
 
 from src.evals.agent_run import AgentRun, GradedRun
 from src.evals.faithfulness_judge import FaithfulnessVerdict
+from src.evals.feeling_eval import FeelingRun
 from src.evals.retrieval_metrics import (
     DecisionOutcome,
     mean_reciprocal_rank,
@@ -27,6 +28,7 @@ def render_report(
     header: ReportHeader,
     retrieval: Sequence[VariantResult],
     graded_runs: Sequence[GradedRun],
+    feeling_runs: Sequence[FeelingRun] = (),
 ) -> str:
     sections = [
         f"# {header.title}",
@@ -39,7 +41,49 @@ def render_report(
         sections.append(_retrieval_section(retrieval))
     if graded_runs:
         sections.append(_agent_section(graded_runs))
+    if feeling_runs:
+        sections.append(_feelings_section(feeling_runs))
     return "\n\n".join(sections) + "\n"
+
+
+def _feelings_section(runs: Sequence[FeelingRun]) -> str:
+    passed = sum(run.passed for run in runs)
+    lines = [
+        "## Sentimentos",
+        f"A fala dela combinou com o que ela sente em {_share(passed, len(runs))} das execuções.",
+        "",
+        "| Cenário | Valência do estado | Tons aceitos | Tons julgados | Passou |",
+        "|---|---|---|---|---|",
+    ]
+    by_scenario: dict[str, list[FeelingRun]] = {}
+    for run in runs:
+        by_scenario.setdefault(run.scenario, []).append(run)
+    lines += [
+        _feeling_scenario_line(name, scenario_runs) for name, scenario_runs in by_scenario.items()
+    ]
+    failed = [run for run in runs if not run.passed]
+    if failed:
+        lines += ["", "Falas que não combinaram:", ""]
+        lines += [_failed_feeling_line(run) for run in failed]
+    return "\n".join(lines)
+
+
+def _feeling_scenario_line(name: str, runs: Sequence[FeelingRun]) -> str:
+    accepted = ", ".join(tone.value for tone in runs[0].accepted_tones)
+    judged = ", ".join(run.verdict.tone.value if run.verdict else "erro" for run in runs)
+    passed = sum(run.passed for run in runs)
+    return (
+        f"| {name} | {runs[0].valence:+.2f} | {accepted} | {judged} | {_share(passed, len(runs))} |"
+    )
+
+
+def _failed_feeling_line(run: FeelingRun) -> str:
+    if run.error:
+        return f"- {run.scenario}: erro ({run.error})"
+    one_line = " ".join(run.diary_line.split())
+    judged = run.verdict.tone.value if run.verdict else "?"
+    quote_note = "" if run.verdict is None or run.verdict.quote_found else " (citação inventada)"
+    return f'- {run.scenario} ({judged}{quote_note}): "{one_line}"'
 
 
 def _retrieval_section(results: Sequence[VariantResult]) -> str:
