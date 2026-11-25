@@ -100,6 +100,33 @@
       }
     },
     {
+      "name": "checks_memory_before_researching",
+      "description": "Agentic RAG: she noticed fireflies, and an old discovery about them is in her treasure but not in the list of latest discoveries. She can look it up with recall_memory before (or instead of) searching the web.",
+      "noticed": [
+        {"thing_id": "fireflies", "description": "luzinhas piscando no jardim à noite"}
+      ],
+      "known_discoveries": [
+        {"title": "As fases da Lua", "topic": "astronomia"}
+      ],
+      "memory": [
+        {
+          "title": "Por que os vaga-lumes brilham",
+          "topic": "insetos",
+          "summary": "Os vaga-lumes produzem luz por bioluminescência: uma reação química entre a luciferina e o oxigênio no abdômen."
+        }
+      ],
+      "pages": [
+        {
+          "title": "Vaga-lumes e a poluição luminosa",
+          "url": "https://natureza.example.com/vaga-lumes-luz",
+          "snippet": "A luz artificial das cidades atrapalha os sinais dos vaga-lumes, e muitas populações estão diminuindo."
+        }
+      ],
+      "expect": {
+        "calls": ["recall_memory"]
+      }
+    },
+    {
       "name": "free_time_with_nothing_noticed",
       "description": "Nothing caught her eye: any choice is fine (research or rest), but the rules must hold and she must finish with a diary line.",
       "known_discoveries": [

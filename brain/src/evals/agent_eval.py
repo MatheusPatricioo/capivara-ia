@@ -11,6 +11,7 @@ from src.application.inner_voice import InnerVoice
 from src.application.related_discoveries import RelatedDiscoveries
 from src.application.repeated_suggestions import RepeatedSuggestions
 from src.application.tools.conversation_discoveries import ConversationDiscoveries
+from src.application.tools.recall_memory_tool import RecallMemoryTool
 from src.application.tools.save_discovery_tool import SaveDiscoveryTool
 from src.application.tools.seen_sources import SeenSources
 from src.application.tools.suggest_improvement_tool import SuggestImprovementTool
@@ -26,6 +27,7 @@ from src.evals.agent_trace import RecordingLanguageModel, RecordingTool, RunTrac
 from src.evals.faithfulness_judge import FaithfulnessJudge, FaithfulnessVerdict, JudgeError
 from src.evals.retrieval_eval import EVAL_DATE
 from src.evals.scripted_world import (
+    EmbeddedMemory,
     FixedMemory,
     InMemoryDiscoveries,
     InMemorySearchHistory,
@@ -62,6 +64,8 @@ class AgentEvalSetup:
     max_remembered_discoveries: int
     recall_min_similarity: float
     suggestion_repeat_min_similarity: float
+    recall_tool: bool
+    """Offer recall_memory, as MEMORY_RECALL_TOOL does in the live capybara."""
     recovered_tool_calls: Callable[[], int]
     """How many tool calls the model has written as text so far (read before and after)."""
 
@@ -132,9 +136,11 @@ def _build_world(scenario: AgentScenario, setup: AgentEvalSetup) -> _ScenarioWor
         RepeatedSuggestions(suggestions, setup.embedder, setup.suggestion_repeat_min_similarity),
         saved_discoveries,
     )
-    return _ScenarioWorld(
-        discoveries, suggestions, [web_search, save_discovery, suggest_improvement]
-    )
+    tools: list[Tool] = [web_search, save_discovery, suggest_improvement]
+    if setup.recall_tool:
+        memory = EmbeddedMemory(setup.embedder, scenario.treasure())
+        tools.append(RecallMemoryTool(memory, setup.recall_min_similarity))
+    return _ScenarioWorld(discoveries, suggestions, tools)
 
 
 def _build_inner_voice(

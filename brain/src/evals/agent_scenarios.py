@@ -8,6 +8,8 @@ from src.domain.discovery import Discovery, DiscoveryHeadline
 from src.domain.web_search import SearchResult
 from src.evals.retrieval_eval import EVAL_DATE, EVAL_SOURCE
 
+RECALL_MEMORY_TOOL_NAME = "recall_memory"
+
 
 class NoticedThing(BaseModel):
     thing_id: str
@@ -54,11 +56,22 @@ class AgentScenario(BaseModel):
     """Listed at the start of the cycle, like the latest saved discoveries."""
     related_discoveries: list[KnownDiscovery] = Field(default_factory=list)
     """What the long-term memory brings back about what she noticed (RAG)."""
+    memory: list[KnownDiscovery] = Field(default_factory=list)
+    """Everything in her treasure that recall_memory can find (known and related included)."""
     earlier_searches: list[str] = Field(default_factory=list)
     """Searches already in her history: repeating one is refused by the tool."""
     pages: list[ScriptedPage]
     """What the web returns for any search."""
     expect: Expectations = Field(default_factory=Expectations)
+
+    def needs_recall_tool(self) -> bool:
+        return RECALL_MEMORY_TOOL_NAME in self.expect.calls
+
+    def treasure(self) -> list[Discovery]:
+        """What recall_memory searches: the scenario's memory plus what she already knows."""
+        everything = [*self.memory, *self.known_discoveries, *self.related_discoveries]
+        unique = {known.title: known for known in everything}
+        return [known.discovery() for known in unique.values()]
 
 
 class AgentScenarioSet(BaseModel):

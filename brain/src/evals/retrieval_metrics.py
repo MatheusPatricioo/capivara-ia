@@ -52,16 +52,24 @@ def mean_reciprocal_rank(outcomes: Sequence[RetrievalOutcome]) -> float:
 
 
 @dataclass(frozen=True)
-class ThresholdDecisions:
-    """How the "only the closest, and only above the threshold" rule decided each question.
+class DecisionOutcome:
+    """Which discovery, if any, went into her context for one question."""
+
+    query: str
+    relevant_id: str | None
+    chosen_id: str | None
+
+
+@dataclass(frozen=True)
+class DecisionSummary:
+    """How the final decisions split, for any decision rule (threshold or rerank):
 
     - right_recall: answerable, and the right discovery came back.
     - wrong_recall: something came back, but not the right discovery (noise in her context).
-    - missed: answerable, but nothing came back (top similarity below the threshold).
+    - missed: answerable, but nothing came back.
     - right_silence: unanswerable, and nothing came back.
     """
 
-    threshold: float
     right_recall: int
     wrong_recall: int
     missed: int
@@ -78,21 +86,44 @@ class ThresholdDecisions:
         return (self.right_recall + self.right_silence) / self.total
 
 
-def threshold_decisions(
-    outcomes: Sequence[RetrievalOutcome], threshold: float
-) -> ThresholdDecisions:
+def summarize_decisions(decisions: Sequence[DecisionOutcome]) -> DecisionSummary:
     right_recall = wrong_recall = missed = right_silence = 0
-    for outcome in outcomes:
-        brought_back = outcome.top_similarity >= threshold
-        if not brought_back and outcome.is_answerable:
+    for decision in decisions:
+        if decision.chosen_id is None and decision.relevant_id is not None:
             missed += 1
-        elif not brought_back:
+        elif decision.chosen_id is None:
             right_silence += 1
-        elif outcome.rank == 1:
+        elif decision.chosen_id == decision.relevant_id:
             right_recall += 1
         else:
             wrong_recall += 1
-    return ThresholdDecisions(threshold, right_recall, wrong_recall, missed, right_silence)
+    return DecisionSummary(right_recall, wrong_recall, missed, right_silence)
+
+
+def decide_by_threshold(
+    outcomes: Sequence[RetrievalOutcome], threshold: float
+) -> list[DecisionOutcome]:
+    """The first version of the rule: the closest discovery, only when it reaches threshold."""
+    return [
+        DecisionOutcome(
+            outcome.query,
+            outcome.relevant_id,
+            outcome.ranked_ids[0] if outcome.top_similarity >= threshold else None,
+        )
+        for outcome in outcomes
+    ]
+
+
+def threshold_decisions(outcomes: Sequence[RetrievalOutcome], threshold: float) -> DecisionSummary:
+    return summarize_decisions(decide_by_threshold(outcomes, threshold))
+
+
+def best_threshold(
+    outcomes: Sequence[RetrievalOutcome], thresholds: Sequence[float]
+) -> tuple[float, DecisionSummary]:
+    """The threshold with the most right decisions (the lowest one on a tie)."""
+    summaries = [(value, threshold_decisions(outcomes, value)) for value in sorted(thresholds)]
+    return max(summaries, key=lambda item: item[1].accuracy)
 
 
 def _answerable(outcomes: Sequence[RetrievalOutcome]) -> list[RetrievalOutcome]:

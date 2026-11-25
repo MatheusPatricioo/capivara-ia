@@ -7,13 +7,12 @@ from statistics import mean
 from src.evals.agent_run import AgentRun, GradedRun
 from src.evals.faithfulness_judge import FaithfulnessVerdict
 from src.evals.retrieval_metrics import (
-    RetrievalOutcome,
+    DecisionOutcome,
     mean_reciprocal_rank,
     recall_at_k,
-    threshold_decisions,
+    summarize_decisions,
 )
-
-THRESHOLD_SWEEP = (0.60, 0.65, 0.70, 0.75, 0.80)
+from src.evals.retrieval_variants import VariantResult
 
 
 @dataclass(frozen=True)
@@ -26,8 +25,7 @@ class ReportHeader:
 
 def render_report(
     header: ReportHeader,
-    retrieval: Sequence[RetrievalOutcome],
-    recall_threshold: float,
+    retrieval: Sequence[VariantResult],
     graded_runs: Sequence[GradedRun],
 ) -> str:
     sections = [
@@ -38,51 +36,47 @@ def render_report(
         ),
     ]
     if retrieval:
-        sections.append(_retrieval_section(retrieval, recall_threshold))
+        sections.append(_retrieval_section(retrieval))
     if graded_runs:
         sections.append(_agent_section(graded_runs))
     return "\n\n".join(sections) + "\n"
 
 
-def _retrieval_section(outcomes: Sequence[RetrievalOutcome], threshold: float) -> str:
-    answerable = sum(1 for outcome in outcomes if outcome.is_answerable)
+def _retrieval_section(results: Sequence[VariantResult]) -> str:
+    questions = results[0].ranking
+    answerable = sum(1 for outcome in questions if outcome.is_answerable)
     lines = [
         "## Recuperação (RAG)",
-        f"{len(outcomes)} perguntas: {answerable} com resposta na memória, "
-        f"{len(outcomes) - answerable} sem resposta.",
+        f"{len(questions)} perguntas: {answerable} com resposta na memória, "
+        f"{len(questions) - answerable} sem resposta. Cada linha liga mais um passo do pipeline.",
         "",
-        "| Métrica | Valor |",
-        "|---|---|",
-        f"| recall@1 | {recall_at_k(outcomes, 1):.2f} |",
-        f"| recall@3 | {recall_at_k(outcomes, 3):.2f} |",
-        f"| MRR | {mean_reciprocal_rank(outcomes):.2f} |",
-        "",
-        'Decisão "só a mais parecida, e só acima do limite" (o que vai para o contexto dela):',
-        "",
-        "| Limite | Acerto | Lembrou a certa | Lembrou errada | Não lembrou | Silêncio certo |",
-        "|---|---|---|---|---|---|",
+        "| Variante | recall@1 | recall@3 | MRR | Decisões certas | Lembrou errada | "
+        "Não lembrou | Regra de decisão |",
+        "|---|---|---|---|---|---|---|---|",
     ]
-    for value in sorted({*THRESHOLD_SWEEP, threshold}):
-        decisions = threshold_decisions(outcomes, value)
-        marker = " (atual)" if value == threshold else ""
-        lines.append(
-            f"| {value:.2f}{marker} | {decisions.accuracy:.0%} | {decisions.right_recall} | "
-            f"{decisions.wrong_recall} | {decisions.missed} | {decisions.right_silence} |"
-        )
-    misses = [outcome for outcome in outcomes if outcome.is_answerable and outcome.rank != 1]
-    if misses:
-        lines += ["", "Perguntas em que a certa não veio em 1º:", ""]
-        lines += [_miss_line(outcome) for outcome in misses]
+    lines += [_variant_line(result) for result in results]
+    best = max(results, key=lambda result: summarize_decisions(result.decisions).accuracy)
+    wrong = [decision for decision in best.decisions if decision.chosen_id != decision.relevant_id]
+    if wrong:
+        lines += ["", f"Decisões erradas da melhor variante ({best.variant.name}):", ""]
+        lines += [_wrong_decision_line(decision) for decision in wrong]
     return "\n".join(lines)
 
 
-def _miss_line(outcome: RetrievalOutcome) -> str:
-    first = outcome.ranked_ids[0] if outcome.ranked_ids else "nada"
-    rank = outcome.rank if outcome.rank is not None else "fora"
+def _variant_line(result: VariantResult) -> str:
+    summary = summarize_decisions(result.decisions)
+    rule = "rerank com LLM" if result.threshold is None else f"limite {result.threshold:.2f}"
     return (
-        f'- "{outcome.query}": esperada `{outcome.relevant_id}` (posição {rank}), '
-        f"veio `{first}` ({outcome.top_similarity:.3f})"
+        f"| {result.variant.name} | {recall_at_k(result.ranking, 1):.2f} | "
+        f"{recall_at_k(result.ranking, 3):.2f} | {mean_reciprocal_rank(result.ranking):.2f} | "
+        f"{summary.accuracy:.0%} | {summary.wrong_recall} | {summary.missed} | {rule} |"
     )
+
+
+def _wrong_decision_line(decision: DecisionOutcome) -> str:
+    expected = f"`{decision.relevant_id}`" if decision.relevant_id else "nada"
+    chosen = f"`{decision.chosen_id}`" if decision.chosen_id else "nada"
+    return f'- "{decision.query}": esperada {expected}, veio {chosen}'
 
 
 def _agent_section(graded_runs: Sequence[GradedRun]) -> str:

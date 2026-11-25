@@ -8,8 +8,9 @@ from collections.abc import Sequence
 from datetime import date
 
 from src.domain.discovery import Discovery, DiscoveryHeadline
-from src.domain.discovery_memory import RememberedDiscovery
+from src.domain.discovery_memory import RememberedDiscovery, memory_text
 from src.domain.search_history import search_key
+from src.domain.text_embedding import TextEmbedder, cosine_similarity
 from src.domain.web_search import SearchResult
 from src.domain.world_suggestion import SavedSuggestion, WorldSuggestion
 
@@ -96,3 +97,31 @@ class InMemorySuggestions:
             SavedSuggestion(f"suggestion-{position}.md", suggestion)
             for position, suggestion in enumerate(self.suggestions, start=1)
         ]
+
+
+class EmbeddedMemory:
+    """DiscoveryMemory kept in a list, compared with the real embedding model.
+
+    Backs the recall_memory tool in the agent eval: what she finds depends on what she
+    asks for, as in the real memory (but without the database).
+    """
+
+    def __init__(self, embedder: TextEmbedder, discoveries: Sequence[Discovery]) -> None:
+        self._embedder = embedder
+        self._discoveries = list(discoveries)
+
+    def remember(self, file_name: str, discovery: Discovery) -> None:
+        self._discoveries.append(discovery)
+
+    def recall(self, text: str, limit: int) -> list[RememberedDiscovery]:
+        if not self._discoveries:
+            return []
+        query, *embeddings = self._embedder.embed(
+            [text, *(memory_text(discovery) for discovery in self._discoveries)]
+        )
+        remembered = [
+            RememberedDiscovery(discovery, cosine_similarity(query, embedding))
+            for discovery, embedding in zip(self._discoveries, embeddings, strict=True)
+        ]
+        remembered.sort(key=lambda item: item.similarity, reverse=True)
+        return remembered[:limit]

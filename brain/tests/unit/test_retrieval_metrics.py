@@ -1,9 +1,12 @@
 import pytest
 
 from src.evals.retrieval_metrics import (
+    DecisionOutcome,
     RetrievalOutcome,
+    best_threshold,
     mean_reciprocal_rank,
     recall_at_k,
+    summarize_decisions,
     threshold_decisions,
 )
 
@@ -94,3 +97,31 @@ def test_accuracy_counts_right_recalls_and_right_silences() -> None:
     ]
 
     assert threshold_decisions(outcomes, THRESHOLD).accuracy == 0.5
+
+
+def test_best_threshold_picks_the_one_with_most_right_decisions() -> None:
+    outcomes = [an_outcome("lua", ("lua",), 0.80), an_outcome(None, ("sol",), 0.65)]
+
+    threshold, summary = best_threshold(outcomes, [0.60, 0.70, 0.90])
+
+    assert (threshold, summary.accuracy) == (0.70, 1.0)
+
+
+def test_best_threshold_keeps_the_lowest_on_a_tie() -> None:
+    outcomes = [an_outcome("lua", ("lua",), 0.80)]
+
+    threshold, _ = best_threshold(outcomes, [0.75, 0.60])
+
+    assert threshold == 0.60
+
+
+def test_summarizes_decisions_from_any_rule() -> None:
+    decisions = [
+        DecisionOutcome("lua", "lua", "lua"),
+        DecisionOutcome("sol", "sol", None),
+        DecisionOutcome("mar", None, None),
+    ]
+
+    summary = summarize_decisions(decisions)
+
+    assert (summary.right_recall, summary.missed, summary.right_silence) == (1, 1, 1)

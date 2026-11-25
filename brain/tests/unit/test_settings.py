@@ -310,7 +310,7 @@ def test_memory_recall_min_similarity_defaults_to_the_measured_value(
 ) -> None:
     settings = Settings(_env_file=None)
 
-    assert settings.memory_recall_min_similarity == 0.70
+    assert settings.memory_recall_min_similarity == 0.50
 
 
 def test_rejects_a_memory_recall_min_similarity_above_one(

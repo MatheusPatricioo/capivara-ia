@@ -5,7 +5,7 @@ from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from src.infrastructure.ollama_language_model import OllamaGenerationOptions
-from src.infrastructure.postgres_discovery_memory import memory_conninfo
+from src.infrastructure.postgres_discovery_memory import SearchMode, memory_conninfo
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 ENV_FILE = PROJECT_ROOT / "brain" / ".env"
@@ -45,9 +45,17 @@ class Settings(BaseSettings):
     memory_db_password: SecretStr = SecretStr("")
     # How long a memory call waits for a database connection before giving up.
     memory_db_timeout_seconds: float = Field(default=5.0, gt=0)
-    # RAG: a saved discovery comes back for something she noticed only when its cosine
-    # similarity reaches this. 0.70 was measured with nomic-embed-text; see .env.example.
-    memory_recall_min_similarity: float = Field(default=0.70, ge=0.0, le=1.0)
+    # RAG pipeline (measured step by step with python -m src.run_evals --suite retrieval).
+    # With rerank, discoveries below this similarity are not even offered to the model;
+    # without rerank, the closest one counts only when it reaches it. See .env.example.
+    memory_recall_min_similarity: float = Field(default=0.50, ge=0.0, le=1.0)
+    memory_search_mode: SearchMode = SearchMode.HYBRID
+    memory_task_prefixes: bool = True
+    memory_query_rewriting: bool = False
+    memory_rerank: bool = True
+    # Agentic RAG: offer the recall_memory tool. Off by default: qwen2.5:7b never called it
+    # in the evals, and the extra tool made it save fewer discoveries.
+    memory_recall_tool: bool = False
     # A new suggestion repeats an earlier one when their cosine similarity reaches this.
     # 0.80 was measured with nomic-embed-text; see .env.example.
     suggestion_repeat_min_similarity: float = Field(default=0.80, ge=0.0, le=1.0)

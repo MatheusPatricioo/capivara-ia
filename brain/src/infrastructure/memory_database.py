@@ -5,12 +5,14 @@ use their own databases on the same server ("<name>_test", "<name>_eval"), so th
 touch the capybara's real memory.
 """
 
+from pathlib import Path
+
 import psycopg
 from psycopg import sql
 
 from src.infrastructure.settings import PROJECT_ROOT, Settings
 
-SCHEMA_FILE = PROJECT_ROOT / "brain" / "database" / "init" / "001_create_discoveries.sql"
+SCHEMA_DIR = PROJECT_ROOT / "brain" / "database" / "init"
 MAINTENANCE_DATABASE = "postgres"
 CONNECT_TIMEOUT_SECONDS = 3
 
@@ -48,9 +50,19 @@ def create_database_if_missing(settings: Settings) -> None:
             )
 
 
+def schema_files() -> list[Path]:
+    """The same files Docker runs on a new volume, in the same (name) order."""
+    return sorted(SCHEMA_DIR.glob("*.sql"))
+
+
 def apply_schema(settings: Settings) -> None:
-    # The schema file only uses IF NOT EXISTS, so applying it on every run is harmless.
+    """Applies every schema file. They only use IF NOT EXISTS / OR REPLACE, so applying them
+    again is harmless, and an existing database gets the files added after it was created.
+
+    Raises psycopg.Error when the database is offline or a file fails.
+    """
     with psycopg.connect(
         settings.memory_db_conninfo(), connect_timeout=CONNECT_TIMEOUT_SECONDS
     ) as connection:
-        connection.execute(SCHEMA_FILE.read_text(encoding="utf-8"))
+        for schema_file in schema_files():
+            connection.execute(schema_file.read_text(encoding="utf-8"))

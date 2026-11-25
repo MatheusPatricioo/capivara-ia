@@ -94,6 +94,7 @@ def setup_with(language_model: object) -> AgentEvalSetup:
         max_remembered_discoveries=20,
         recall_min_similarity=0.7,
         suggestion_repeat_min_similarity=0.8,
+        recall_tool=False,
         recovered_tool_calls=lambda: 0,
     )
 

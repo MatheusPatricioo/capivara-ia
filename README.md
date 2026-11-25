@@ -25,11 +25,34 @@ Mundo e Cérebro conversam por WebSocket, com mensagens JSON validadas. O Céreb
 A memória tem duas camadas:
 
 - **Descobertas:** arquivos Markdown legíveis na pasta de descobertas (`DISCOVERIES_DIR` no `brain/.env`, ou `discoveries/` por padrão). Qualquer pessoa pode ver o que a capivara encontrou. Eles são a fonte da verdade.
-- **Memória de longo prazo:** cada descoberta salva também vira uma linha no PostgreSQL com a extensão [pgvector](https://github.com/pgvector/pgvector), junto do embedding do texto (gerado pelo `nomic-embed-text`). É um índice por significado: "roedor que mergulha" encontra "Capivaras nadam", mesmo sem nenhuma palavra em comum.
+- **Memória de longo prazo:** cada descoberta salva também vai para o PostgreSQL, inteira e em pedaços (*chunks*: o texto todo e janelas de duas frases, cada uma com o título e o tema como cabeçalho). Cada pedaço guarda um embedding do `nomic-embed-text` (busca por significado, com [pgvector](https://github.com/pgvector/pgvector)) e um `tsvector` (busca por palavras, com o full-text search do próprio PostgreSQL, em português e sem acentos).
 
 Se o banco estiver desligado, nada quebra: a descoberta continua salva em Markdown, ela só não entra na memória (fica um aviso no log). Para colocar na memória as descobertas que já estavam na pasta, existe um comando próprio (veja [Ligar a memória](#ligar-a-memória)).
 
-**Como ela lembra (RAG):** no começo de cada ciclo do modo vivo, para cada coisa que ela notou no mundo (como "um carvalho enorme de folhas alaranjadas"), a descoberta mais parecida volta para o contexto dela, com o resumo completo. Assim, em vez de pesquisar de novo o que já sabe, ela vai atrás de um detalhe novo. Só volta a descoberta mais parecida, e só se a similaridade chegar a `MEMORY_RECALL_MIN_SIMILARITY` (0,70 por padrão, medido com as coisas do mundo). Cada comparação fica no log, para recalibrar esse valor com o uso.
+**Como ela lembra (RAG):** no começo de cada ciclo do modo vivo, para cada coisa que ela notou no mundo (como "um carvalho enorme de folhas alaranjadas"), o pipeline decide se alguma descoberta do tesouro é sobre aquilo:
+
+1. **Busca híbrida:** os pedaços são buscados por significado e por palavras ao mesmo tempo, e as duas listas são juntadas por **Reciprocal Rank Fusion** (RRF). Embeddings e consultas usam os prefixos de tarefa do `nomic-embed-text` (`search_document:` e `search_query:`).
+2. **Rerank com LLM:** as 5 descobertas mais próximas (acima de um piso de similaridade) vão para o modelo, que escolhe a que é mesmo sobre a coisa notada, ou "nenhuma". A resposta é restrita a essas opções (saída estruturada) e conferida no código.
+3. **Reescrita da pergunta (opcional):** "luzinhas piscando no jardim" vira também "vaga-lumes bioluminescência". Melhora a busca, mas com o rerank as decisões já acertavam tanto quanto, então vem desligada para economizar uma chamada ao modelo.
+
+A descoberta escolhida volta para o contexto dela com o resumo completo, para que ela vá atrás de um detalhe novo em vez de pesquisar de novo o que já sabe.
+
+**Memória como ferramenta (agentic RAG):** além do RAG automático, existe a ferramenta `recall_memory`, para ela decidir sozinha quando procurar no tesouro. Ela vem **desligada** (`MEMORY_RECALL_TOOL=false`), e o motivo é o próprio eval. O qwen2.5:7b não chamou a ferramenta nenhuma vez em 15 execuções do cenário feito para ela. Pior: só por ela estar na lista, ele passou a salvar menos descobertas, e uma frase no prompt sobre ela derrubou o salvamento de 5/5 para 2/5. Com um modelo maior, vale ligar e medir de novo.
+
+Cada passo foi ligado um de cada vez e medido nos [evals](#evals-medindo-a-capivara). Cada etapa pode ser ligada e desligada no `brain/.env` (`MEMORY_SEARCH_MODE`, `MEMORY_TASK_PREFIXES`, `MEMORY_QUERY_REWRITING`, `MEMORY_RERANK`, `MEMORY_RECALL_TOOL`).
+
+Resultado nas 30 perguntas do eval ([relatório](brain/evals/reports/2026-11-24-rag-v2.md)). "Decisões certas" conta tanto lembrar a descoberta certa quanto ficar em silêncio quando nenhuma é sobre o assunto:
+
+| Variante | recall@1 | MRR | Decisões certas | Lembrou errada |
+|---|---|---|---|---|
+| Vetor do texto inteiro (como era) | 0,71 | 0,77 | 57% | 13 |
+| + prefixos de tarefa | 0,62 | 0,76 | 57% | 7 |
+| + chunks e busca híbrida (RRF) | 0,88 | 0,93 | 77% | 5 |
+| + reescrita da pergunta | 0,92 | 0,95 | 83% | 2 |
+| + rerank com LLM | 0,92 | 0,95 | 97% | 0 |
+| **Híbrida + rerank, sem reescrita (padrão)** | 0,88 | 0,93 | **97%** | **0** |
+
+As variantes sem rerank usam o melhor limite de similaridade achado no próprio conjunto, o que as favorece, e mesmo assim ficam bem abaixo. Os prefixos sozinhos até pioram o recall@1: só rendem junto com os pedaços e a busca híbrida. No eval do agente, a nova versão passou em tudo em 76% das execuções, dentro da faixa do baseline (68% a 84%).
 
 ### Desenhos na lousa
 
@@ -72,16 +95,16 @@ Testes conferem o código com um LLM falso. **Evals** conferem o comportamento d
 - **Agente:** 5 momentos da vida dela, com o modelo, os prompts, a voz interior e as ferramentas reais. Só a internet e os arquivos são roteirizados. Checagens em código contam quantas vezes ela tentou quebrar uma regra (fonte inventada, busca repetida, sugestão antes de salvar) e se fez o que o momento pedia.
 - **Fidelidade (LLM-as-judge):** um juiz no Ollama quebra cada resumo salvo em afirmações e precisa citar o trecho exato das páginas que sustenta cada uma. O código confere se a citação existe e calcula a nota. O que dá para checar por código (como o idioma) não passa pelo juiz.
 
-Cada execução gera um relatório em `brain/evals/reports/`. A linha de base está em [`2026-11-24-baseline.md`](brain/evals/reports/2026-11-24-baseline.md):
+Cada execução gera um relatório em `brain/evals/reports/`. A linha de base está em [`2026-11-24-baseline.md`](brain/evals/reports/2026-11-24-baseline.md) e a versão atual em [`2026-11-24-rag-v2.md`](brain/evals/reports/2026-11-24-rag-v2.md):
 
-| Medida | Linha de base |
-|---|---|
-| RAG: recall@1 / recall@3 / MRR | 0,71 / 0,79 / 0,77 |
-| RAG: decisões certas no limite atual (0,70) | 47% |
-| Agente: execuções que passaram em tudo | 84% (21 de 25) |
-| Agente: chamadas de ferramenta recusadas / escritas como texto | 2% / 0% |
-| Agente: tentativas de quebrar regras (fonte inventada, busca repetida, sugestão antes de salvar) | 0 |
-| Fidelidade: afirmações com citação nas páginas | 81% |
+| Medida | Linha de base | Atual |
+|---|---|---|
+| RAG: recall@1 / recall@3 / MRR | 0,71 / 0,79 / 0,77 | 0,88 / 0,96 / 0,93 |
+| RAG: decisões certas | 47% (limite 0,70) | 97% (rerank com LLM) |
+| Agente: execuções que passaram em tudo | 84% (21 de 25) | 76% (19 de 25) |
+| Agente: chamadas de ferramenta recusadas / escritas como texto | 2% / 0% | 0% / 0% |
+| Agente: tentativas de quebrar regras (fonte inventada, busca repetida, sugestão antes de salvar) | 0 | 0 |
+| Fidelidade: afirmações com citação nas páginas | 81% | 91% |
 
 Duas lições do baseline. Com o mesmo código, duas rodadas de 25 execuções variaram de 68% a 84% em "passou em tudo", então diferenças menores que uns 15 pontos são ruído. E o juiz local (7B) ainda erra para os dois lados: pega invenções reais ("na primavera", quando a página dizia outono) e às vezes não acha a citação de uma frase que está na página. Por isso o relatório lista cada afirmação sem apoio, para conferir à mão.
 
@@ -152,6 +175,8 @@ python -m src.load_discoveries_into_memory
 ```
 
 A partir daí, toda descoberta nova entra na memória sozinha.
+
+**Atualizando de uma versão anterior:** o cérebro aplica sozinho, ao ligar, os arquivos novos de `brain/database/init/` (como a tabela de pedaços). Rode o comando acima uma vez para que as descobertas antigas ganhem pedaços e embeddings com os prefixos de tarefa. O mesmo vale sempre que mudar `MEMORY_TASK_PREFIXES`.
 
 ### Conversar com a capivara
 
@@ -236,12 +261,12 @@ python -m src.run_evals --repeats 5 --label nome-da-mudanca
 
 🚧 Em desenvolvimento ativo.
 
-- **Funcionando:** chat e modo vivo autônomo, pesquisa na web, descobertas salvas em Markdown, rascunhos na lousa escolhidos por embeddings e desenhados traço por traço, memória de longo prazo com RAG (PostgreSQL + pgvector), sugestões de melhorias para o mundo (com a aba Sugestões no computador e a capivara reconhecendo o que foi construído), mundo 3D conectado ao cérebro por WebSocket e limite de tokens por hora.
+- **Funcionando:** chat e modo vivo autônomo, pesquisa na web, descobertas salvas em Markdown, rascunhos na lousa escolhidos por embeddings e desenhados traço por traço, memória de longo prazo com RAG (busca híbrida com pgvector e full-text, RRF e rerank com LLM) e ferramenta de memória opcional (agentic RAG), evals automatizados com LLM-as-judge, CI, sugestões de melhorias para o mundo (com a aba Sugestões no computador e a capivara reconhecendo o que foi construído), mundo 3D conectado ao cérebro por WebSocket e limite de tokens por hora.
 - **Próximos passos** (técnicas de IA usadas no mercado, nesta ordem, sempre com ferramentas gratuitas):
   1. ~~**CI:** `ruff`, `mypy` e `pytest` (com PostgreSQL + pgvector) a cada push, no GitHub Actions.~~ ✔
   2. ~~**Evals automatizados:** RAG (recall@k, MRR, acerto da decisão), agente (checagens de regras e expectativas) e fidelidade com LLM-as-judge.~~ ✔ (veja [Evals](#evals-medindo-a-capivara))
   3. ~~**Argumentos de ferramenta com um schema só:** cada ferramenta tem uma classe Pydantic que gera o JSON Schema enviado ao modelo e valida o que ele manda, com erros campo por campo para ele se corrigir. O tool calling já era nativo: o eval mostrou 0 chamadas escritas como texto.~~ ✔ ([relatório](brain/evals/reports/2026-11-24-tool-arguments.md): sem regressão, tudo dentro do ruído do baseline)
-  4. **RAG v2:** as descobertas divididas em pedaços (chunking), busca híbrida que junta palavras (full-text do PostgreSQL) com significado (pgvector) por Reciprocal Rank Fusion, reranking, reescrita da pergunta antes de buscar e a memória como uma ferramenta que a capivara decide usar (agentic RAG).
+  4. ~~**RAG v2:** pedaços (chunking) com cabeçalho, busca híbrida (full-text do PostgreSQL + pgvector) por Reciprocal Rank Fusion, rerank com LLM, reescrita da pergunta e a memória como ferramenta (agentic RAG).~~ ✔ (decisões certas de 57% para 97%; veja [Memória](#memória))
   5. **Observabilidade:** cada passo do agente (prompt, ferramenta, tokens, tempo) registrado com OpenTelemetry e visto num painel do Langfuse rodando no Docker, com os prompts versionados.
   6. **Reflexão e consolidação de memória:** de tempos em tempos ela relê as descobertas e escreve reflexões de nível mais alto, que também viram memória (como no artigo *Generative Agents*).
   7. **Defesa contra prompt injection:** páginas de ataque ("ignore suas instruções e...") nos evals, provando que conteúdo da web é tratado como dado, com uma camada de guardrail.

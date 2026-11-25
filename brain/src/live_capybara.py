@@ -9,13 +9,16 @@ from src.application.attention_inbox import AttentionInbox
 from src.application.autonomous_loop import AutonomousLoop
 from src.application.conversation import Conversation
 from src.application.inner_voice import InnerVoice
+from src.application.memory_query_expander import MemoryQueryExpander
 from src.application.metered_language_model import MeteredLanguageModel
 from src.application.related_discoveries import RelatedDiscoveries
+from src.application.related_memory_chooser import RelatedMemoryChooser
 from src.application.token_budget import HourlyTokenBudget
 from src.capybara_tools import TOOL_RESULT_REMINDER_OVERRIDES, build_capybara_tools
 from src.domain.attention import Attention
 from src.domain.chalkboard import Chalkboard
 from src.domain.discovery_memory import DiscoveryMemory
+from src.domain.language_model import StructuredLanguageModel
 from src.infrastructure.logging_setup import configure_logging
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
 from src.infrastructure.markdown_suggestion_repository import MarkdownSuggestionRepository
@@ -34,6 +37,8 @@ MEMORY_TEMPLATE_NAME = "known_discoveries"
 NOTICED_TEMPLATE_NAME = "noticed_things"
 RELATED_TEMPLATE_NAME = "related_discoveries"
 SUGGESTIONS_TEMPLATE_NAME = "known_suggestions"
+EXPAND_MEMORY_QUERY_NAME = "expand_memory_query"
+CHOOSE_RELATED_MEMORY_NAME = "choose_related_memory"
 
 logger = logging.getLogger(__name__)
 
@@ -57,8 +62,27 @@ def attention_listener(inbox: AttentionInbox) -> Callable[[NoticedMessage], None
     return notice
 
 
+def build_related_discoveries(
+    settings: Settings, memory: DiscoveryMemory, language_model: StructuredLanguageModel
+) -> RelatedDiscoveries:
+    """The RAG pipeline of the inner voice, each step switched on in brain/.env."""
+    expander = (
+        MemoryQueryExpander(language_model, load_prompt(EXPAND_MEMORY_QUERY_NAME))
+        if settings.memory_query_rewriting
+        else None
+    )
+    chooser = (
+        RelatedMemoryChooser(language_model, load_prompt(CHOOSE_RELATED_MEMORY_NAME))
+        if settings.memory_rerank
+        else None
+    )
+    return RelatedDiscoveries(
+        memory, settings.memory_recall_min_similarity, chooser=chooser, expander=expander
+    )
+
+
 def build_inner_voice(
-    settings: Settings, attention_inbox: AttentionInbox, memory: DiscoveryMemory
+    settings: Settings, attention_inbox: AttentionInbox, related: RelatedDiscoveries
 ) -> InnerVoice:
     return InnerVoice(
         invitation=load_prompt(INNER_VOICE_NAME),
@@ -67,7 +91,7 @@ def build_inner_voice(
         max_remembered_discoveries=settings.max_remembered_discoveries,
         attention=attention_inbox,
         noticed_template=load_prompt(NOTICED_TEMPLATE_NAME),
-        related=RelatedDiscoveries(memory, settings.memory_recall_min_similarity),
+        related=related,
         related_template=load_prompt(RELATED_TEMPLATE_NAME),
         suggestions=MarkdownSuggestionRepository(settings.discoveries_dir),
         suggestions_template=load_prompt(SUGGESTIONS_TEMPLATE_NAME),
@@ -98,7 +122,6 @@ def main() -> None:
         ) as http_client,
         open_long_term_memory(settings, http_client) as memory,
     ):
-        inner_voice = build_inner_voice(settings, attention_inbox, memory)
         body = WebSocketBody(world_server)
         body.show_chalkboard(chalkboard.drawings)
         language_model = MeteredLanguageModel(
@@ -108,6 +131,11 @@ def main() -> None:
                 generation_options=settings.ollama_generation_options(),
             ),
             budget,
+        )
+        inner_voice = build_inner_voice(
+            settings,
+            attention_inbox,
+            build_related_discoveries(settings, memory, language_model),
         )
 
         def start_conversation() -> Conversation:

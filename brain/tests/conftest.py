@@ -40,5 +40,5 @@ def memory_test_pool(memory_test_settings: Settings) -> Iterator[MemoryPool]:
 def empty_memory_pool(memory_test_pool: MemoryPool) -> MemoryPool:
     """The test pool with the discoveries table emptied, so each test starts clean."""
     with memory_test_pool.connection() as connection:
-        connection.execute("TRUNCATE discoveries")
+        connection.execute("TRUNCATE discoveries CASCADE")
     return memory_test_pool

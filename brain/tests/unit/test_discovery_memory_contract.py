@@ -15,6 +15,7 @@ from src.domain.discovery_memory import DiscoveryMemory
 from src.infrastructure.postgres_discovery_memory import (
     EMBEDDING_DIMENSIONS,
     PostgresDiscoveryMemory,
+    SearchMode,
 )
 from tests.fakes.in_memory_discovery_memory import (
     InMemoryDiscoveryMemory,
@@ -44,20 +45,30 @@ def build_in_memory(request: pytest.FixtureRequest) -> DiscoveryMemory:
     return InMemoryDiscoveryMemory(WordCountEmbedder(VOCABULARY))
 
 
-def build_postgres(request: pytest.FixtureRequest) -> DiscoveryMemory:
-    # Asked for here, not as a fixture argument, so the fake never waits for the database.
-    pool = request.getfixturevalue("empty_memory_pool")
-    embedder = ZeroPaddedEmbedder(WordCountEmbedder(VOCABULARY), EMBEDDING_DIMENSIONS)
-    return PostgresDiscoveryMemory(pool, embedder)
+def postgres_builder(search_mode: SearchMode) -> Callable[[pytest.FixtureRequest], DiscoveryMemory]:
+    def build_postgres(request: pytest.FixtureRequest) -> DiscoveryMemory:
+        # Asked for here, not as a fixture argument, so the fake never waits for the database.
+        pool = request.getfixturevalue("empty_memory_pool")
+        embedder = ZeroPaddedEmbedder(WordCountEmbedder(VOCABULARY), EMBEDDING_DIMENSIONS)
+        return PostgresDiscoveryMemory(pool, embedder, search_mode=search_mode)
+
+    return build_postgres
 
 
 MEMORY_BUILDERS: dict[str, Callable[[pytest.FixtureRequest], DiscoveryMemory]] = {
     "in_memory": build_in_memory,
-    "postgres": build_postgres,
+    "postgres_vector": postgres_builder(SearchMode.VECTOR),
+    "postgres_hybrid": postgres_builder(SearchMode.HYBRID),
 }
 
 
-@pytest.fixture(params=["in_memory", pytest.param("postgres", marks=pytest.mark.database)])
+@pytest.fixture(
+    params=[
+        "in_memory",
+        pytest.param("postgres_vector", marks=pytest.mark.database),
+        pytest.param("postgres_hybrid", marks=pytest.mark.database),
+    ]
+)
 def memory(request: pytest.FixtureRequest) -> DiscoveryMemory:
     return MEMORY_BUILDERS[request.param](request)
 

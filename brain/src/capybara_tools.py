@@ -11,6 +11,7 @@ from src.application.remembering_discovery_repository import RememberingDiscover
 from src.application.repeated_suggestions import RepeatedSuggestions
 from src.application.tools.conversation_discoveries import ConversationDiscoveries
 from src.application.tools.embodied_tool import EmbodiedTool
+from src.application.tools.recall_memory_tool import RecallMemoryTool
 from src.application.tools.save_discovery_tool import SaveDiscoveryTool
 from src.application.tools.seen_sources import SeenSources
 from src.application.tools.suggest_improvement_tool import SuggestImprovementTool
@@ -65,7 +66,8 @@ def build_capybara_tools(
     The doodle for a discovery is chosen with retrieve and rerank: http_client reaches
     Ollama's embedding model (retrieve) and language_model picks among them (rerank).
 
-    With a memory, every saved discovery is also remembered for later cycles.
+    With a memory, every saved discovery is also remembered for later cycles, and she can
+    search her treasure with recall_memory (agentic RAG).
 
     After saving a discovery, she may suggest one thing for her world (suggest_improvement),
     inspired by the discovery she just saved in this same conversation.
@@ -105,14 +107,14 @@ def build_capybara_tools(
     suggest_improvement_tool = _build_suggest_improvement_tool(
         settings, http_client, saved_discoveries
     )
+    tools: list[Tool] = [web_search_tool, save_discovery_tool, suggest_improvement_tool]
+    if memory is not None and settings.memory_recall_tool:
+        # Agentic RAG: she decides when to look into her treasure, like a web search.
+        tools.append(RecallMemoryTool(memory, settings.memory_recall_min_similarity))
     if body is None:
-        return [web_search_tool, save_discovery_tool, suggest_improvement_tool]
-    return [
-        EmbodiedTool(web_search_tool, body, Place.COMPUTER),
-        # Saving a discovery or a suggestion writes a file, and her files live in the computer.
-        EmbodiedTool(save_discovery_tool, body, Place.COMPUTER),
-        EmbodiedTool(suggest_improvement_tool, body, Place.COMPUTER),
-    ]
+        return tools
+    # Searching, saving and remembering all happen at the computer, where her files live.
+    return [EmbodiedTool(tool, body, Place.COMPUTER) for tool in tools]
 
 
 def _build_suggest_improvement_tool(

@@ -10,6 +10,7 @@ from src.domain.drawing import Drawing
 from src.domain.language_model import ChatMessage, StructuredReply
 from src.domain.tool import ToolError
 from src.infrastructure.settings import Settings
+from tests.fakes.in_memory_discovery_memory import InMemoryDiscoveryMemory, WordCountEmbedder
 
 
 class NeverAskedStructuredLanguageModel:
@@ -58,6 +59,29 @@ def test_offers_search_save_and_suggest_but_no_draw_tool_because_drawing_is_auto
         "save_discovery",
         "suggest_improvement",
     ]
+
+
+def test_with_a_memory_but_the_recall_tool_off_she_gets_no_recall_tool(
+    settings: Settings, http_client: httpx.Client
+) -> None:
+    memory = InMemoryDiscoveryMemory(WordCountEmbedder(["lua"]))
+    tools = build_capybara_tools(
+        settings, Chalkboard(3), NeverAskedStructuredLanguageModel(), http_client, memory=memory
+    )
+
+    assert "recall_memory" not in [tool.definition.name for tool in tools]
+
+
+def test_with_a_memory_and_the_recall_tool_on_she_can_also_search_her_treasure(
+    settings: Settings, http_client: httpx.Client
+) -> None:
+    settings = settings.model_copy(update={"memory_recall_tool": True})
+    memory = InMemoryDiscoveryMemory(WordCountEmbedder(["lua"]))
+    tools = build_capybara_tools(
+        settings, Chalkboard(3), NeverAskedStructuredLanguageModel(), http_client, memory=memory
+    )
+
+    assert tools[-1].definition.name == "recall_memory"
 
 
 def test_goes_to_the_computer_to_save_a_discovery(

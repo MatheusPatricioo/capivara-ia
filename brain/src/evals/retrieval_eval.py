@@ -1,5 +1,6 @@
 """Retrieval eval: loads a fixed set of discoveries into the memory and asks known questions."""
 
+from collections.abc import Callable
 from datetime import date
 from pathlib import Path
 
@@ -60,18 +61,23 @@ class RetrievalDataset(BaseModel):
 
 
 def run_retrieval_eval(
-    memory: DiscoveryMemory, dataset: RetrievalDataset, limit: int
+    memory: DiscoveryMemory,
+    dataset: RetrievalDataset,
+    limit: int,
+    rewrite: Callable[[str], str] | None = None,
 ) -> list[RetrievalOutcome]:
     """Remembers every discovery of the dataset, then recalls each question.
 
-    The memory must start empty: anything else in it would count as a wrong answer.
+    rewrite, when given, turns each question into the text actually searched (query
+    rewriting). The memory must start empty: anything else in it would count as wrong.
     """
     id_by_title = {discovery.title: discovery.id for discovery in dataset.discoveries}
     for discovery in dataset.discoveries:
         memory.remember(discovery.id, discovery.to_discovery())
     outcomes: list[RetrievalOutcome] = []
     for question in dataset.questions:
-        remembered = memory.recall(question.query, limit)
+        searched = rewrite(question.query) if rewrite else question.query
+        remembered = memory.recall(searched, limit)
         outcomes.append(
             RetrievalOutcome(
                 query=question.query,

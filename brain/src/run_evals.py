@@ -17,22 +17,28 @@ from datetime import date
 
 import httpx
 
+from src.application.memory_query_expander import MemoryQueryExpander
+from src.application.related_discoveries import RelatedDiscoveries
+from src.application.related_memory_chooser import RelatedMemoryChooser
 from src.capybara_tools import SUGGESTION_INVITATION_PROMPT_NAME, TOOL_RESULT_REMINDER_OVERRIDES
+from src.domain.discovery_memory import DiscoveryMemory
 from src.evals.agent_eval import AgentEvalSetup, CapybaraPrompts, grade_run, run_scenario
 from src.evals.agent_run import GradedRun
 from src.evals.agent_scenarios import AgentScenarioSet
 from src.evals.eval_report import ReportHeader, render_report
 from src.evals.faithfulness_judge import FaithfulnessJudge
-from src.evals.retrieval_eval import RetrievalDataset, run_retrieval_eval
-from src.evals.retrieval_metrics import RetrievalOutcome
+from src.evals.retrieval_eval import RetrievalDataset
+from src.evals.retrieval_variants import (
+    CachedRewriter,
+    RetrievalVariant,
+    VariantResult,
+    run_variant,
+)
 from src.infrastructure.logging_setup import configure_logging
 from src.infrastructure.memory_database import prepare_side_database
 from src.infrastructure.ollama_language_model import OllamaLanguageModel
 from src.infrastructure.ollama_text_embedder import OllamaTextEmbedder
-from src.infrastructure.postgres_discovery_memory import (
-    PostgresDiscoveryMemory,
-    create_memory_pool,
-)
+from src.infrastructure.postgres_discovery_memory import SearchMode, create_memory_pool
 from src.infrastructure.prompt_loader import load_prompt
 from src.infrastructure.settings import PROJECT_ROOT, Settings
 from src.live_capybara import (
@@ -44,6 +50,7 @@ from src.live_capybara import (
     SYSTEM_PROMPT_NAME,
     TOOL_RESULT_REMINDER_NAME,
 )
+from src.long_term_memory import build_discovery_memory
 
 EVALS_DIR = PROJECT_ROOT / "brain" / "evals"
 RETRIEVAL_DATASET = EVALS_DIR / "datasets" / "retrieval.json"
@@ -55,6 +62,16 @@ EVAL_DATABASE_SUFFIX = "eval"
 RECALL_LIMIT = 5
 DEFAULT_REPEATS = 3
 SUITES = ("all", "retrieval", "agent")
+EXPAND_MEMORY_QUERY_PROMPT_NAME = "expand_memory_query"
+CHOOSE_RELATED_MEMORY_PROMPT_NAME = "choose_related_memory"
+RETRIEVAL_VARIANTS = (
+    RetrievalVariant("1. Vetor do texto inteiro (como era)", False, False, False, False),
+    RetrievalVariant("2. + prefixos de tarefa", True, False, False, False),
+    RetrievalVariant("3. + chunks e busca híbrida (RRF)", True, True, False, False),
+    RetrievalVariant("4. + reescrita da pergunta", True, True, True, False),
+    RetrievalVariant("5. + rerank com LLM", True, True, True, True),
+    RetrievalVariant("6. Híbrida + rerank, sem reescrita", True, True, False, True),
+)
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +85,9 @@ def main(arguments: Sequence[str] | None = None) -> None:
     ) as http_client:
         embedder = OllamaTextEmbedder(http_client, settings.ollama_embedding_model)
         retrieval = (
-            _run_retrieval(settings, embedder) if options.suite in ("all", "retrieval") else []
+            _run_retrieval(settings, http_client, embedder)
+            if options.suite in ("all", "retrieval")
+            else []
         )
         graded_runs = (
             _run_agent(settings, http_client, embedder, options.repeats, options.scenario)
@@ -79,7 +98,7 @@ def main(arguments: Sequence[str] | None = None) -> None:
     header = ReportHeader(
         title, settings.ollama_model, settings.ollama_embedding_model, options.repeats
     )
-    report = render_report(header, retrieval, settings.memory_recall_min_similarity, graded_runs)
+    report = render_report(header, retrieval, graded_runs)
     report_file = _write_report(report, options.label)
     print(report)
     print(f"Relatório salvo em {report_file}")
@@ -94,15 +113,46 @@ def _parse_arguments(arguments: Sequence[str] | None) -> argparse.Namespace:
     return parser.parse_args(arguments)
 
 
-def _run_retrieval(settings: Settings, embedder: OllamaTextEmbedder) -> list[RetrievalOutcome]:
+def _run_retrieval(
+    settings: Settings, http_client: httpx.Client, embedder: OllamaTextEmbedder
+) -> list[VariantResult]:
+    """Runs every RAG variant on its own empty eval database, the same questions each time."""
+    judge_model = OllamaLanguageModel(client=http_client, model=settings.ollama_model)
+    rewriter = CachedRewriter(
+        MemoryQueryExpander(judge_model, load_prompt(EXPAND_MEMORY_QUERY_PROMPT_NAME))
+    )
+    chooser = RelatedMemoryChooser(judge_model, load_prompt(CHOOSE_RELATED_MEMORY_PROMPT_NAME))
+    dataset = RetrievalDataset.load(RETRIEVAL_DATASET)
     eval_settings = prepare_side_database(settings, EVAL_DATABASE_SUFFIX)
     with create_memory_pool(
         eval_settings.memory_db_conninfo(), eval_settings.memory_db_timeout_seconds
     ) as pool:
-        with pool.connection() as connection:
-            connection.execute("TRUNCATE discoveries")
-        memory = PostgresDiscoveryMemory(pool, embedder)
-        return run_retrieval_eval(memory, RetrievalDataset.load(RETRIEVAL_DATASET), RECALL_LIMIT)
+
+        def empty_memory(variant: RetrievalVariant) -> DiscoveryMemory:
+            with pool.connection() as connection:
+                connection.execute("TRUNCATE discoveries CASCADE")
+            return build_discovery_memory(
+                pool,
+                embedder,
+                task_prefixes=variant.task_prefixes,
+                search_mode=SearchMode.HYBRID if variant.hybrid_search else SearchMode.VECTOR,
+            )
+
+        def related(variant: RetrievalVariant, memory: DiscoveryMemory) -> RelatedDiscoveries:
+            return RelatedDiscoveries(
+                memory,
+                settings.memory_recall_min_similarity,
+                chooser=chooser,
+                expander=rewriter if variant.query_rewriting else None,
+            )
+
+        results = []
+        for variant in RETRIEVAL_VARIANTS:
+            print(f"RAG: {variant.name}...", flush=True)
+            results.append(
+                run_variant(variant, dataset, empty_memory, related, rewriter, RECALL_LIMIT)
+            )
+        return results
 
 
 def _run_agent(
@@ -124,6 +174,7 @@ def _run_agent(
         max_steps=settings.max_tool_steps,
         max_remembered_discoveries=settings.max_remembered_discoveries,
         recall_min_similarity=settings.memory_recall_min_similarity,
+        recall_tool=settings.memory_recall_tool,
         suggestion_repeat_min_similarity=settings.suggestion_repeat_min_similarity,
         recovered_tool_calls=lambda: language_model.recovered_tool_call_count,
     )
@@ -132,6 +183,8 @@ def _run_agent(
         scenario
         for scenario in AgentScenarioSet.load(AGENT_SCENARIOS).scenarios
         if only_scenario is None or scenario.name == only_scenario
+        # Without the tool, a scenario that expects it could only fail.
+        if settings.memory_recall_tool or not scenario.needs_recall_tool()
     ]
     graded_runs: list[GradedRun] = []
     for scenario in scenarios:
