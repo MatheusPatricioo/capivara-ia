@@ -99,17 +99,17 @@
 [ext_resource type="PackedScene" uid="uid://dh6rmbe1fxv5i" path="res://assets/nature/Models/GLTF format/tree_tall.glb" id="kit_tree_tall"]
 [ext_resource type="PackedScene" uid="uid://bnb8c16x0bkct" path="res://assets/nature/Models/GLTF format/tree_thin.glb" id="kit_tree_thin"]
 [ext_resource type="PackedScene" uid="uid://cvamsv28d0m4u" path="res://assets/nature/Models/GLTF format/tree_thin_fall.glb" id="kit_tree_thin_fall"]
+[ext_resource type="PackedScene" path="res://scenes/props/lamp_post.tscn" id="lamp_post"]
+[ext_resource type="PackedScene" path="res://scenes/props/mailbox.tscn" id="mailbox"]
 [ext_resource type="Script" uid="uid://bkryivid2jl7w" path="res://scripts/props/observable.gd" id="observable"]
 [ext_resource type="Script" uid="uid://dyr6lm16r7w4d" path="res://scripts/props/path_flowers.gd" id="path_flowers"]
 [ext_resource type="PackedScene" path="res://scenes/props/round_prop.tscn" id="round_prop"]
 [ext_resource type="Script" uid="uid://gbpeuysh0a8d" path="res://scripts/props/scatter_patch.gd" id="scatter_patch"]
 [ext_resource type="Script" uid="uid://cw5lg5n8c8ph3" path="res://scripts/props/stepping_stones.gd" id="stepping_stones"]
 [ext_resource type="PackedScene" path="res://scenes/props/waterfall.tscn" id="waterfall"]
-[ext_resource type="Script" path="res://scripts/world_sky.gd" id="world_sky"]
-[ext_resource type="PackedScene" path="res://scenes/props/mailbox.tscn" id="mailbox"]
+[ext_resource type="Script" uid="uid://cfp3tmwrvk1xx" path="res://scripts/world_sky.gd" id="world_sky"]
 [ext_resource type="PackedScene" path="res://scenes/props/writing_desk.tscn" id="writing_desk"]
-[ext_resource type="PackedScene" path="res://scenes/props/lamp_post.tscn" id="lamp_post"]
-[ext_resource type="Script" path="res://scripts/writing_desk/writing_desk_viewer.gd" id="writing_desk_viewer"]
+[ext_resource type="Script" uid="uid://np7fn8eueqpg" path="res://scripts/writing_desk/writing_desk_viewer.gd" id="writing_desk_viewer"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 
@@ -148,7 +148,7 @@ shadow_enabled = true
 directional_shadow_mode = 1
 directional_shadow_max_distance = 30.0
 
-[node name="Sky" type="Node3D" parent="." node_paths=PackedStringArray("sun", "world_environment")]
+[node name="Sky" type="Node3D" parent="." unique_id=832911869 node_paths=PackedStringArray("sun", "world_environment")]
 script = ExtResource("world_sky")
 sun = NodePath("../Sun")
 world_environment = NodePath("../Environment")
@@ -940,7 +940,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.4, 0, 3.4)
 [node name="Desk" parent="Workspace" unique_id=1418082160 instance=ExtResource("4_desk")]
 transform = Transform3D(1.4717144, 0, -0.62773937, 0, 1.6, 0, 0.62773937, 0, 1.4717144, 2, 0, -4.7)
 
-[node name="WritingDesk" parent="Workspace" instance=ExtResource("writing_desk")]
+[node name="WritingDesk" parent="Workspace" unique_id=248875606 instance=ExtResource("writing_desk")]
 transform = Transform3D(1.4717144, 0, -0.62773937, 0, 1.6, 0, 0.62773937, 0, 1.4717144, 0.7, 0, -4.65)
 
 [node name="Home" type="Node3D" parent="." unique_id=533113209 groups=["navigation_source"]]
@@ -949,23 +949,23 @@ transform = Transform3D(1.4717144, 0, -0.62773937, 0, 1.6, 0, 0.62773937, 0, 1.4
 transform = Transform3D(1.288247, 0, -1.2571474, 0, 1.8, 0, 1.2571474, 0, 1.288247, 3.9, 0, -4)
 
 [node name="FoodBowl" parent="Home" unique_id=956629825 instance=ExtResource("41_food_bowl")]
-transform = Transform3D(0.4740882, 0, -0.88047737, 0, 1, 0, 0.88047737, 0, 0.4740882, 3.9, 0, -2.1)
+transform = Transform3D(0.4740882, 0, -0.88047737, 0, 1, 0, 0.88047737, 0, 0.4740882, 3.5898576, 0.22595668, -2.695372)
 
-[node name="Mailbox" parent="Home" instance=ExtResource("mailbox")]
-transform = Transform3D(0.559, 0, -0.829, 0, 1, 0, 0.829, 0, 0.559, 2.2, 0, -3.3)
+[node name="Mailbox" parent="Home" unique_id=519050397 instance=ExtResource("mailbox")]
+transform = Transform3D(0.559, 0, -0.829, 0, 1, 0, 0.829, 0, 0.559, 4.3750887, 0.007526338, -2.5905187)
 
-[node name="GardenLights" type="Node3D" parent="." groups=["navigation_source"]]
+[node name="GardenLights" type="Node3D" parent="." unique_id=28672662 groups=["navigation_source"]]
 
-[node name="LampPostByTheDoor" parent="GardenLights" instance=ExtResource("lamp_post")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 0, -2.7)
+[node name="LampPostByTheDoor" parent="GardenLights" unique_id=224767944 instance=ExtResource("lamp_post")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.83308, 0.4347062, -0.9167235)
 
-[node name="LampPostMidPath" parent="GardenLights" instance=ExtResource("lamp_post")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0, -0.55)
+[node name="LampPostMidPath" parent="GardenLights" unique_id=1645671003 instance=ExtResource("lamp_post")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.0602224, 0.013953209, -0.22103184)
 
-[node name="LampPostByThePond" parent="GardenLights" instance=ExtResource("lamp_post")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.3, 0, 1.0)
+[node name="LampPostByThePond" parent="GardenLights" unique_id=1259791360 instance=ExtResource("lamp_post")]
+transform = Transform3D(0.99994296, -0.01068246, 0, 0.01068246, 0.99994296, 0, 0, 0, 1, 4.981222, 0.06842816, 2.0121255)
 
-[node name="LampPostByTheGarden" parent="GardenLights" instance=ExtResource("lamp_post")]
+[node name="LampPostByTheGarden" parent="GardenLights" unique_id=1057305082 instance=ExtResource("lamp_post")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 0, 2.2)
 
 [node name="NavigationRegion" type="NavigationRegion3D" parent="." unique_id=1730609506]
@@ -974,7 +974,7 @@ script = ExtResource("8_world_navigation")
 
 [node name="ComputerScreen" parent="." unique_id=719916942 instance=ExtResource("50_computer_screen")]
 
-[node name="WritingDeskViewer" type="CanvasLayer" parent="."]
+[node name="WritingDeskViewer" type="CanvasLayer" parent="." unique_id=976436633]
 script = ExtResource("writing_desk_viewer")
 
 [node name="Observables" type="Node3D" parent="." unique_id=188773998]
@@ -1034,5 +1034,5 @@ script = ExtResource("observable")
 thing_id = &"magic_clearing"
 description = "uma clareira lá fora, depois da cerca, com pedras em roda e luzinhas brilhando"
 
-[connection signal="clicked" from="Workspace/Desk/ClickArea" to="ComputerScreen" method="open"]
-[connection signal="clicked" from="Workspace/WritingDesk/ClickArea" to="WritingDeskViewer" method="open"]
+[connection signal="clicked" from="Workspace/Desk" to="ComputerScreen" method="open"]
+[connection signal="clicked" from="Workspace/WritingDesk" to="WritingDeskViewer" method="open"]

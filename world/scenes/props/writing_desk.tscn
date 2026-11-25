@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://assets/furniture/Models/GLTF format/lampRoundTable.glb" id="3_table_lamp"]
 [ext_resource type="Script" path="res://scripts/props/clickable_area.gd" id="4_clickable_area"]
 [ext_resource type="Script" path="res://scripts/props/night_light.gd" id="5_night_light"]
+[ext_resource type="Script" path="res://scripts/props/clickable_prop.gd" id="6_clickable_prop"]
 
 ; Her writing desk: a small table with drawers, a pile of books (her diary among them),
 ; a letter being written and a lamp that turns on at night. Clicking it opens her letters
@@ -26,6 +27,7 @@ size = Vector3(0.54, 0.39, 0.39)
 size = Vector3(0.6, 0.75, 0.45)
 
 [node name="WritingDesk" type="StaticBody3D"]
+script = ExtResource("6_clickable_prop")
 input_ray_pickable = false
 
 [node name="SideTable" parent="." instance=ExtResource("1_side_table")]
