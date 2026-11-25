@@ -6,7 +6,12 @@ diario/2026-11-25.md
 
 ## 14:30
 
+- **Humor:** feliz (joy, +0.42)
+
 Hoje pesquisei sobre vaga-lumes...
+
+The mood line is optional (entries written without feelings have none). Its word is for
+people; the emotion and the valence in parentheses are what is read back.
 """
 
 import logging
@@ -14,7 +19,15 @@ import re
 from datetime import date, datetime, time
 from pathlib import Path
 
-from src.domain.diary import DiaryDay, DiaryEntry, DiaryStorageError, InvalidDiaryEntryError
+from src.application.diary_mood_words import entry_mood_word
+from src.domain.diary import (
+    DiaryDay,
+    DiaryEntry,
+    DiaryMood,
+    DiaryStorageError,
+    InvalidDiaryEntryError,
+)
+from src.domain.feelings.emotion import Emotion
 from src.infrastructure.safe_file_names import is_inside
 
 logger = logging.getLogger(__name__)
@@ -25,8 +38,14 @@ FILE_EXTENSION = ".md"
 TITLE_DATE_FORMAT = "%d/%m/%Y"
 TIME_FORMAT = "%H:%M"
 ENTRY_HEADING_PREFIX = "## "
+MOOD_PREFIX = "- **Humor:** "
+CALM_EMOTION_ID = "calm"
 # Only files named like 2026-11-25.md are pages of the diary; anything else is ignored.
 DAY_FILE_NAME = re.compile(r"^\d{4}-\d{2}-\d{2}\.md$")
+# "- **Humor:** feliz (joy, +0.42)": the emotion id and the valence are in the parentheses.
+MOOD_LINE = re.compile(
+    r"^- \*\*Humor:\*\* .*\((?P<emotion>[a-z_]+), (?P<valence>[+-]?\d+(?:\.\d+)?)\)\s*$"
+)
 
 
 class MarkdownDiary:
@@ -71,7 +90,14 @@ def _page_title(day: date) -> str:
 
 
 def _entry_markdown(entry: DiaryEntry) -> str:
-    return f"\n{ENTRY_HEADING_PREFIX}{entry.written_at.strftime(TIME_FORMAT)}\n\n{entry.text}\n"
+    heading = f"\n{ENTRY_HEADING_PREFIX}{entry.written_at.strftime(TIME_FORMAT)}\n\n"
+    mood_line = f"{_mood_markdown(entry.mood)}\n\n" if entry.mood is not None else ""
+    return f"{heading}{mood_line}{entry.text}\n"
+
+
+def _mood_markdown(mood: DiaryMood) -> str:
+    emotion_id = str(mood.emotion) if mood.emotion is not None else CALM_EMOTION_ID
+    return f"{MOOD_PREFIX}{entry_mood_word(mood)} ({emotion_id}, {mood.valence:+.2f})"
 
 
 def _read_day(day_file: Path) -> DiaryDay:
@@ -109,4 +135,25 @@ def _heading_time(heading_line: str) -> time:
 
 
 def _entry(day: date, written_time: time, lines: list[str]) -> DiaryEntry:
-    return DiaryEntry(datetime.combine(day, written_time), "\n".join(lines))
+    """The mood line, when there is one, is the first line with text under the heading."""
+    body_lines = list(lines)
+    while body_lines and not body_lines[0].strip():
+        body_lines.pop(0)
+    mood = None
+    if body_lines and body_lines[0].startswith(MOOD_PREFIX):
+        mood = _parse_mood(body_lines.pop(0))
+    return DiaryEntry(datetime.combine(day, written_time), "\n".join(body_lines), mood)
+
+
+def _parse_mood(mood_line: str) -> DiaryMood | None:
+    """None when the line was broken by hand: the entry is still shown, without its mood."""
+    match = MOOD_LINE.match(mood_line)
+    try:
+        if match is None:
+            raise ValueError("it does not end with (emotion, valence)")
+        emotion_id = match.group("emotion")
+        emotion = None if emotion_id == CALM_EMOTION_ID else Emotion(emotion_id)
+        return DiaryMood(emotion, float(match.group("valence")))
+    except (ValueError, InvalidDiaryEntryError) as error:
+        logger.warning("Ignoring the mood line %r: %s", mood_line, error)
+        return None

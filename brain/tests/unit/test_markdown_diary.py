@@ -3,12 +3,17 @@ from pathlib import Path
 
 import pytest
 
-from src.domain.diary import DiaryDay, DiaryEntry
+from src.domain.diary import DiaryDay, DiaryEntry, DiaryMood
+from src.domain.feelings.emotion import Emotion
 from src.infrastructure.markdown_diary import DIARY_FOLDER_NAME, MarkdownDiary
 
 AFTERNOON = DiaryEntry(datetime(2026, 11, 25, 14, 30), "Hoje pesquisei sobre vaga-lumes.")
 NIGHT = DiaryEntry(datetime(2026, 11, 25, 21, 5), "Fiquei olhando as estrelas.\n\nQue noite!")
 NEXT_MORNING = DiaryEntry(datetime(2026, 11, 26, 8, 0), "Acordei com chuva.")
+HAPPY_AFTERNOON = DiaryEntry(
+    datetime(2026, 11, 25, 14, 30), "Achei vaga-lumes!", DiaryMood(Emotion.JOY, 0.42)
+)
+CALM_NIGHT = DiaryEntry(datetime(2026, 11, 25, 21, 5), "Noite quieta.", DiaryMood(None, -0.05))
 
 
 @pytest.fixture
@@ -79,3 +84,36 @@ def test_skips_a_page_with_a_broken_heading(diary: MarkdownDiary, diary_dir: Pat
     (diary_dir / "2026-11-26.md").write_text("## de manhã\n\nsem hora", encoding="utf-8")
 
     assert diary.recent_days(limit=7) == [DiaryDay(date(2026, 11, 25), (AFTERNOON,))]
+
+
+def test_writes_her_mood_in_words_under_the_time(diary: MarkdownDiary, diary_dir: Path) -> None:
+    diary.write(HAPPY_AFTERNOON)
+
+    page = (diary_dir / "2026-11-25.md").read_text(encoding="utf-8")
+    assert "## 14:30\n\n- **Humor:** feliz (joy, +0.42)\n\nAchei vaga-lumes!\n" in page
+
+
+def test_reads_back_the_mood_of_each_entry(diary: MarkdownDiary) -> None:
+    diary.write(HAPPY_AFTERNOON)
+    diary.write(CALM_NIGHT)
+
+    assert diary.recent_days(limit=1)[0].entries == (HAPPY_AFTERNOON, CALM_NIGHT)
+
+
+def test_an_entry_without_a_mood_line_has_no_mood(diary: MarkdownDiary) -> None:
+    diary.write(AFTERNOON)
+
+    assert diary.recent_days(limit=1)[0].entries[0].mood is None
+
+
+def test_a_broken_mood_line_keeps_the_entry_without_its_mood(
+    diary: MarkdownDiary, diary_dir: Path
+) -> None:
+    diary_dir.mkdir()
+    (diary_dir / "2026-11-25.md").write_text(
+        "## 14:30\n\n- **Humor:** feliz demais\n\nAchei vaga-lumes!\n", encoding="utf-8"
+    )
+
+    assert diary.recent_days(limit=1)[0].entries == (
+        DiaryEntry(datetime(2026, 11, 25, 14, 30), "Achei vaga-lumes!"),
+    )

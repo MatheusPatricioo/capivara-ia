@@ -8,8 +8,9 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, ValidationError
 
+from src.application.diary_mood_words import day_mood_word, entry_mood_word
 from src.application.world_sky import SkyView
-from src.domain.diary import DiaryDay
+from src.domain.diary import DiaryDay, DiaryEntry
 from src.domain.feelings.emotion import EmotionalState
 from src.domain.letter import MAX_LETTER_LENGTH, Reply, SavedLetter
 
@@ -78,6 +79,8 @@ class DiaryEntryMessage(BaseModel):
     written_at: str
     """Local date and time, like "2026-11-25T14:30"."""
     text: str
+    mood: str | None = None
+    """How she felt, in one word ("feliz", "tranquila"); None for entries without a mood."""
 
 
 class DiaryDayMessage(BaseModel):
@@ -85,6 +88,8 @@ class DiaryDayMessage(BaseModel):
     """Like "2026-11-25"."""
     entries: list[DiaryEntryMessage]
     """The earliest first, as she wrote them."""
+    mood: str | None = None
+    """How the day went ("um dia bom"); None when no entry of the day has a mood."""
 
 
 class DiaryMessage(BaseModel):
@@ -183,15 +188,19 @@ def diary_message(days: list[DiaryDay]) -> DiaryMessage:
         days=[
             DiaryDayMessage(
                 day=diary_day.day.isoformat(),
-                entries=[
-                    DiaryEntryMessage(
-                        written_at=entry.written_at.strftime(WORLD_DATE_FORMAT), text=entry.text
-                    )
-                    for entry in diary_day.entries
-                ],
+                entries=[_diary_entry_message(entry) for entry in diary_day.entries],
+                mood=day_mood_word(diary_day),
             )
             for diary_day in days
         ]
+    )
+
+
+def _diary_entry_message(entry: DiaryEntry) -> DiaryEntryMessage:
+    return DiaryEntryMessage(
+        written_at=entry.written_at.strftime(WORLD_DATE_FORMAT),
+        text=entry.text,
+        mood=entry_mood_word(entry.mood) if entry.mood is not None else None,
     )
 
 

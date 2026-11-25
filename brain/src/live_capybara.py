@@ -267,7 +267,7 @@ def main() -> None:
             budget,
             inner_voice.compose,
             settings.autonomous_cycle_interval_seconds,
-            on_thought=think_aloud_and_write(build_diary_keeper(settings, world_server)),
+            on_thought=think_aloud_and_write(build_diary_keeper(settings, world_server, heart)),
             on_cycle_finished=after_each_cycle(inner_voice, letters),
             before_cycle=before_each_cycle(self_care, letters),
             pace=pace,

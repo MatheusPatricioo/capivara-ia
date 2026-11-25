@@ -1,14 +1,19 @@
 class_name DiaryTab
 extends HSplitContainer
 
-## Her personal diary: the days on the left (newest first) and the page of the chosen day
-## on the right, each thought under the time she wrote it. Only for reading: the diary is
-## hers. The pages come from the brain (Brain.diary_changed); this only shows them.
+## Her personal diary: the days on the left (newest first, with how the day went) and the
+## page of the chosen day on the right, each thought under the time she wrote it and how
+## she felt (the mood meter, in words). Only for reading: the diary is hers.
+## The pages come from the brain (Brain.diary_changed); this only shows them.
 
 const EMPTY_TEXT: String = "O diário ainda está em branco. Depois de cada tempinho livre, ela escreve aqui o que pensou."
-const ENTRY_FORMAT: String = "[b]%s[/b]\n%s"
+const PAGE_TITLE_FORMAT: String = "[b]%s[/b]%s\n\n"
+const ENTRY_FORMAT: String = "[b]%s[/b]%s\n%s"
+const MOOD_FORMAT: String = "  ·  [i]%s[/i]"
 const ENTRY_SEPARATOR: String = "\n\n"
-const ENTRY_COUNT_FORMAT: String = "%s  (%d)"
+const DAY_MOOD_FORMAT: String = "  ·  %s"
+## Wider than the letters list, so "25/11  ·  um dia muito difícil" fits on one line.
+const DAY_LIST_WIDTH: float = 330.0
 
 var _days: Array = []
 var _day_list: ItemList
@@ -54,27 +59,37 @@ func _index_of_day(day: String) -> int:
 	return -1
 
 
+## "25/11  ·  um dia bom", or only "25/11" when no entry of the day has a mood.
 func _list_title(diary_day: Dictionary) -> String:
-	var entries: Array = _entries_of(diary_day)
-	return ENTRY_COUNT_FORMAT % [ReadableDates.full_day(str(diary_day.get("day", ""))), entries.size()]
+	var day_and_month: String = ReadableDates.day_and_month(str(diary_day.get("day", "")))
+	return day_and_month + _mood_suffix(diary_day.get("mood"), DAY_MOOD_FORMAT)
 
 
+## The full date and how the day went on top, then every entry of the day.
 func _open_day(day_index: int) -> void:
 	_day_list.select(day_index)
-	var page_parts: PackedStringArray = []
-	for entry: Variant in _entries_of(_days[day_index]):
+	var diary_day: Dictionary = _days[day_index]
+	var full_day: String = ReadableDates.full_day(str(diary_day.get("day", "")))
+	var page_title: String = PAGE_TITLE_FORMAT % [full_day, _mood_suffix(diary_day.get("mood"), MOOD_FORMAT)]
+	var entry_texts: PackedStringArray = []
+	for entry: Variant in _entries_of(diary_day):
 		if entry is Dictionary:
-			page_parts.append(_entry_text(entry))
-	_page_text.text = ENTRY_SEPARATOR.join(page_parts)
+			entry_texts.append(_entry_text(entry))
+	_page_text.text = page_title + ENTRY_SEPARATOR.join(entry_texts)
 	_page_text.scroll_to_line(0)
 
 
-## The time in bold, then what she wrote. Brackets are escaped, so her text never turns
-## into formatting by accident.
+## The time in bold and how she felt in italics, then what she wrote. Brackets are
+## escaped, so her text never turns into formatting by accident.
 func _entry_text(entry: Dictionary) -> String:
 	var written_time: String = ReadableDates.time_only(str(entry.get("written_at", "")))
 	var text: String = str(entry.get("text", "")).replace("[", "[lb]")
-	return ENTRY_FORMAT % [written_time, text]
+	return ENTRY_FORMAT % [written_time, _mood_suffix(entry.get("mood"), MOOD_FORMAT), text]
+
+
+## The mood in the given format, or nothing for days and entries without a mood.
+func _mood_suffix(mood: Variant, mood_format: String) -> String:
+	return mood_format % mood if mood is String else ""
 
 
 func _entries_of(diary_day: Dictionary) -> Array:
@@ -84,6 +99,7 @@ func _entries_of(diary_day: Dictionary) -> Array:
 
 func _build() -> void:
 	_day_list = PaperStyle.side_list()
+	_day_list.custom_minimum_size.x = DAY_LIST_WIDTH
 	_day_list.item_selected.connect(_open_day)
 	add_child(_day_list)
 	_page_text = PaperStyle.page_text()
