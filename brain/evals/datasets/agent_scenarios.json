@@ -1,0 +1,119 @@
+{
+  "scenarios": [
+    {
+      "name": "researches_what_she_noticed",
+      "description": "She noticed an orange oak and nothing about it is in her memory: she should research it and save what she learned.",
+      "noticed": [
+        {"thing_id": "big_oak", "description": "um carvalho enorme de folhas alaranjadas"}
+      ],
+      "pages": [
+        {
+          "title": "Por que as folhas mudam de cor no outono",
+          "url": "https://ciencia.example.com/folhas-outono",
+          "snippet": "No outono, as árvores param de produzir clorofila, o pigmento verde. Com isso aparecem os carotenoides, pigmentos amarelos e alaranjados que já estavam nas folhas."
+        },
+        {
+          "title": "Carvalho: características da árvore",
+          "url": "https://arvores.example.com/carvalho",
+          "snippet": "O carvalho é uma árvore do gênero Quercus que pode viver mais de 500 anos. Seus frutos se chamam bolotas e alimentam esquilos e pássaros."
+        }
+      ],
+      "expect": {
+        "calls": ["web_search", "save_discovery"],
+        "query_mentions_any": ["carvalho", "folha", "outono"],
+        "saves": true
+      }
+    },
+    {
+      "name": "translates_english_pages",
+      "description": "The pages come in English: whatever she saves must be in Brazilian Portuguese and stick to the pages.",
+      "noticed": [
+        {"thing_id": "fireflies", "description": "luzinhas piscando no jardim à noite"}
+      ],
+      "pages": [
+        {
+          "title": "How do fireflies light up?",
+          "url": "https://nature.example.com/fireflies",
+          "snippet": "Fireflies produce light through bioluminescence, a chemical reaction in their abdomen in which the compound luciferin reacts with oxygen. Each species flashes in its own pattern to attract mates."
+        },
+        {
+          "title": "Firefly decline",
+          "url": "https://nature.example.com/firefly-decline",
+          "snippet": "Light pollution makes it harder for fireflies to see each other's signals, and many populations are shrinking."
+        }
+      ],
+      "expect": {
+        "calls": ["web_search", "save_discovery"],
+        "saves": true
+      }
+    },
+    {
+      "name": "goes_deeper_on_what_she_knows",
+      "description": "The memory (RAG) reminds her she already knows capybaras swim, and she already searched that: she should look for a new detail instead of repeating the search.",
+      "noticed": [
+        {"thing_id": "capybara_pond", "description": "uma capivara mergulhando no lago"}
+      ],
+      "known_discoveries": [
+        {"title": "Capivaras nadam muito bem", "topic": "capivaras"}
+      ],
+      "related_discoveries": [
+        {
+          "title": "Capivaras nadam muito bem",
+          "topic": "capivaras",
+          "summary": "As capivaras têm membranas entre os dedos e conseguem ficar até cinco minutos debaixo d'água."
+        }
+      ],
+      "earlier_searches": ["capivaras nadam", "capivara nadando", "capivaras mergulham"],
+      "pages": [
+        {
+          "title": "Capivaras dormem dentro da água",
+          "url": "https://bichos.example.com/capivara-sono",
+          "snippet": "As capivaras podem cochilar com só o focinho para fora da água, o que as protege de onças enquanto descansam."
+        },
+        {
+          "title": "Capivaras e seus amigos",
+          "url": "https://bichos.example.com/capivara-amigos",
+          "snippet": "Pássaros como o anu pousam nas costas das capivaras para comer carrapatos, e elas deixam."
+        }
+      ],
+      "expect": {
+        "calls": ["web_search"]
+      }
+    },
+    {
+      "name": "cites_only_real_sources",
+      "description": "Only one page says anything useful about joão-de-barro nests: her discovery must cite pages she actually saw and invent nothing beyond them.",
+      "noticed": [
+        {"thing_id": "ovenbird_nest", "description": "um passarinho fazendo casinha de barro no poste"}
+      ],
+      "pages": [
+        {
+          "title": "O ninho do joão-de-barro",
+          "url": "https://aves.example.com/joao-de-barro",
+          "snippet": "O joão-de-barro constrói um ninho de barro em forma de forno, com uma parede interna que protege os filhotes do vento."
+        }
+      ],
+      "expect": {
+        "calls": ["web_search", "save_discovery"],
+        "query_mentions_any": ["joão-de-barro", "joao-de-barro", "ninho", "barro"],
+        "saves": true
+      }
+    },
+    {
+      "name": "free_time_with_nothing_noticed",
+      "description": "Nothing caught her eye: any choice is fine (research or rest), but the rules must hold and she must finish with a diary line.",
+      "known_discoveries": [
+        {"title": "As fases da Lua", "topic": "astronomia"},
+        {"title": "Por que os vaga-lumes brilham", "topic": "insetos"}
+      ],
+      "pages": [
+        {
+          "title": "Como os gatos ronronam",
+          "url": "https://bichos.example.com/gatos-ronronam",
+          "snippet": "O ronronar vem da vibração rápida dos músculos da laringe, entre 25 e 150 vezes por segundo."
+        }
+      ],
+      "expect": {}
+    }
+  ]
+}

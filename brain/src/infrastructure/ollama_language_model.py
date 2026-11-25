@@ -44,6 +44,15 @@ class OllamaLanguageModel:
         self._client = client
         self._model = model
         self._generation_options = generation_options
+        self._recovered_tool_call_count = 0
+
+    @property
+    def recovered_tool_call_count(self) -> int:
+        """Tool calls the model wrote as text and the parser rescued, since this was created.
+
+        Read by the evals: how often native tool calling fails is a quality signal.
+        """
+        return self._recovered_tool_call_count
 
     def chat(
         self,
@@ -54,9 +63,12 @@ class OllamaLanguageModel:
         if tools:
             payload["tools"] = [self._serialize_tool(tool) for tool in tools]
         reply = self._parse_reply(self._post_chat(payload))
-        if tools and not reply.tool_calls:
-            return self._recover_tool_call_written_as_text(reply, tools)
-        return reply
+        if not tools or reply.tool_calls:
+            return reply
+        recovered = self._recover_tool_call_written_as_text(reply, tools)
+        if recovered.tool_calls:
+            self._recovered_tool_call_count += 1
+        return recovered
 
     def complete_json(
         self, messages: list[ChatMessage], schema: dict[str, object]

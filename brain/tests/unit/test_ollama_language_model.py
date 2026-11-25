@@ -252,6 +252,23 @@ def test_recovers_a_tool_call_written_as_text(
     assert reply == ChatMessage(Role.ASSISTANT, "", tool_calls=(SEARCH_CALL,))
 
 
+def test_counts_each_tool_call_recovered_from_text(
+    ollama_writing_the_tool_call_as_text: OllamaLanguageModel,
+) -> None:
+    ollama_writing_the_tool_call_as_text.chat(MESSAGES, tools=[SEARCH_TOOL])
+    ollama_writing_the_tool_call_as_text.chat(MESSAGES, tools=[SEARCH_TOOL])
+
+    assert ollama_writing_the_tool_call_as_text.recovered_tool_call_count == 2
+
+
+def test_does_not_count_native_tool_calls_as_recovered(
+    ollama_asking_for_a_tool: OllamaLanguageModel,
+) -> None:
+    ollama_asking_for_a_tool.chat(MESSAGES, tools=[SEARCH_TOOL])
+
+    assert ollama_asking_for_a_tool.recovered_tool_call_count == 0
+
+
 def test_keeps_the_text_when_no_tools_were_offered(
     ollama_writing_the_tool_call_as_text: OllamaLanguageModel,
 ) -> None:

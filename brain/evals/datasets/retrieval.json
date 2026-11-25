@@ -1,0 +1,132 @@
+{
+  "discoveries": [
+    {
+      "id": "capivaras-nadam",
+      "title": "Capivaras nadam muito bem",
+      "topic": "capivaras",
+      "summary": "As capivaras têm membranas entre os dedos e conseguem ficar até cinco minutos debaixo d'água. Elas mergulham para fugir de predadores e passam boa parte do dia perto de rios e lagos."
+    },
+    {
+      "id": "vitoria-regia",
+      "title": "A vitória-régia aguenta o peso de uma criança",
+      "topic": "plantas aquáticas",
+      "summary": "A vitória-régia é uma planta da Amazônia cujas folhas redondas passam de dois metros de diâmetro. Nervuras por baixo da folha distribuem o peso, e por isso ela aguenta até quarenta quilos."
+    },
+    {
+      "id": "vaga-lumes",
+      "title": "Por que os vaga-lumes brilham",
+      "topic": "insetos",
+      "summary": "Os vaga-lumes produzem luz por bioluminescência: uma reação química entre a luciferina e o oxigênio no abdômen. Cada espécie pisca num ritmo próprio para encontrar parceiros à noite."
+    },
+    {
+      "id": "carvalho-outono",
+      "title": "Por que as folhas do carvalho ficam alaranjadas",
+      "topic": "árvores",
+      "summary": "No outono, o carvalho para de produzir clorofila, o pigmento verde. Aí aparecem os carotenoides, amarelos e alaranjados, que já estavam na folha, e as antocianinas, avermelhadas."
+    },
+    {
+      "id": "fases-da-lua",
+      "title": "As fases da Lua",
+      "topic": "astronomia",
+      "summary": "A Lua não tem luz própria: ela reflete a luz do Sol. Conforme gira em volta da Terra, vemos partes diferentes do lado iluminado, o que forma as fases nova, crescente, cheia e minguante, num ciclo de cerca de 29 dias."
+    },
+    {
+      "id": "abelhas-danca",
+      "title": "A dança das abelhas",
+      "topic": "insetos",
+      "summary": "As abelhas operárias fazem uma dança em forma de oito dentro da colmeia para contar às outras onde estão as flores. A direção da dança indica o ângulo em relação ao Sol, e a duração indica a distância."
+    },
+    {
+      "id": "girassol",
+      "title": "O girassol segue o Sol quando é jovem",
+      "topic": "plantas",
+      "summary": "Os girassóis jovens viram a cabeça de leste para oeste durante o dia, acompanhando o Sol, e voltam para o leste à noite. Quando amadurecem, param de girar e ficam virados para o leste."
+    },
+    {
+      "id": "cogumelos-rede",
+      "title": "Os cogumelos conversam pelo subsolo",
+      "topic": "fungos",
+      "summary": "Debaixo da terra, os fungos formam uma rede de fios chamada micélio, que liga as raízes de várias árvores. Por ela, as árvores trocam açúcares, água e até sinais de alerta."
+    },
+    {
+      "id": "joao-de-barro",
+      "title": "O ninho do joão-de-barro",
+      "topic": "aves",
+      "summary": "O joão-de-barro constrói um ninho de barro e palha em forma de forno, com uma parede interna que protege os filhotes do vento e dos predadores. O casal leva semanas para terminar a casa."
+    },
+    {
+      "id": "arco-iris",
+      "title": "Como nasce o arco-íris",
+      "topic": "fenômenos do céu",
+      "summary": "O arco-íris aparece quando a luz do Sol atravessa gotas de chuva: a gota desvia e separa a luz branca nas suas cores, do vermelho ao violeta. Por isso ele só aparece com o Sol atrás de quem olha."
+    },
+    {
+      "id": "tucano-bico",
+      "title": "O bico do tucano é um ar-condicionado",
+      "topic": "aves",
+      "summary": "O bico enorme do tucano é leve, feito de queratina com uma estrutura esponjosa por dentro. Ele é cheio de vasos sanguíneos e ajuda a ave a soltar calor nos dias quentes."
+    },
+    {
+      "id": "formigas-cortadeiras",
+      "title": "As formigas cortadeiras cultivam fungos",
+      "topic": "insetos",
+      "summary": "As saúvas cortam pedaços de folhas e levam para o formigueiro, mas não comem as folhas: elas usam o material para cultivar um fungo, que é o verdadeiro alimento da colônia."
+    },
+    {
+      "id": "estrelas-cor",
+      "title": "A cor das estrelas mostra a temperatura",
+      "topic": "astronomia",
+      "summary": "As estrelas azuladas são as mais quentes, passando de 25 mil graus, enquanto as avermelhadas são as mais frias. O Sol, amarelado, fica no meio, com cerca de 5.500 graus na superfície."
+    },
+    {
+      "id": "nuvens-tipos",
+      "title": "Os tipos de nuvem",
+      "topic": "clima",
+      "summary": "Os cúmulos são nuvens fofas de tempo bom, os estratos formam camadas cinzentas e baixas, e os cirros são finos e altos, feitos de cristais de gelo. Os cumulonimbos, enormes, trazem tempestades."
+    },
+    {
+      "id": "pedras-rio",
+      "title": "Por que as pedras do rio são redondas",
+      "topic": "geologia",
+      "summary": "A correnteza arrasta as pedras e faz uma bater na outra e na areia. Ao longo de milhares de anos, as pontas se desgastam e elas ficam lisas e arredondadas, os seixos."
+    },
+    {
+      "id": "sapos-pele",
+      "title": "Os sapos respiram pela pele",
+      "topic": "anfíbios",
+      "summary": "Além dos pulmões, os sapos absorvem oxigênio pela pele, que precisa ficar sempre úmida. Por isso eles vivem perto da água e se escondem do sol forte."
+    }
+  ],
+  "questions": [
+    {"query": "uma capivara mergulhando no lago", "relevant_id": "capivaras-nadam"},
+    {"query": "roedor que fica debaixo d'água", "relevant_id": "capivaras-nadam"},
+    {"query": "folhas gigantes boiando no laguinho", "relevant_id": "vitoria-regia"},
+    {"query": "planta da Amazônia que aguenta peso", "relevant_id": "vitoria-regia"},
+    {"query": "luzinhas piscando no jardim à noite", "relevant_id": "vaga-lumes"},
+    {"query": "inseto que acende", "relevant_id": "vaga-lumes"},
+    {"query": "um carvalho enorme de folhas alaranjadas", "relevant_id": "carvalho-outono"},
+    {"query": "árvore mudando de cor no outono", "relevant_id": "carvalho-outono"},
+    {"query": "a lua crescente no céu", "relevant_id": "fases-da-lua"},
+    {"query": "por que a lua muda de forma", "relevant_id": "fases-da-lua"},
+    {"query": "abelhas voando em volta das flores", "relevant_id": "abelhas-danca"},
+    {"query": "como os insetos da colmeia se comunicam", "relevant_id": "abelhas-danca"},
+    {"query": "flores amarelas grandes viradas para o sol", "relevant_id": "girassol"},
+    {"query": "cogumelos crescendo perto das raízes", "relevant_id": "cogumelos-rede"},
+    {"query": "árvores trocando nutrientes embaixo da terra", "relevant_id": "cogumelos-rede"},
+    {"query": "um passarinho fazendo casinha de lama no poste", "relevant_id": "joao-de-barro"},
+    {"query": "faixas coloridas no céu depois da chuva", "relevant_id": "arco-iris"},
+    {"query": "ave de bico laranja gigante", "relevant_id": "tucano-bico"},
+    {"query": "como os animais se refrescam no calor", "relevant_id": "tucano-bico"},
+    {"query": "uma fila de formigas carregando folhas", "relevant_id": "formigas-cortadeiras"},
+    {"query": "estrela avermelhada brilhando", "relevant_id": "estrelas-cor"},
+    {"query": "nuvens escuras de tempestade", "relevant_id": "nuvens-tipos"},
+    {"query": "seixos lisos na beira do riacho", "relevant_id": "pedras-rio"},
+    {"query": "um sapo coaxando na beira do lago", "relevant_id": "sapos-pele"},
+    {"query": "uma bicicleta vermelha encostada na cerca", "relevant_id": null},
+    {"query": "o computador da capivara", "relevant_id": null},
+    {"query": "uma xícara de café fumegante", "relevant_id": null},
+    {"query": "um violão esquecido no banco", "relevant_id": null},
+    {"query": "a lousa cheia de desenhos de giz", "relevant_id": null},
+    {"query": "um vulcão em erupção", "relevant_id": null}
+  ]
+}

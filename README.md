@@ -64,6 +64,27 @@ python -m src.mark_suggestion_built 2026-11-24-um-laguinho-com-vitorias-regias.m
 
 Isso troca a linha `- **Situação:** pendente` do arquivo por `construída` (editar a linha à mão também funciona). A partir daí, a voz interior conta a ela quais pedidos o Matheus construiu e quais ainda estão esperando. O `--thing-id` é opcional: é o `thing_id` do `Observable` que coloquei no mundo para o pedido. Quando ela passa perto dele, repara na coisa e fica sabendo que é o que ela pediu.
 
+### Evals: medindo a capivara
+
+Testes conferem o código com um LLM falso. **Evals** conferem o comportamento do modelo de verdade: rodam cada caso várias vezes (o modelo não responde sempre igual) e devolvem taxas, para que cada mudança no agente tenha um "antes e depois" com números.
+
+- **Recuperação (RAG):** 16 descobertas fixas e 30 perguntas com resposta conhecida (6 delas sem resposta na memória) medem a busca com **recall@k** e **MRR**, e a decisão final (o que vai para o contexto dela) com uma tabela de acertos por limite de similaridade.
+- **Agente:** 5 momentos da vida dela, com o modelo, os prompts, a voz interior e as ferramentas reais. Só a internet e os arquivos são roteirizados. Checagens em código contam quantas vezes ela tentou quebrar uma regra (fonte inventada, busca repetida, sugestão antes de salvar) e se fez o que o momento pedia.
+- **Fidelidade (LLM-as-judge):** um juiz no Ollama quebra cada resumo salvo em afirmações e precisa citar o trecho exato das páginas que sustenta cada uma. O código confere se a citação existe e calcula a nota. O que dá para checar por código (como o idioma) não passa pelo juiz.
+
+Cada execução gera um relatório em `brain/evals/reports/`. A linha de base está em [`2026-11-24-baseline.md`](brain/evals/reports/2026-11-24-baseline.md):
+
+| Medida | Linha de base |
+|---|---|
+| RAG: recall@1 / recall@3 / MRR | 0,71 / 0,79 / 0,77 |
+| RAG: decisões certas no limite atual (0,70) | 47% |
+| Agente: execuções que passaram em tudo | 84% (21 de 25) |
+| Agente: chamadas de ferramenta recusadas / escritas como texto | 2% / 0% |
+| Agente: tentativas de quebrar regras (fonte inventada, busca repetida, sugestão antes de salvar) | 0 |
+| Fidelidade: afirmações com citação nas páginas | 81% |
+
+Duas lições do baseline. Com o mesmo código, duas rodadas de 25 execuções variaram de 68% a 84% em "passou em tudo", então diferenças menores que uns 15 pontos são ruído. E o juiz local (7B) ainda erra para os dois lados: pega invenções reais ("na primavera", quando a página dizia outono) e às vezes não acha a citação de uma frase que está na página. Por isso o relatório lista cada afirmação sem apoio, para conferir à mão.
+
 ## Stack
 
 - **Mundo:** Godot 4, GDScript
@@ -194,6 +215,17 @@ pytest -m "not database"
 
 A cada push e pull request, o GitHub Actions (`.github/workflows/ci.yml`) roda `ruff`, `mypy` e a suíte inteira, com um PostgreSQL + pgvector de verdade como serviço, então os testes de `database` também rodam lá.
 
+### Rodar os evals
+
+Os evals usam o Ollama de verdade (e o PostgreSQL para a recuperação, num banco separado `<MEMORY_DB_NAME>_eval`), então ficam fora do `pytest` e do CI:
+
+```bash
+cd brain
+python -m src.run_evals                          # tudo, cada cenário 3 vezes (~4 min)
+python -m src.run_evals --suite retrieval        # só o RAG (segundos)
+python -m src.run_evals --repeats 5 --label nome-da-mudanca
+```
+
 ## Créditos
 
 - Kits de natureza e móveis por [Kenney](https://kenney.nl) (CC0)
@@ -207,7 +239,7 @@ A cada push e pull request, o GitHub Actions (`.github/workflows/ci.yml`) roda `
 - **Funcionando:** chat e modo vivo autônomo, pesquisa na web, descobertas salvas em Markdown, rascunhos na lousa escolhidos por embeddings e desenhados traço por traço, memória de longo prazo com RAG (PostgreSQL + pgvector), sugestões de melhorias para o mundo (com a aba Sugestões no computador e a capivara reconhecendo o que foi construído), mundo 3D conectado ao cérebro por WebSocket e limite de tokens por hora.
 - **Próximos passos** (técnicas de IA usadas no mercado, nesta ordem, sempre com ferramentas gratuitas):
   1. ~~**CI:** `ruff`, `mypy` e `pytest` (com PostgreSQL + pgvector) a cada push, no GitHub Actions.~~ ✔
-  2. **Evals automatizados:** uma suíte que roda com um comando e mede o agente com casos fixos (usou a ferramenta certa? repetiu a busca? inventou fonte?), com um LLM-as-judge local no Ollama avaliando a fidelidade dos resumos, e métricas de recuperação do RAG (recall@k e MRR) sobre um conjunto de perguntas com resposta conhecida. Substitui as medições feitas à mão.
+  2. ~~**Evals automatizados:** RAG (recall@k, MRR, acerto da decisão), agente (checagens de regras e expectativas) e fidelidade com LLM-as-judge.~~ ✔ (veja [Evals](#evals-medindo-a-capivara))
   3. **Tool calling nativo e structured outputs:** as chamadas de ferramenta saem pela API de tools do Ollama, e as escolhas do LLM (como o rabisco da lousa) são restritas a um JSON Schema, em vez de extraídas do texto. Medido pelos evals.
   4. **RAG v2:** as descobertas divididas em pedaços (chunking), busca híbrida que junta palavras (full-text do PostgreSQL) com significado (pgvector) por Reciprocal Rank Fusion, reranking, reescrita da pergunta antes de buscar e a memória como uma ferramenta que a capivara decide usar (agentic RAG).
   5. **Observabilidade:** cada passo do agente (prompt, ferramenta, tokens, tempo) registrado com OpenTelemetry e visto num painel do Langfuse rodando no Docker, com os prompts versionados.
