@@ -1,0 +1,60 @@
+# Runs the brain's quality checks on every push and pull request:
+# lint (ruff), types (mypy strict) and the whole test suite, including the tests
+# marked "database", against a real PostgreSQL + pgvector started as a service.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  brain:
+    runs-on: ubuntu-latest
+
+    services:
+      memory-db:
+        # Same image as compose.yaml, so CI tests the schema the capybara really uses.
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_DB: capybara_memory
+          POSTGRES_USER: capybara
+          POSTGRES_PASSWORD: ci-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U capybara -d capybara_memory"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    # pydantic-settings reads these instead of brain/.env, which is never committed.
+    env:
+      MEMORY_DB_HOST: 127.0.0.1
+      MEMORY_DB_PORT: 5432
+      MEMORY_DB_NAME: capybara_memory
+      MEMORY_DB_USER: capybara
+      MEMORY_DB_PASSWORD: ci-only-password
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --group dev .
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Type check
+        run: mypy brain/src
+
+      - name: Tests
+        run: pytest

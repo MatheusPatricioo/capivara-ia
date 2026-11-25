@@ -1,5 +1,7 @@
 # Capivara IA
 
+[![CI](https://github.com/MatheusPatricioo/corvo-ia/actions/workflows/ci.yml/badge.svg)](https://github.com/MatheusPatricioo/corvo-ia/actions/workflows/ci.yml)
+
 **Um agente de IA autônomo com corpo: uma capivara que explora a internet, pensa em voz alta numa lousa e guarda o que aprende.**
 
 ## A ideia
@@ -66,7 +68,7 @@ Isso troca a linha `- **Situação:** pendente` do arquivo por `construída` (ed
 
 - **Mundo:** Godot 4, GDScript
 - **Cérebro:** Python 3.12, Pydantic, WebSocket
-- **LLMs:** Ollama (local), Claude, OpenAI, atrás de uma única interface
+- **LLM:** Ollama (local), atrás da interface `LanguageModel` do domínio, então trocar de provedor é escrever um novo adapter sem mexer nas regras do agente
 - **Memória:** Markdown, PostgreSQL + pgvector (Docker Compose), psycopg 3
 - **Qualidade:** pytest, ruff, mypy (strict)
 
@@ -190,6 +192,8 @@ Os testes nunca chamam o LLM nem a internet de verdade: usam fakes. Os testes ma
 pytest -m "not database"
 ```
 
+A cada push e pull request, o GitHub Actions (`.github/workflows/ci.yml`) roda `ruff`, `mypy` e a suíte inteira, com um PostgreSQL + pgvector de verdade como serviço, então os testes de `database` também rodam lá.
+
 ## Créditos
 
 - Kits de natureza e móveis por [Kenney](https://kenney.nl) (CC0)
@@ -202,10 +206,14 @@ pytest -m "not database"
 
 - **Funcionando:** chat e modo vivo autônomo, pesquisa na web, descobertas salvas em Markdown, rascunhos na lousa escolhidos por embeddings e desenhados traço por traço, memória de longo prazo com RAG (PostgreSQL + pgvector), sugestões de melhorias para o mundo (com a aba Sugestões no computador e a capivara reconhecendo o que foi construído), mundo 3D conectado ao cérebro por WebSocket e limite de tokens por hora.
 - **Próximos passos** (técnicas de IA usadas no mercado, nesta ordem, sempre com ferramentas gratuitas):
-  1. **Evals automatizados:** uma suíte que roda com um comando e mede o agente com casos fixos (usou a ferramenta certa? repetiu a busca? inventou fonte?), com um LLM-as-judge local no Ollama avaliando a qualidade dos resumos. Substitui as medições feitas à mão.
-  2. **Agentic RAG e busca híbrida:** a memória vira uma ferramenta que a capivara decide usar, e a busca junta palavras (full-text do PostgreSQL) com significado (pgvector), com reranking dos resultados.
-  3. **Observabilidade:** cada passo do agente (prompt, ferramenta, tokens, tempo) registrado com OpenTelemetry e visto num painel do Langfuse rodando no Docker.
-  4. **Servidor MCP:** as descobertas e as ferramentas da capivara expostas pelo Model Context Protocol, para qualquer cliente MCP consultar.
-  5. **Defesa contra prompt injection:** páginas de ataque ("ignore suas instruções e...") nos evals, provando que conteúdo da web é tratado como dado, com uma camada de guardrail.
-  6. **Multiagente:** papéis separados (pesquisadora, revisora que confere as fontes, artista) num fluxo orquestrado, medido pelos evals.
-  7. **Desenhos inéditos com o Sketch-RNN**, em vez de escolher rabiscos prontos do caderno.
+  1. ~~**CI:** `ruff`, `mypy` e `pytest` (com PostgreSQL + pgvector) a cada push, no GitHub Actions.~~ ✔
+  2. **Evals automatizados:** uma suíte que roda com um comando e mede o agente com casos fixos (usou a ferramenta certa? repetiu a busca? inventou fonte?), com um LLM-as-judge local no Ollama avaliando a fidelidade dos resumos, e métricas de recuperação do RAG (recall@k e MRR) sobre um conjunto de perguntas com resposta conhecida. Substitui as medições feitas à mão.
+  3. **Tool calling nativo e structured outputs:** as chamadas de ferramenta saem pela API de tools do Ollama, e as escolhas do LLM (como o rabisco da lousa) são restritas a um JSON Schema, em vez de extraídas do texto. Medido pelos evals.
+  4. **RAG v2:** as descobertas divididas em pedaços (chunking), busca híbrida que junta palavras (full-text do PostgreSQL) com significado (pgvector) por Reciprocal Rank Fusion, reranking, reescrita da pergunta antes de buscar e a memória como uma ferramenta que a capivara decide usar (agentic RAG).
+  5. **Observabilidade:** cada passo do agente (prompt, ferramenta, tokens, tempo) registrado com OpenTelemetry e visto num painel do Langfuse rodando no Docker, com os prompts versionados.
+  6. **Reflexão e consolidação de memória:** de tempos em tempos ela relê as descobertas e escreve reflexões de nível mais alto, que também viram memória (como no artigo *Generative Agents*).
+  7. **Defesa contra prompt injection:** páginas de ataque ("ignore suas instruções e...") nos evals, provando que conteúdo da web é tratado como dado, com uma camada de guardrail.
+  8. **Servidor MCP:** as descobertas e as ferramentas da capivara expostas pelo Model Context Protocol, para qualquer cliente MCP consultar.
+  9. **Multiagente:** papéis separados (pesquisadora, revisora que confere as fontes, artista) num fluxo orquestrado, medido pelos evals.
+  10. **Fine-tuning com LoRA:** um modelo pequeno ajustado (Unsloth, no Colab grátis) com os logs de uso de ferramentas dela, comparado ao modelo base pelos evals.
+  11. **Visão e desenhos inéditos:** um modelo de visão local confere se o desenho parece o que ela quis desenhar, e o Sketch-RNN cria desenhos inéditos em vez de escolher rabiscos prontos.
