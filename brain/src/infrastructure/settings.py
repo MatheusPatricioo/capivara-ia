@@ -99,6 +99,16 @@ class Settings(BaseSettings):
     weather_refresh_minutes: float = Field(default=15.0, gt=0)
     # A fixed sky (like "rain") instead of the real one, to test without waiting for rain.
     weather_override: Sky | None = None
+    # Voice in the chat (python -m src.chat_with_capybara --voz), all local and offline:
+    # Piper speaks with the voice file below, faster-whisper listens with a Whisper model.
+    voice_model_path: Path = PROJECT_ROOT / "brain" / "voices" / "pt_BR-faber-medium.onnx"
+    # Whisper size: tiny, base, small, medium or large-v3. Bigger hears better but is slower.
+    speech_recognition_model: str = "small"
+    speech_recognition_language: str = "pt"
+    # "cpu" works everywhere; "cuda" uses an NVIDIA graphics card.
+    speech_recognition_device: str = "cpu"
+    # How the model numbers are stored: int8 is light on the CPU, float16 suits the GPU.
+    speech_recognition_compute_type: str = "int8"
     log_level: LogLevel = "INFO"
     log_file: Path = PROJECT_ROOT / "logs" / "capybara.log"
 

@@ -114,6 +114,7 @@ Duas lições do baseline. Com o mesmo código, duas rodadas de 25 execuções v
 - **Cérebro:** Python 3.12, Pydantic, WebSocket
 - **LLM:** Ollama (local), atrás da interface `LanguageModel` do domínio, então trocar de provedor é escrever um novo adapter sem mexer nas regras do agente
 - **Memória:** Markdown, PostgreSQL + pgvector (Docker Compose), psycopg 3
+- **Voz (opcional):** Piper (texto para fala) e faster-whisper (fala para texto), os dois locais e offline, com sounddevice para tocar e gravar
 - **Qualidade:** pytest, ruff, mypy (strict)
 
 ## Como começar
@@ -188,6 +189,26 @@ python -m src.chat_with_capybara
 ```
 
 Digite `sair` para encerrar o chat.
+
+#### Conversar por voz
+
+Ela também pode falar em voz alta, e você pode falar com ela pelo microfone. O texto continua igual: o que ela diz aparece na tela, e você pode digitar quando quiser. Tudo roda na sua máquina, sem internet depois dos downloads.
+
+Uma vez só, instale as bibliotecas de voz e baixe a voz em português (na raiz do projeto):
+
+```bash
+pip install ".[voice]"
+python -m piper.download_voices pt_BR-faber-medium --download-dir brain/voices
+```
+
+Depois, ligue o chat com `--voz`:
+
+```bash
+cd brain
+python -m src.chat_with_capybara --voz
+```
+
+Para falar, aperte Enter com a linha vazia, fale e aperte Enter de novo. Na primeira vez, o modelo do Whisper (`small`, ~480 MB) é baixado sozinho. O tamanho do modelo, o idioma e o uso de GPU ficam em `SPEECH_RECOGNITION_*`, no `brain/.env`.
 
 ### Ver a capivara viva
 

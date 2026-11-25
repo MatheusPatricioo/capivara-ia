@@ -15,6 +15,16 @@ dependencies = [
     "websockets",
 ]
 
+[project.optional-dependencies]
+# Her voice in the chat (--voz): Piper speaks, faster-whisper listens and sounddevice
+# plays and records. Optional, so the text chat works without them.
+voice = [
+    "faster-whisper",
+    "numpy",
+    "piper-tts",
+    "sounddevice",
+]
+
 [build-system]
 requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
@@ -52,3 +62,8 @@ known-first-party = ["src", "tests"]
 [tool.mypy]
 python_version = "3.12"
 strict = true
+
+[[tool.mypy.overrides]]
+# Voice libraries without type information; their objects are treated as Any.
+module = ["faster_whisper", "sounddevice"]
+ignore_missing_imports = true

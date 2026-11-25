@@ -1,0 +1,30 @@
+"""Builds her voice for the chat. Imported only when the chat runs with --voz, so the
+text chat works without the voice libraries (pip install ".[voice]") installed."""
+
+from dataclasses import dataclass
+
+from src.application.capybara_speech import CapybaraSpeech
+from src.infrastructure.faster_whisper_speech_recognizer import FasterWhisperSpeechRecognizer
+from src.infrastructure.piper_speech_synthesizer import PiperSpeechSynthesizer
+from src.infrastructure.settings import Settings
+from src.infrastructure.sounddevice_audio import SounddeviceMicrophone, SounddeviceSpeaker
+
+
+@dataclass(frozen=True)
+class CapybaraVoice:
+    speech: CapybaraSpeech
+    microphone: SounddeviceMicrophone
+
+
+def build_capybara_voice(settings: Settings) -> CapybaraVoice:
+    """Loads both models up front, so the first reply is not delayed. Raises SpeechError
+    when one of them is missing."""
+    synthesizer = PiperSpeechSynthesizer.load(settings.voice_model_path)
+    recognizer = FasterWhisperSpeechRecognizer.load(
+        settings.speech_recognition_model,
+        language=settings.speech_recognition_language,
+        device=settings.speech_recognition_device,
+        compute_type=settings.speech_recognition_compute_type,
+    )
+    speech = CapybaraSpeech(recognizer, synthesizer, SounddeviceSpeaker())
+    return CapybaraVoice(speech, SounddeviceMicrophone())
