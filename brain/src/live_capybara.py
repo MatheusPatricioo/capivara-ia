@@ -16,6 +16,7 @@ from src.application.memory_query_expander import MemoryQueryExpander
 from src.application.metered_language_model import MeteredLanguageModel
 from src.application.related_discoveries import RelatedDiscoveries
 from src.application.related_memory_chooser import RelatedMemoryChooser
+from src.application.reply_reader import ReplyReader
 from src.application.self_care import SelfCare
 from src.application.shown_mailbox import ShownMailbox
 from src.application.token_budget import HourlyTokenBudget
@@ -54,6 +55,7 @@ EXPAND_MEMORY_QUERY_NAME = "expand_memory_query"
 CHOOSE_RELATED_MEMORY_NAME = "choose_related_memory"
 FEELINGS_TEMPLATE_NAME = "feelings"
 LETTER_PROMPT_NAME = "letter"
+LETTER_REPLIES_TEMPLATE_NAME = "letter_replies"
 # Each message corrects the sun in the world, which moves it on its own in between.
 SKY_PUBLISH_INTERVAL_SECONDS = 10.0
 
@@ -110,6 +112,7 @@ def build_inner_voice(
     attention_inbox: AttentionInbox,
     related: RelatedDiscoveries,
     heart: Heart | None = None,
+    replies: Callable[[], str] | None = None,
 ) -> InnerVoice:
     feelings = (
         FeelingsVoice(
@@ -132,6 +135,7 @@ def build_inner_voice(
         suggestions=MarkdownSuggestionRepository(settings.discoveries_dir),
         suggestions_template=load_prompt(SUGGESTIONS_TEMPLATE_NAME),
         feelings=feelings.compose if feelings is not None else None,
+        replies=replies,
     )
 
 
@@ -196,18 +200,44 @@ def build_letter_writer(
     )
 
 
+def build_reply_reader(
+    heart: Heart | None, mailbox: ShownMailbox | None, body: Body
+) -> ReplyReader | None:
+    if heart is None or mailbox is None:
+        return None
+    return ReplyReader(mailbox, heart, load_prompt(LETTER_REPLIES_TEMPLATE_NAME), body=body)
+
+
 def with_letters(
-    before_cycle: Callable[[], None], letter_writer: LetterWriter | None
+    before_cycle: Callable[[], None],
+    letter_writer: LetterWriter | None,
+    reply_reader: ReplyReader | None = None,
 ) -> Callable[[], None]:
-    """Before each cycle: first she takes care of herself, then she may write him a letter."""
-    if letter_writer is None:
+    """Before each cycle: first she takes care of herself, then she reads his replies, and
+    then she may write him a letter (a reply that made her happy can spare one)."""
+    if letter_writer is None and reply_reader is None:
         return before_cycle
 
-    def take_care_and_write() -> None:
+    def take_care_read_and_write() -> None:
         before_cycle()
-        letter_writer.maybe_write()
+        if reply_reader is not None:
+            reply_reader.read_new_replies()
+        if letter_writer is not None:
+            letter_writer.maybe_write()
 
-    return take_care_and_write
+    return take_care_read_and_write
+
+
+def after_cycle(inner_voice: InnerVoice, reply_reader: ReplyReader | None) -> Callable[[], None]:
+    """After a cycle that finished: she lets go of what she noticed and of the replies she read."""
+    if reply_reader is None:
+        return inner_voice.release_offered
+
+    def release_all() -> None:
+        inner_voice.release_offered()
+        reply_reader.release()
+
+    return release_all
 
 
 def main() -> None:
@@ -248,11 +278,14 @@ def main() -> None:
             ),
             budget,
         )
+        mailbox = build_mailbox(settings, heart, world_server, world_events)
+        reply_reader = build_reply_reader(heart, mailbox, body)
         inner_voice = build_inner_voice(
             settings,
             attention_inbox,
             build_related_discoveries(settings, memory, language_model),
             heart,
+            replies=reply_reader.compose if reply_reader is not None else None,
         )
 
         def start_conversation() -> Conversation:
@@ -268,10 +301,10 @@ def main() -> None:
             )
 
         self_care, pace = feeling_hooks(heart, body)
-        mailbox = build_mailbox(settings, heart, world_server, world_events)
         before_cycle = with_letters(
             self_care,
             build_letter_writer(settings, heart, mailbox, language_model, system_prompt, body),
+            reply_reader,
         )
         loop = AutonomousLoop(
             start_conversation,
@@ -279,7 +312,7 @@ def main() -> None:
             inner_voice.compose,
             settings.autonomous_cycle_interval_seconds,
             on_thought=print_thought,
-            on_cycle_finished=inner_voice.release_offered,
+            on_cycle_finished=after_cycle(inner_voice, reply_reader),
             before_cycle=before_cycle,
             pace=pace,
         )

@@ -97,3 +97,24 @@ def test_a_letter_gets_only_one_reply() -> None:
 def test_rejects_an_empty_reply() -> None:
     with pytest.raises(InvalidLetterError):
         Reply(NOW, "  ")
+
+
+def test_a_fresh_reply_is_new_to_her() -> None:
+    letter = Letter(NOW, "Oi, Matheus!").answered(Reply(NOW, "Oi!"))
+
+    assert letter.has_a_new_reply
+
+
+def test_a_reply_she_read_is_no_longer_new() -> None:
+    letter = Letter(NOW, "Oi, Matheus!").answered(Reply(NOW, "Oi!")).reply_seen()
+
+    assert not letter.has_a_new_reply
+
+
+def test_an_unanswered_letter_has_no_new_reply() -> None:
+    assert not Letter(NOW, "Oi, Matheus!").has_a_new_reply
+
+
+def test_cannot_read_the_reply_of_an_unanswered_letter() -> None:
+    with pytest.raises(InvalidLetterError):
+        Letter(NOW, "Oi, Matheus!").reply_seen()

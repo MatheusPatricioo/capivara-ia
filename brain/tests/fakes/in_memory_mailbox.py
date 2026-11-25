@@ -29,6 +29,9 @@ class InMemoryMailbox:
     def answer(self, file_name: str, reply: Reply) -> SavedLetter:
         return self._change(file_name, lambda letter: letter.answered(reply))
 
+    def mark_reply_seen(self, file_name: str) -> SavedLetter:
+        return self._change(file_name, Letter.reply_seen)
+
     def _change(self, file_name: str, change: Callable[[Letter], Letter]) -> SavedLetter:
         for index, saved in enumerate(self._saved):
             if saved.file_name == file_name:
@@ -50,4 +53,7 @@ class BrokenMailbox:
         raise LetterStorageError("disk is full")
 
     def answer(self, file_name: str, reply: Reply) -> SavedLetter:
+        raise LetterStorageError("disk is full")
+
+    def mark_reply_seen(self, file_name: str) -> SavedLetter:
         raise LetterStorageError("disk is full")

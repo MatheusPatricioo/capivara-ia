@@ -30,6 +30,8 @@ class EventKind(StrEnum):
     WISH_GRANTED = "wish_granted"
     NOTICED_SOMETHING = "noticed_something"
     VISITED_COMFORT_PLACE = "visited_comfort_place"
+    LETTER_ANSWERED = "letter_answered"
+    """She read Matheus's reply to one of her letters."""
 
 
 @dataclass(frozen=True)
@@ -107,6 +109,16 @@ APPRAISAL_RULES: Mapping[EventKind, AppraisalRule] = {
     EventKind.NOTICED_SOMETHING: AppraisalRule(
         {Emotion.CURIOSITY: 0.3, Emotion.SURPRISE: 0.3, Emotion.BOREDOM: -0.2},
         {Need.NOVELTY: 0.1},
+    ),
+    # Softer than talking (he is not there), but someone wrote back: joy and gratitude.
+    EventKind.LETTER_ANSWERED: AppraisalRule(
+        {
+            Emotion.JOY: 0.35,
+            Emotion.GRATITUDE: 0.3,
+            Emotion.LONELINESS: -0.3,
+            Emotion.SADNESS: -0.15,
+        },
+        {Need.BOND: 0.15},
     ),
     EventKind.VISITED_COMFORT_PLACE: AppraisalRule(
         {

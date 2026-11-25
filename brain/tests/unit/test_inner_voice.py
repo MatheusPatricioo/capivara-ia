@@ -433,3 +433,27 @@ def test_leaves_other_noticed_things_as_they_are(attention: AttentionInbox) -> N
     composed = inner_voice.compose()
 
     assert "- cogumelos vermelhos\n" in composed
+
+
+REPLIES = "(O Matheus respondeu sua cartinha!)"
+
+
+def test_tells_his_replies_before_how_she_feels() -> None:
+    inner_voice = InnerVoice(
+        INVITATION,
+        FakeCatalog([]),
+        MEMORY_TEMPLATE,
+        MAX_REMEMBERED_DISCOVERIES,
+        feelings=lambda: FEELINGS,
+        replies=lambda: REPLIES,
+    )
+
+    assert inner_voice.compose() == f"{REPLIES}\n\n{FEELINGS}\n\n{INVITATION}"
+
+
+def test_says_nothing_about_replies_when_there_are_none() -> None:
+    inner_voice = InnerVoice(
+        INVITATION, FakeCatalog([]), MEMORY_TEMPLATE, MAX_REMEMBERED_DISCOVERIES, replies=str
+    )
+
+    assert inner_voice.compose() == INVITATION

@@ -112,3 +112,18 @@ def test_refuses_a_second_reply(mailbox: MarkdownMailbox) -> None:
 
     with pytest.raises(InvalidLetterError):
         mailbox.answer(file_name, Reply(datetime(2026, 11, 26, 11, 0), "Mudei de ideia."))
+
+
+def test_a_new_reply_is_saved_as_not_seen_by_her(mailbox: MarkdownMailbox) -> None:
+    mailbox.answer(mailbox.post(LETTER), Reply(datetime(2026, 11, 26, 10, 0), "Volto amanhã."))
+
+    assert mailbox.saved_letters()[0].letter.has_a_new_reply
+
+
+def test_remembers_she_read_the_reply(mailbox: MarkdownMailbox) -> None:
+    file_name = mailbox.post(LETTER)
+    mailbox.answer(file_name, Reply(datetime(2026, 11, 26, 10, 0), "Volto amanhã."))
+
+    mailbox.mark_reply_seen(file_name)
+
+    assert not mailbox.saved_letters()[0].letter.has_a_new_reply

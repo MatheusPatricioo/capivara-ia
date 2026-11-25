@@ -42,6 +42,8 @@ class Reply:
 
     written_at: datetime
     text: str
+    seen_by_her: bool = False
+    """She read it in a cycle of her own, so it does not move her a second time."""
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "text", _checked_text(self.text, "reply"))
@@ -74,6 +76,18 @@ class Letter:
             raise InvalidLetterError("this letter was already answered")
         return replace(self, status=LetterStatus.READ, reply=reply)
 
+    @property
+    def has_a_new_reply(self) -> bool:
+        """Matheus answered and she has not read the answer yet."""
+        return self.reply is not None and not self.reply.seen_by_her
+
+    def reply_seen(self) -> "Letter":
+        """The same letter, with the reply now read by her. Raises InvalidLetterError
+        when there is no reply to read."""
+        if self.reply is None:
+            raise InvalidLetterError("this letter has no reply to read")
+        return replace(self, reply=replace(self.reply, seen_by_her=True))
+
 
 @dataclass(frozen=True)
 class SavedLetter:
@@ -102,6 +116,11 @@ class Mailbox(Protocol):
         Raises LetterStorageError when there is no such letter and InvalidLetterError when
         it was already answered.
         """
+        ...
+
+    def mark_reply_seen(self, file_name: str) -> SavedLetter:
+        """Remembers she read the reply. Raises LetterStorageError when there is no such
+        letter and InvalidLetterError when it has no reply."""
         ...
 
 

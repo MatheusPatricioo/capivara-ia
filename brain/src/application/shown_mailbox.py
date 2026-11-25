@@ -62,6 +62,11 @@ class ShownMailbox:
             self.show()
             return answered
 
+    def mark_reply_seen(self, file_name: str) -> SavedLetter:
+        """She read the reply: nothing changes in the world, so nothing is shown."""
+        with self._lock:
+            return self._mailbox.mark_reply_seen(file_name)
+
     def reply_to_letter(self, file_name: str, text: str) -> None:
         """Matheus answered a letter in the world. A bad reply is only logged: the world
         keeps showing the letter without it, so he can try again."""

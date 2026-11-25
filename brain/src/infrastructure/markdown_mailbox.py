@@ -26,6 +26,9 @@ TITLE_LINE = "# Carta para o Matheus"
 WRITTEN_AT_PREFIX = "- **Escrita em:** "
 STATUS_PREFIX = "- **Situação:** "
 REPLIED_AT_PREFIX = "- **Respondida em:** "
+REPLY_SEEN_PREFIX = "- **Ela leu a resposta:** "
+YES_WORD = "sim"
+NO_WORD = "não"
 LETTER_HEADING = "## Carta"
 REPLY_HEADING = "## Resposta do Matheus"
 STATUS_WORDS = {LetterStatus.UNREAD: "não lida", LetterStatus.READ: "lida"}
@@ -76,6 +79,9 @@ class MarkdownMailbox:
     def answer(self, file_name: str, reply: Reply) -> SavedLetter:
         return self._rewrite(file_name, lambda letter: letter.answered(reply))
 
+    def mark_reply_seen(self, file_name: str) -> SavedLetter:
+        return self._rewrite(file_name, Letter.reply_seen)
+
     def _rewrite(self, file_name: str, change: Callable[[Letter], Letter]) -> SavedLetter:
         """Reads the letter, changes it and writes it back in the same file."""
         file_path = self._letters_dir / file_name
@@ -105,7 +111,8 @@ def _to_markdown(letter: Letter) -> str:
     reply_section = ""
     if letter.reply is not None:
         replied_at = letter.reply.written_at.strftime(WRITTEN_AT_FORMAT)
-        replied_at_line = f"{REPLIED_AT_PREFIX}{replied_at}\n"
+        seen_word = YES_WORD if letter.reply.seen_by_her else NO_WORD
+        replied_at_line = f"{REPLIED_AT_PREFIX}{replied_at}\n{REPLY_SEEN_PREFIX}{seen_word}\n"
         reply_section = f"\n{REPLY_HEADING}\n\n{letter.reply.text}\n"
     return (
         f"{TITLE_LINE}\n\n"
@@ -136,6 +143,7 @@ def _reply(lines: list[str]) -> Reply | None:
     return Reply(
         written_at=datetime.strptime(replied_at_text, WRITTEN_AT_FORMAT),
         text="\n".join(section_lines(REPLY_HEADING, lines)),
+        seen_by_her=first_value_after(REPLY_SEEN_PREFIX, lines).lower() == YES_WORD,
     )
 
 

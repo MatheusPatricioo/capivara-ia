@@ -46,6 +46,9 @@ class InnerVoice:
 
     With feelings, a short description of how she feels (and why) comes right before
     what she noticed, so her mood colours what she picks and how she tells it.
+
+    With replies, Matheus's answers to her letters come right before her feelings, which
+    already carry the joy of reading them.
     """
 
     def __init__(
@@ -61,6 +64,7 @@ class InnerVoice:
         suggestions: WorldSuggestionArchive | None = None,
         suggestions_template: str = "",
         feelings: Callable[[], str] | None = None,
+        replies: Callable[[], str] | None = None,
     ) -> None:
         self._invitation = invitation
         self._catalog = catalog
@@ -73,11 +77,12 @@ class InnerVoice:
         self._suggestions = suggestions
         self._suggestions_template = suggestions_template
         self._feelings = feelings
+        self._replies = replies
         self._offered: tuple[PointOfAttention, ...] = ()
 
     def compose(self) -> str:
-        """Memory and earlier suggestions first, then related discoveries, how she feels,
-        what she noticed, and the invitation last.
+        """Memory and earlier suggestions first, then related discoveries, Matheus's replies
+        to her letters, how she feels, what she noticed, and the invitation last.
 
         The end of the message is the part the model follows best.
         """
@@ -87,6 +92,7 @@ class InnerVoice:
             self._memory(),
             self._earlier_suggestions(suggestions),
             self._related_memories(),
+            self._replies() if self._replies is not None else "",
             self._feelings() if self._feelings is not None else "",
             self._noticed(suggestions),
             self._invitation,

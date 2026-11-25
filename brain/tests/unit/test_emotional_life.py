@@ -288,3 +288,20 @@ def test_never_talked_means_no_hours_since_talking(life: EmotionalLife) -> None:
 
 def test_the_bond_ladder_has_a_hurt_rung() -> None:
     assert BOND_LADDER.rungs[HURT_RUNG].name == "hurt"
+
+
+def test_a_reply_to_her_letter_makes_her_glad(life: EmotionalLife) -> None:
+    before = life.emotions.intensity(Emotion.JOY)
+
+    feel(life, EventKind.LETTER_ANSWERED, hours=1.0)
+
+    assert life.emotions.intensity(Emotion.JOY) > before
+
+
+def test_a_reply_to_her_letter_eases_her_loneliness(life: EmotionalLife) -> None:
+    stay_awake(life, 0.0, TWO_DAYS)
+    lonely = life.emotions.intensity(Emotion.LONELINESS)
+
+    feel(life, EventKind.LETTER_ANSWERED, hours=TWO_DAYS)
+
+    assert life.emotions.intensity(Emotion.LONELINESS) < lonely
