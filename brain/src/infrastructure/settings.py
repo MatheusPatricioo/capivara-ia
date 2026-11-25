@@ -6,11 +6,16 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from src.domain.feelings.needs import NeedRhythm
 from src.domain.feelings.temperament import Temperament
+from src.domain.letter import LetterRhythm
+from src.domain.weather import Sky
+from src.domain.world_clock import ClockMode, WorldClock
 from src.infrastructure.ollama_language_model import OllamaGenerationOptions
 from src.infrastructure.postgres_discovery_memory import SearchMode, memory_conninfo
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 ENV_FILE = PROJECT_ROOT / "brain" / ".env"
+
+SECONDS_PER_MINUTE = 60.0
 
 LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
@@ -30,7 +35,6 @@ class Settings(BaseSettings):
     # DuckDuckGo region code; "br-pt" brings Brazilian pages first.
     web_search_region: str = "br-pt"
     discoveries_dir: Path = PROJECT_ROOT / "discoveries"
-    chalkboard_capacity: int = Field(default=3, gt=0)
     world_server_host: str = "127.0.0.1"
     world_server_port: int = Field(default=8765, gt=0, lt=65536)
     autonomous_cycle_interval_seconds: float = Field(default=120.0, gt=0)
@@ -71,6 +75,23 @@ class Settings(BaseSettings):
     temperament_patience: float = Field(default=0.6, ge=0.0, le=1.0)
     temperament_sensitivity: float = Field(default=0.5, ge=0.0, le=1.0)
     temperament_resilience: float = Field(default=0.7, ge=0.0, le=1.0)
+    # Letters: when she misses Matheus, she writes to him (needs FEELINGS_ENABLED).
+    letters_enabled: bool = True
+    letter_min_hours_between: float = Field(default=20.0, ge=0)
+    letter_max_unread: int = Field(default=3, gt=0)
+    # Day and night in her world: "real" follows the wall clock, "fast" squeezes a whole
+    # day into world_fast_day_minutes real minutes, for quick tests.
+    world_clock_mode: ClockMode = ClockMode.REAL
+    world_fast_day_minutes: float = Field(default=60.0, gt=0)
+    # Real weather from Open-Meteo (free, no key): when it rains there, it rains in her world.
+    weather_enabled: bool = True
+    weather_place_name: str = "Belo Horizonte"
+    weather_latitude: float = Field(default=-19.9167, ge=-90.0, le=90.0)
+    weather_longitude: float = Field(default=-43.9345, ge=-180.0, le=180.0)
+    weather_timeout_seconds: float = Field(default=10.0, gt=0)
+    weather_refresh_minutes: float = Field(default=15.0, gt=0)
+    # A fixed sky (like "rain") instead of the real one, to test without waiting for rain.
+    weather_override: Sky | None = None
     log_level: LogLevel = "INFO"
     log_file: Path = PROJECT_ROOT / "logs" / "capybara.log"
 
@@ -92,6 +113,17 @@ class Settings(BaseSettings):
 
     def need_rhythm(self) -> NeedRhythm:
         return NeedRhythm(time_scale=self.feelings_time_scale)
+
+    def letter_rhythm(self) -> LetterRhythm:
+        return LetterRhythm(
+            min_hours_between=self.letter_min_hours_between, max_unread=self.letter_max_unread
+        )
+
+    def world_clock(self) -> WorldClock:
+        return WorldClock(
+            self.world_clock_mode,
+            fast_day_seconds=self.world_fast_day_minutes * SECONDS_PER_MINUTE,
+        )
 
     def memory_db_conninfo(self) -> str:
         return memory_conninfo(

@@ -4,6 +4,8 @@ import pytest
 from psycopg.conninfo import conninfo_to_dict
 from pydantic import ValidationError
 
+from src.domain.weather import Sky
+from src.domain.world_clock import ClockMode
 from src.infrastructure.ollama_language_model import OllamaGenerationOptions
 from src.infrastructure.settings import Settings
 
@@ -128,42 +130,6 @@ def test_discoveries_dir_comes_from_environment_variable(custom_discoveries_dir:
     settings = Settings(_env_file=None)
 
     assert settings.discoveries_dir == custom_discoveries_dir
-
-
-@pytest.fixture
-def environment_without_chalkboard_capacity(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("CHALKBOARD_CAPACITY", raising=False)
-
-
-@pytest.fixture
-def custom_chalkboard_capacity(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("CHALKBOARD_CAPACITY", "5")
-
-
-@pytest.fixture
-def zero_chalkboard_capacity(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("CHALKBOARD_CAPACITY", "0")
-
-
-def test_chalkboard_capacity_defaults_to_three(
-    environment_without_chalkboard_capacity: None,
-) -> None:
-    settings = Settings(_env_file=None)
-
-    assert settings.chalkboard_capacity == 3
-
-
-def test_chalkboard_capacity_comes_from_environment_variable(
-    custom_chalkboard_capacity: None,
-) -> None:
-    settings = Settings(_env_file=None)
-
-    assert settings.chalkboard_capacity == 5
-
-
-def test_rejects_a_chalkboard_capacity_of_zero(zero_chalkboard_capacity: None) -> None:
-    with pytest.raises(ValidationError):
-        Settings(_env_file=None)
 
 
 @pytest.fixture
@@ -343,3 +309,61 @@ def test_rejects_a_suggestion_repeat_min_similarity_below_zero(
 ) -> None:
     with pytest.raises(ValidationError):
         Settings(_env_file=None)
+
+
+@pytest.fixture
+def environment_without_world_clock_mode(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("WORLD_CLOCK_MODE", raising=False)
+
+
+@pytest.fixture
+def fast_world_clock(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("WORLD_CLOCK_MODE", "fast")
+
+
+@pytest.fixture
+def unknown_world_clock_mode(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("WORLD_CLOCK_MODE", "turbo")
+
+
+def test_world_clock_mode_defaults_to_real_time(
+    environment_without_world_clock_mode: None,
+) -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.world_clock_mode is ClockMode.REAL
+
+
+def test_world_clock_mode_comes_from_environment_variable(fast_world_clock: None) -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.world_clock_mode is ClockMode.FAST
+
+
+def test_rejects_an_unknown_world_clock_mode(unknown_world_clock_mode: None) -> None:
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None)
+
+
+@pytest.fixture
+def environment_without_weather_override(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("WEATHER_OVERRIDE", raising=False)
+
+
+@pytest.fixture
+def rain_weather_override(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("WEATHER_OVERRIDE", "rain")
+
+
+def test_weather_follows_the_forecast_by_default(
+    environment_without_weather_override: None,
+) -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.weather_override is None
+
+
+def test_weather_override_comes_from_environment_variable(rain_weather_override: None) -> None:
+    settings = Settings(_env_file=None)
+
+    assert settings.weather_override is Sky.RAIN

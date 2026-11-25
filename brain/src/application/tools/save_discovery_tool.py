@@ -4,7 +4,7 @@ from datetime import date
 
 from pydantic import Field, field_validator
 
-from src.application.chalkboard_artist import PinnedDrawing
+from src.application.drawing_artist import SavedDrawing
 from src.application.tools.conversation_discoveries import ConversationDiscoveries
 from src.application.tools.seen_sources import SeenSources
 from src.application.tools.tool_arguments import (
@@ -53,7 +53,7 @@ class SaveDiscoveryTool:
         repository: DiscoveryRepository,
         seen_sources: SeenSources,
         today: Callable[[], date] = date.today,
-        illustrate: Callable[[Discovery], PinnedDrawing | None] | None = None,
+        illustrate: Callable[[Discovery], SavedDrawing | None] | None = None,
         saved_discoveries: ConversationDiscoveries | None = None,
         follow_up: str = "",
     ) -> None:
@@ -99,8 +99,8 @@ class SaveDiscoveryTool:
         logger.info("Discovery saved: %s (sources: %s)", file_name, ", ".join(discovery.sources))
         if self._saved_discoveries is not None:
             self._saved_discoveries.remember(discovery)
-        pinned_drawing = self._illustrate(discovery) if self._illustrate else None
-        return self._with_follow_up(self._result_message(file_name, pinned_drawing))
+        saved_drawing = self._illustrate(discovery) if self._illustrate else None
+        return self._with_follow_up(self._result_message(file_name, saved_drawing))
 
     def _with_follow_up(self, message: str) -> str:
         """The follow-up comes last, the part of a tool result the model follows best."""
@@ -108,7 +108,7 @@ class SaveDiscoveryTool:
             return message
         return f"{message} {self._follow_up}"
 
-    def _result_message(self, file_name: str, pinned_drawing: PinnedDrawing | None) -> str:
+    def _result_message(self, file_name: str, saved_drawing: SavedDrawing | None) -> str:
         """Tells her what already happened, drawing included, so she only has to tell it.
 
         Asking her to call a draw tool made her promise drawings she never made.
@@ -116,9 +116,9 @@ class SaveDiscoveryTool:
         message = f"Saved as {file_name}."
         if self._illustrate is None:
             return message
-        if pinned_drawing is None:
-            return f"{message} At your chalkboard, this one did not become a drawing."
-        return f"{message} {_describe_drawing(pinned_drawing)}"
+        if saved_drawing is None:
+            return f"{message} This one did not become a drawing."
+        return f"{message} {_describe_drawing(saved_drawing)}"
 
     def _sources(self, sources: list[str]) -> tuple[str, ...]:
         if not sources:
@@ -151,12 +151,8 @@ class SaveDiscoveryTool:
                 )
 
 
-def _describe_drawing(pinned_drawing: PinnedDrawing) -> str:
-    drawing = pinned_drawing.drawing
-    description = (
-        f"Then you walked to your chalkboard and drew it with {len(drawing.strokes)} chalk "
-        f"stroke(s), saved as {pinned_drawing.file_name}."
+def _describe_drawing(saved_drawing: SavedDrawing) -> str:
+    return (
+        f"Then you sketched it on your computer with {len(saved_drawing.drawing.strokes)} "
+        f"stroke(s), saved as {saved_drawing.file_name}."
     )
-    if pinned_drawing.erased is not None:
-        description += f" To make room, you erased the old drawing '{pinned_drawing.erased.title}'."
-    return description

@@ -7,7 +7,6 @@ from src.application.feelings_voice import FeelingsVoice
 from src.application.heart import Heart
 from src.capybara_heart import build_heart
 from src.capybara_tools import TOOL_RESULT_REMINDER_OVERRIDES, build_capybara_tools
-from src.domain.chalkboard import Chalkboard
 from src.domain.feelings.appraisal import EmotionalEvent, EventKind
 from src.domain.language_model import LanguageModelError
 from src.infrastructure.logging_setup import configure_logging
@@ -58,7 +57,6 @@ def main() -> None:
             system_prompt_with_feelings(settings, heart),
             tools=build_capybara_tools(
                 settings,
-                Chalkboard(settings.chalkboard_capacity),
                 language_model,
                 http_client,
                 memory=memory,

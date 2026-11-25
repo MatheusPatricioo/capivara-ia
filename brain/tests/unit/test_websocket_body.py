@@ -1,18 +1,14 @@
 import pytest
 
 from src.domain.body import Place
-from src.domain.drawing import Drawing, Point, Stroke
 from src.domain.feelings.emotion import Emotion
 from src.infrastructure.websocket_body import WebSocketBody
 from src.infrastructure.world_messages import (
     FeelingsMessage,
     GoToMessage,
     WorldMessage,
-    chalkboard_message,
 )
 from tests.fakes.emotional_lives import a_life
-
-SUN_DRAWING = Drawing(title="O sol", strokes=(Stroke(points=(Point(160, 150), Point(240, 150))),))
 
 
 class RecordingBroadcaster:
@@ -39,14 +35,6 @@ def test_go_to_sends_the_place_id(body: WebSocketBody, broadcaster: RecordingBro
     body.go_to(Place.COMPUTER)
 
     assert broadcaster.sent == [(GoToMessage(point="computer"), False)]
-
-
-def test_show_chalkboard_sends_the_drawings_and_remembers_them(
-    body: WebSocketBody, broadcaster: RecordingBroadcaster
-) -> None:
-    body.show_chalkboard((SUN_DRAWING,))
-
-    assert broadcaster.sent == [(chalkboard_message((SUN_DRAWING,)), True)]
 
 
 def test_show_feelings_sends_her_strongest_emotion_and_remembers_it(

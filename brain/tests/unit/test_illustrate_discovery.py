@@ -3,9 +3,8 @@ from datetime import date
 
 import pytest
 
-from src.application.chalkboard_artist import ChalkboardArtist, PinnedDrawing
+from src.application.drawing_artist import DrawingArtist, SavedDrawing
 from src.application.illustrate_discovery import IllustrateDiscovery
-from src.domain.chalkboard import Chalkboard
 from src.domain.discovery import Discovery
 from src.domain.doodle import Doodle, DoodleLibrary
 from src.domain.drawing import Drawing, DrawingStorageError
@@ -77,8 +76,8 @@ def repository() -> InMemoryDrawingRepository:
 
 
 @pytest.fixture
-def artist(repository: InMemoryDrawingRepository) -> ChalkboardArtist:
-    return ChalkboardArtist(repository, Chalkboard(capacity=3), today=lambda: TODAY)
+def artist(repository: InMemoryDrawingRepository) -> DrawingArtist:
+    return DrawingArtist(repository, today=lambda: TODAY)
 
 
 @pytest.fixture
@@ -87,12 +86,12 @@ def hand() -> RecordingHand:
 
 
 @pytest.fixture
-def illustrator(hand: RecordingHand, artist: ChalkboardArtist) -> IllustrateDiscovery:
+def illustrator(hand: RecordingHand, artist: DrawingArtist) -> IllustrateDiscovery:
     return IllustrateDiscovery(FixedChooser("sun"), DOODLE_LIBRARY, hand, artist)
 
 
 def illustrator_choosing(
-    chooser: FixedChooser | FailingChooser, artist: ChalkboardArtist
+    chooser: FixedChooser | FailingChooser, artist: DrawingArtist
 ) -> IllustrateDiscovery:
     return IllustrateDiscovery(chooser, DOODLE_LIBRARY, RecordingHand(), artist)
 
@@ -113,14 +112,14 @@ def test_draws_what_her_hand_redrew(
     assert repository.saved == [SUN_DRAWING]
 
 
-def test_returns_the_pinned_drawing(illustrator: IllustrateDiscovery) -> None:
-    assert illustrator.illustrate(SUN_DISCOVERY) == PinnedDrawing(
-        drawing=SUN_DRAWING, file_name=SAVED_FILE_NAME, erased=None
+def test_returns_the_saved_drawing(illustrator: IllustrateDiscovery) -> None:
+    assert illustrator.illustrate(SUN_DISCOVERY) == SavedDrawing(
+        drawing=SUN_DRAWING, file_name=SAVED_FILE_NAME
     )
 
 
 def test_draws_nothing_when_there_is_nothing_to_sketch(
-    artist: ChalkboardArtist, repository: InMemoryDrawingRepository
+    artist: DrawingArtist, repository: InMemoryDrawingRepository
 ) -> None:
     result = illustrator_choosing(FixedChooser(None), artist).illustrate(SUN_DISCOVERY)
 
@@ -128,33 +127,33 @@ def test_draws_nothing_when_there_is_nothing_to_sketch(
 
 
 def test_draws_nothing_for_a_category_without_doodles(
-    artist: ChalkboardArtist, repository: InMemoryDrawingRepository
+    artist: DrawingArtist, repository: InMemoryDrawingRepository
 ) -> None:
     result = illustrator_choosing(FixedChooser("volcano"), artist).illustrate(SUN_DISCOVERY)
 
     assert (result, repository.saved) == (None, [])
 
 
-def test_returns_none_when_the_embedding_model_is_offline(artist: ChalkboardArtist) -> None:
+def test_returns_none_when_the_embedding_model_is_offline(artist: DrawingArtist) -> None:
     illustrator = illustrator_choosing(FailingChooser(EmbeddingError("refused")), artist)
 
     assert illustrator.illustrate(SUN_DISCOVERY) is None
 
 
-def test_returns_none_when_the_language_model_is_offline(artist: ChalkboardArtist) -> None:
+def test_returns_none_when_the_language_model_is_offline(artist: DrawingArtist) -> None:
     illustrator = illustrator_choosing(FailingChooser(LanguageModelError("refused")), artist)
 
     assert illustrator.illustrate(SUN_DISCOVERY) is None
 
 
 def test_returns_none_when_the_image_cannot_be_saved() -> None:
-    artist = ChalkboardArtist(FullDiskDrawingRepository(), Chalkboard(capacity=3))
+    artist = DrawingArtist(FullDiskDrawingRepository())
 
     assert illustrator_choosing(FixedChooser("sun"), artist).illustrate(SUN_DISCOVERY) is None
 
 
 def test_logs_when_there_is_nothing_to_sketch(
-    artist: ChalkboardArtist, caplog: pytest.LogCaptureFixture
+    artist: DrawingArtist, caplog: pytest.LogCaptureFixture
 ) -> None:
     caplog.set_level(logging.INFO, logger=ILLUSTRATE_LOGGER)
 
@@ -164,7 +163,7 @@ def test_logs_when_there_is_nothing_to_sketch(
 
 
 def test_logs_why_the_drawing_failed(
-    artist: ChalkboardArtist, caplog: pytest.LogCaptureFixture
+    artist: DrawingArtist, caplog: pytest.LogCaptureFixture
 ) -> None:
     caplog.set_level(logging.WARNING, logger=ILLUSTRATE_LOGGER)
     illustrator = illustrator_choosing(FailingChooser(EmbeddingError("connection refused")), artist)

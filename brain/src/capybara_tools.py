@@ -4,8 +4,8 @@ import httpx
 from ddgs import DDGS
 
 from src.application.category_matcher import CategoryMatcher
-from src.application.chalkboard_artist import ChalkboardArtist
 from src.application.doodle_category_chooser import DoodleCategoryChooser
+from src.application.drawing_artist import DrawingArtist
 from src.application.illustrate_discovery import IllustrateDiscovery
 from src.application.remembering_discovery_repository import RememberingDiscoveryRepository
 from src.application.repeated_suggestions import RepeatedSuggestions
@@ -19,7 +19,6 @@ from src.application.tools.suggest_improvement_tool import SuggestImprovementToo
 from src.application.tools.web_search_tool import WebSearchTool
 from src.domain.body import Body, Place
 from src.domain.capybara_hand import CapybaraHand
-from src.domain.chalkboard import Chalkboard
 from src.domain.discovery import DiscoveryRepository
 from src.domain.discovery_memory import DiscoveryMemory
 from src.domain.feelings.appraisal import EventKind
@@ -57,7 +56,6 @@ SUGGESTION_INVITATION_PROMPT_NAME = "suggestion_invitation"
 
 def build_capybara_tools(
     settings: Settings,
-    chalkboard: Chalkboard,
     language_model: StructuredLanguageModel,
     http_client: httpx.Client,
     body: Body | None = None,
@@ -101,7 +99,7 @@ def build_capybara_tools(
         ),
         load_doodle_library(),
         CapybaraHand(),
-        ChalkboardArtist(PngDrawingRepository(settings.discoveries_dir), chalkboard, body=body),
+        DrawingArtist(PngDrawingRepository(settings.discoveries_dir)),
     )
     save_discovery_tool = SaveDiscoveryTool(
         _build_discovery_repository(settings, memory),

@@ -2,7 +2,6 @@ import pytest
 
 from src.application.tools.embodied_tool import EmbodiedTool
 from src.domain.body import Place
-from src.domain.drawing import Drawing
 from src.domain.language_model import ToolDefinition
 from src.domain.tool import ToolError
 
@@ -21,9 +20,6 @@ class RecordingBody:
 
     def go_to(self, place: Place) -> None:
         self._timeline.append(f"go_to {place.value}")
-
-    def show_chalkboard(self, drawings: tuple[Drawing, ...]) -> None:
-        self._timeline.append("show_chalkboard")
 
 
 class EchoTool:

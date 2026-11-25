@@ -13,7 +13,7 @@ const STARTING_TEXT: String = (
 	"Ligando o cérebro (Ollama, memória e cérebro)...\n"
 	+ "Na primeira vez pode levar um minuto."
 )
-## Above the 3D world, below the chalkboard and computer screens (layer 10).
+## Above the 3D world, below the computer screen (layer 10).
 const DRAW_LAYER: int = 5
 const SCREEN_MARGIN: Vector2 = Vector2(12, 12)
 const PADDING: int = 10

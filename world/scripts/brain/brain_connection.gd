@@ -6,10 +6,16 @@ extends Node
 ## While the brain is offline it keeps trying to connect, so the world can open first.
 
 signal go_to_requested(point_id: StringName)
-signal chalkboard_changed(drawings: Array)
 ## How the capybara feels: her strongest emotion ("joy", "loneliness"... or "calm"), how strong
 ## it is (0 to 1), valence (-1 bad to 1 good) and arousal (0 calm to 1 agitated).
 signal feelings_changed(emotion: StringName, intensity: float, valence: float, arousal: float)
+## The time of day and the weather: day_fraction from 0 (midnight) to 1, how many real
+## seconds a world day lasts (to move the sun between messages) and the sky ("clear",
+## "cloudy", "fog", "rain", "storm" or "unknown").
+signal sky_changed(day_fraction: float, day_length_seconds: float, weather: StringName)
+## Every letter in the mailbox, the newest first. Each one is a Dictionary with file_name,
+## written_at ("2026-11-25T14:30"), text and unread.
+signal mailbox_changed(letters: Array)
 signal connection_changed(is_connected: bool)
 
 const DEFAULT_URL: String = "ws://127.0.0.1:8765"
@@ -63,6 +69,14 @@ func report_noticed(thing_id: StringName, description: String) -> void:
 	_socket.send_text(JSON.stringify(event))
 
 
+## Tells the brain Matheus opened a letter, so it marks the letter as read. Dropped while
+## the brain is offline: the letter stays unread and is reported again next time.
+func report_letter_opened(file_name: String) -> void:
+	if not _is_connected:
+		return
+	_socket.send_text(JSON.stringify({"type": "letter_opened", "letter": file_name}))
+
+
 func _read_messages() -> void:
 	while _socket.get_available_packet_count() > 0:
 		_handle_message(_socket.get_packet().get_string_from_utf8())
@@ -77,15 +91,21 @@ func _handle_message(text: String) -> void:
 	match message.get("type"):
 		"go_to":
 			go_to_requested.emit(StringName(str(message.get("point", ""))))
-		"chalkboard":
-			var drawings: Variant = message.get("drawings", [])
-			chalkboard_changed.emit(drawings if drawings is Array else [])
 		"feelings":
 			feelings_changed.emit(
 				StringName(str(message.get("emotion", "calm"))),
 				float(message.get("intensity", 0.0)),
 				float(message.get("valence", 0.0)),
 				float(message.get("arousal", 0.3)),
+			)
+		"mailbox":
+			var letters: Variant = message.get("letters", [])
+			mailbox_changed.emit(letters if letters is Array else [])
+		"sky":
+			sky_changed.emit(
+				float(message.get("day_fraction", 0.5)),
+				float(message.get("day_length_seconds", 86400.0)),
+				StringName(str(message.get("weather", "unknown"))),
 			)
 		_:
 			push_warning("Unknown message type from the brain: %s" % message.get("type"))

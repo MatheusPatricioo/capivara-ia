@@ -1,0 +1,42 @@
+from src.domain.letter import Letter, LetterStorageError, SavedLetter
+
+
+class InMemoryMailbox:
+    """Keeps the letters in a list instead of Markdown files."""
+
+    def __init__(self, letters: list[Letter] | None = None) -> None:
+        self._saved: list[SavedLetter] = []
+        for letter in letters or []:
+            self.post(letter)
+
+    @property
+    def posted(self) -> list[Letter]:
+        return [saved.letter for saved in self._saved]
+
+    def post(self, letter: Letter) -> str:
+        file_name = f"carta-{len(self._saved) + 1}.md"
+        self._saved.append(SavedLetter(file_name, letter))
+        return file_name
+
+    def saved_letters(self) -> list[SavedLetter]:
+        return list(self._saved)
+
+    def mark_read(self, file_name: str) -> SavedLetter:
+        for index, saved in enumerate(self._saved):
+            if saved.file_name == file_name:
+                self._saved[index] = SavedLetter(file_name, saved.letter.opened())
+                return self._saved[index]
+        raise LetterStorageError(f"no letter named {file_name}")
+
+
+class BrokenMailbox:
+    """A mailbox on a disk that fails."""
+
+    def post(self, letter: Letter) -> str:
+        raise LetterStorageError("disk is full")
+
+    def saved_letters(self) -> list[SavedLetter]:
+        return []
+
+    def mark_read(self, file_name: str) -> SavedLetter:
+        raise LetterStorageError("disk is full")

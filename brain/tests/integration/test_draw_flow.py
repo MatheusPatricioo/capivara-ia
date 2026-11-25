@@ -5,15 +5,14 @@ from pathlib import Path
 import pytest
 
 from src.application.category_matcher import CategoryCandidate
-from src.application.chalkboard_artist import ChalkboardArtist
 from src.application.conversation import Conversation
 from src.application.doodle_category_chooser import DoodleCategoryChooser
+from src.application.drawing_artist import DrawingArtist
 from src.application.illustrate_discovery import IllustrateDiscovery
 from src.application.tools.save_discovery_tool import SaveDiscoveryTool
 from src.application.tools.seen_sources import SeenSources
 from src.application.tools.web_search_tool import WebSearchTool
 from src.domain.capybara_hand import STILL_HAND, CapybaraHand
-from src.domain.chalkboard import Chalkboard
 from src.domain.doodle import Doodle, DoodleLibrary
 from src.domain.language_model import (
     ChatMessage,
@@ -98,20 +97,13 @@ def language_model() -> ScriptedLanguageModel:
 
 
 @pytest.fixture
-def chalkboard() -> Chalkboard:
-    return Chalkboard(capacity=3)
-
-
-@pytest.fixture
-def conversation(
-    language_model: ScriptedLanguageModel, chalkboard: Chalkboard, tmp_path: Path
-) -> Conversation:
+def conversation(language_model: ScriptedLanguageModel, tmp_path: Path) -> Conversation:
     seen_sources = SeenSources()
     illustrator = IllustrateDiscovery(
         DoodleCategoryChooser(OceanCandidates(), language_model, "Escolha:\n{candidates}"),
         DoodleLibrary({"ocean": [WAVES_DOODLE]}),
         CapybaraHand(STILL_HAND),
-        ChalkboardArtist(PngDrawingRepository(tmp_path), chalkboard, today=lambda: TODAY),
+        DrawingArtist(PngDrawingRepository(tmp_path), today=lambda: TODAY),
     )
     tools = [
         WebSearchTool(FakeWebSearcher(), seen_sources=seen_sources),
@@ -136,14 +128,6 @@ def test_writes_the_drawing_png_next_to_the_discovery(
     ]
 
 
-def test_pins_the_drawing_on_the_chalkboard(
-    conversation: Conversation, chalkboard: Chalkboard
-) -> None:
-    conversation.send(USER_MESSAGE)
-
-    assert [drawing.title for drawing in chalkboard.drawings] == ["Capivaras nadam"]
-
-
 def test_tells_the_model_the_discovery_was_saved_and_drawn(
     conversation: Conversation, language_model: ScriptedLanguageModel
 ) -> None:
@@ -152,8 +136,8 @@ def test_tells_the_model_the_discovery_was_saved_and_drawn(
     tool_result = language_model.received_histories[2][-1]
     assert tool_result == ChatMessage(
         Role.TOOL,
-        f"Saved as {EXPECTED_DISCOVERY_FILE}. Then you walked to your chalkboard and drew it "
-        f"with 3 chalk stroke(s), saved as {EXPECTED_DRAWING_FILE}.",
+        f"Saved as {EXPECTED_DISCOVERY_FILE}. Then you sketched it on your computer "
+        f"with 3 stroke(s), saved as {EXPECTED_DRAWING_FILE}.",
         tool_name="save_discovery",
     )
 

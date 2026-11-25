@@ -1,0 +1,93 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/props/mailbox_flag.gd" id="1_mailbox_flag"]
+[ext_resource type="Script" path="res://scripts/interaction_point.gd" id="2_interaction_point"]
+[ext_resource type="Script" path="res://scripts/props/clickable_area.gd" id="3_clickable_area"]
+
+; The capybara's mailbox, built from simple shapes: a wooden post, a red box with a round
+; top and a flag that goes up while a letter waits unread. Its front faces local +Z.
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood"]
+albedo_color = Color(0.5, 0.33, 0.2, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_box"]
+albedo_color = Color(0.25, 0.45, 0.7, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_flag"]
+albedo_color = Color(0.9, 0.18, 0.15, 1)
+roughness = 0.6
+
+[sub_resource type="BoxMesh" id="BoxMesh_post"]
+material = SubResource("StandardMaterial3D_wood")
+size = Vector3(0.08, 0.8, 0.08)
+
+[sub_resource type="BoxMesh" id="BoxMesh_box"]
+material = SubResource("StandardMaterial3D_box")
+size = Vector3(0.28, 0.2, 0.42)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_round_top"]
+material = SubResource("StandardMaterial3D_box")
+top_radius = 0.14
+bottom_radius = 0.14
+height = 0.42
+radial_segments = 16
+rings = 1
+
+[sub_resource type="BoxMesh" id="BoxMesh_flag_arm"]
+material = SubResource("StandardMaterial3D_flag")
+size = Vector3(0.02, 0.26, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_flag_tip"]
+material = SubResource("StandardMaterial3D_flag")
+size = Vector3(0.02, 0.08, 0.1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_mailbox"]
+size = Vector3(0.3, 1.1, 0.45)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_click"]
+size = Vector3(0.45, 0.5, 0.6)
+
+[node name="Mailbox" type="StaticBody3D"]
+input_ray_pickable = false
+script = ExtResource("1_mailbox_flag")
+
+[node name="Post" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.4, 0)
+mesh = SubResource("BoxMesh_post")
+
+[node name="Box" type="MeshInstance3D" parent="."]
+position = Vector3(0, 0.9, 0)
+mesh = SubResource("BoxMesh_box")
+
+[node name="RoundTop" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, 1, 0)
+mesh = SubResource("CylinderMesh_round_top")
+
+[node name="FlagPivot" type="Node3D" parent="."]
+position = Vector3(0.155, 0.92, -0.12)
+
+[node name="FlagArm" type="MeshInstance3D" parent="FlagPivot"]
+position = Vector3(0, 0.13, 0)
+mesh = SubResource("BoxMesh_flag_arm")
+
+[node name="FlagTip" type="MeshInstance3D" parent="FlagPivot"]
+position = Vector3(0, 0.22, 0.05)
+mesh = SubResource("BoxMesh_flag_tip")
+
+[node name="MailboxCollision" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.55, 0)
+shape = SubResource("BoxShape3D_mailbox")
+
+[node name="ArrivalPoint" type="Marker3D" parent="."]
+position = Vector3(0, 0, 0.7)
+script = ExtResource("2_interaction_point")
+point_id = &"mailbox"
+
+[node name="ClickArea" type="Area3D" parent="."]
+script = ExtResource("3_clickable_area")
+
+[node name="ClickShape" type="CollisionShape3D" parent="ClickArea"]
+position = Vector3(0, 0.95, 0)
+shape = SubResource("BoxShape3D_click")
