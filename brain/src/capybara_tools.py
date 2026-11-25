@@ -94,16 +94,7 @@ def build_capybara_tools(
         search_history=JsonSearchHistory(settings.discoveries_dir / SEARCH_HISTORY_FILE_NAME),
         search_log=JsonlSearchLog(settings.discoveries_dir / SEARCH_LOG_RELATIVE_PATH),
     )
-    illustrator = IllustrateDiscovery(
-        DoodleCategoryChooser(
-            _build_category_matcher(settings, http_client),
-            language_model,
-            load_prompt(CHOOSE_DOODLE_PROMPT_NAME),
-        ),
-        load_doodle_library(),
-        CapybaraHand(),
-        DrawingArtist(PngDrawingRepository(settings.discoveries_dir)),
-    )
+    illustrator = _build_illustrator(settings, language_model, http_client)
     save_discovery_tool = SaveDiscoveryTool(
         _build_discovery_repository(settings, memory),
         seen_sources,
@@ -142,6 +133,22 @@ def _build_suggest_improvement_tool(
             settings.suggestion_repeat_min_similarity,
         ),
         saved_discoveries,
+    )
+
+
+def _build_illustrator(
+    settings: Settings, language_model: StructuredLanguageModel, http_client: httpx.Client
+) -> IllustrateDiscovery:
+    """Draws a doodle for each saved discovery, chosen with retrieve and rerank."""
+    return IllustrateDiscovery(
+        DoodleCategoryChooser(
+            _build_category_matcher(settings, http_client),
+            language_model,
+            load_prompt(CHOOSE_DOODLE_PROMPT_NAME),
+        ),
+        load_doodle_library(),
+        CapybaraHand(),
+        DrawingArtist(PngDrawingRepository(settings.discoveries_dir)),
     )
 
 

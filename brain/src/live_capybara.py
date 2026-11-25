@@ -12,17 +12,15 @@ from src.application.diary_keeper import DiaryKeeper
 from src.application.feelings_voice import FeelingsVoice
 from src.application.heart import Heart
 from src.application.inner_voice import InnerVoice
-from src.application.letter_writer import LetterWriter
 from src.application.memory_query_expander import MemoryQueryExpander
 from src.application.metered_language_model import MeteredLanguageModel
 from src.application.related_discoveries import RelatedDiscoveries
 from src.application.related_memory_chooser import RelatedMemoryChooser
-from src.application.reply_reader import ReplyReader
 from src.application.self_care import SelfCare
-from src.application.shown_diary import ShownDiary
-from src.application.shown_mailbox import ShownMailbox
 from src.application.token_budget import HourlyTokenBudget
+from src.capybara_diary import build_diary_keeper
 from src.capybara_heart import build_heart
+from src.capybara_letters import CapybaraLetters, build_letters
 from src.capybara_sky import build_world_sky, describe_sky
 from src.capybara_tools import TOOL_RESULT_REMINDER_OVERRIDES, build_capybara_tools
 from src.domain.attention import Attention
@@ -30,19 +28,15 @@ from src.domain.body import Body
 from src.domain.discovery_memory import DiscoveryMemory
 from src.domain.feelings.appraisal import EmotionalEvent, EventKind
 from src.domain.feelings.behavior import cycle_pace
-from src.domain.language_model import LanguageModel, StructuredLanguageModel
+from src.domain.language_model import StructuredLanguageModel
 from src.infrastructure.logging_setup import configure_logging
-from src.infrastructure.markdown_diary import MarkdownDiary
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
-from src.infrastructure.markdown_mailbox import MarkdownMailbox
 from src.infrastructure.markdown_suggestion_repository import MarkdownSuggestionRepository
 from src.infrastructure.ollama_language_model import OllamaLanguageModel
 from src.infrastructure.prompt_loader import load_prompt
 from src.infrastructure.settings import Settings
 from src.infrastructure.sky_broadcaster import SkyBroadcaster
 from src.infrastructure.websocket_body import WebSocketBody
-from src.infrastructure.websocket_diary_display import WebSocketDiaryDisplay
-from src.infrastructure.websocket_mailbox_display import WebSocketMailboxDisplay
 from src.infrastructure.world_event_router import WorldEventRouter
 from src.infrastructure.world_messages import NoticedMessage
 from src.infrastructure.world_server import WorldServer
@@ -58,19 +52,15 @@ SUGGESTIONS_TEMPLATE_NAME = "known_suggestions"
 EXPAND_MEMORY_QUERY_NAME = "expand_memory_query"
 CHOOSE_RELATED_MEMORY_NAME = "choose_related_memory"
 FEELINGS_TEMPLATE_NAME = "feelings"
-LETTER_PROMPT_NAME = "letter"
-LETTER_REPLIES_TEMPLATE_NAME = "letter_replies"
 # Each message corrects the sun in the world, which moves it on its own in between.
 SKY_PUBLISH_INTERVAL_SECONDS = 10.0
+SECONDS_PER_MINUTE = 60.0
 
 logger = logging.getLogger(__name__)
 
 
 def print_thought(thought: str) -> None:
     print(f"Capivara (pensando): {thought}\n", flush=True)
-
-
-SECONDS_PER_MINUTE = 60.0
 
 
 def attention_listener(
@@ -90,6 +80,29 @@ def attention_listener(
             logger.debug("Already waiting or resting: %s", event.thing)
 
     return notice
+
+
+def build_attention_inbox(settings: Settings) -> AttentionInbox:
+    return AttentionInbox(
+        Attention(
+            settings.attention_capacity,
+            rest_seconds=settings.attention_rest_minutes * SECONDS_PER_MINUTE,
+        )
+    )
+
+
+def build_language_model(
+    settings: Settings, http_client: httpx.Client, budget: HourlyTokenBudget
+) -> MeteredLanguageModel:
+    """The local model, with every call counted against the hourly token budget."""
+    return MeteredLanguageModel(
+        OllamaLanguageModel(
+            client=http_client,
+            model=settings.ollama_model,
+            generation_options=settings.ollama_generation_options(),
+        ),
+        budget,
+    )
 
 
 def build_related_discoveries(
@@ -161,66 +174,32 @@ def feeling_hooks(
     return SelfCare(heart, body).take_care, lambda: cycle_pace(heart.check_in().emotions)
 
 
-def build_mailbox(
-    settings: Settings,
-    heart: Heart | None,
-    world_server: WorldServer,
-    world_events: WorldEventRouter,
-) -> ShownMailbox | None:
-    """The mailbox of the world, shown right away and listening for opened and answered letters.
+def before_each_cycle(
+    self_care: Callable[[], None], letters: CapybaraLetters | None
+) -> Callable[[], None]:
+    """First she takes care of herself, then she reads his replies and may write to him."""
+    if letters is None:
+        return self_care
 
-    None without feelings (she cannot miss anyone) or with LETTERS_ENABLED off.
-    """
-    if heart is None or not settings.letters_enabled:
-        return None
-    mailbox = ShownMailbox(
-        MarkdownMailbox(settings.discoveries_dir), WebSocketMailboxDisplay(world_server)
-    )
-    world_events.when_letter_opened(mailbox.open_letter)
-    world_events.when_letter_replied(mailbox.reply_to_letter)
-    mailbox.show()
-    return mailbox
+    def take_care_then_write() -> None:
+        self_care()
+        letters.before_cycle()
+
+    return take_care_then_write
 
 
-def build_letter_writer(
-    settings: Settings,
-    heart: Heart | None,
-    mailbox: ShownMailbox | None,
-    language_model: LanguageModel,
-    system_prompt: str,
-    body: Body,
-) -> LetterWriter | None:
-    if heart is None or mailbox is None:
-        return None
-    return LetterWriter(
-        heart,
-        mailbox,
-        MarkdownDiscoveryRepository(settings.discoveries_dir),
-        language_model,
-        system_prompt,
-        load_prompt(LETTER_PROMPT_NAME),
-        settings.letter_rhythm(),
-        body=body,
-    )
+def after_each_cycle(
+    inner_voice: InnerVoice, letters: CapybaraLetters | None
+) -> Callable[[], None]:
+    """After a cycle that finished: she lets go of what she noticed and of the replies she read."""
+    if letters is None:
+        return inner_voice.release_offered
 
+    def release_everything() -> None:
+        inner_voice.release_offered()
+        letters.after_cycle()
 
-def build_reply_reader(
-    heart: Heart | None, mailbox: ShownMailbox | None, body: Body
-) -> ReplyReader | None:
-    if heart is None or mailbox is None:
-        return None
-    return ReplyReader(mailbox, heart, load_prompt(LETTER_REPLIES_TEMPLATE_NAME), body=body)
-
-
-def build_diary_keeper(settings: Settings, world_server: WorldServer) -> DiaryKeeper:
-    """Her diary, shown in the world right away and after every new entry."""
-    diary = ShownDiary(
-        MarkdownDiary(settings.discoveries_dir),
-        WebSocketDiaryDisplay(world_server),
-        shown_days=settings.diary_shown_days,
-    )
-    diary.show()
-    return DiaryKeeper(diary)
+    return release_everything
 
 
 def think_aloud_and_write(diary_keeper: DiaryKeeper) -> Callable[[str], None]:
@@ -233,48 +212,11 @@ def think_aloud_and_write(diary_keeper: DiaryKeeper) -> Callable[[str], None]:
     return print_and_keep
 
 
-def with_letters(
-    before_cycle: Callable[[], None],
-    letter_writer: LetterWriter | None,
-    reply_reader: ReplyReader | None = None,
-) -> Callable[[], None]:
-    """Before each cycle: first she takes care of herself, then she reads his replies, and
-    then she may write him a letter (a reply that made her happy can spare one)."""
-    if letter_writer is None and reply_reader is None:
-        return before_cycle
-
-    def take_care_read_and_write() -> None:
-        before_cycle()
-        if reply_reader is not None:
-            reply_reader.read_new_replies()
-        if letter_writer is not None:
-            letter_writer.maybe_write()
-
-    return take_care_read_and_write
-
-
-def after_cycle(inner_voice: InnerVoice, reply_reader: ReplyReader | None) -> Callable[[], None]:
-    """After a cycle that finished: she lets go of what she noticed and of the replies she read."""
-    if reply_reader is None:
-        return inner_voice.release_offered
-
-    def release_all() -> None:
-        inner_voice.release_offered()
-        reply_reader.release()
-
-    return release_all
-
-
 def main() -> None:
     settings = Settings()
     configure_logging(settings.log_file, settings.log_level)
     budget = HourlyTokenBudget(settings.max_tokens_per_hour)
-    attention_inbox = AttentionInbox(
-        Attention(
-            settings.attention_capacity,
-            rest_seconds=settings.attention_rest_minutes * SECONDS_PER_MINUTE,
-        )
-    )
+    attention_inbox = build_attention_inbox(settings)
     system_prompt = load_prompt(SYSTEM_PROMPT_NAME)
     tool_result_reminder = load_prompt(TOOL_RESULT_REMINDER_NAME)
     heart = build_heart(settings)
@@ -295,22 +237,16 @@ def main() -> None:
         if heart is not None:
             heart.watch(body.show_feelings)
             body.show_feelings(heart.check_in())
-        language_model = MeteredLanguageModel(
-            OllamaLanguageModel(
-                client=http_client,
-                model=settings.ollama_model,
-                generation_options=settings.ollama_generation_options(),
-            ),
-            budget,
+        language_model = build_language_model(settings, http_client, budget)
+        letters = build_letters(
+            settings, heart, world_server, world_events, language_model, system_prompt, body
         )
-        mailbox = build_mailbox(settings, heart, world_server, world_events)
-        reply_reader = build_reply_reader(heart, mailbox, body)
         inner_voice = build_inner_voice(
             settings,
             attention_inbox,
             build_related_discoveries(settings, memory, language_model),
             heart,
-            replies=reply_reader.compose if reply_reader is not None else None,
+            replies=letters.reply_reader.compose if letters is not None else None,
         )
 
         def start_conversation() -> Conversation:
@@ -326,19 +262,14 @@ def main() -> None:
             )
 
         self_care, pace = feeling_hooks(heart, body)
-        before_cycle = with_letters(
-            self_care,
-            build_letter_writer(settings, heart, mailbox, language_model, system_prompt, body),
-            reply_reader,
-        )
         loop = AutonomousLoop(
             start_conversation,
             budget,
             inner_voice.compose,
             settings.autonomous_cycle_interval_seconds,
             on_thought=think_aloud_and_write(build_diary_keeper(settings, world_server)),
-            on_cycle_finished=after_cycle(inner_voice, reply_reader),
-            before_cycle=before_cycle,
+            on_cycle_finished=after_each_cycle(inner_voice, letters),
+            before_cycle=before_each_cycle(self_care, letters),
             pace=pace,
         )
         print(

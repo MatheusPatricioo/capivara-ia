@@ -88,11 +88,19 @@ class FaithfulnessJudge:
         ]
         reply = self._language_model.complete_json(messages, VERDICT_SCHEMA)
         try:
-            data = _VerdictData.model_validate(reply.data)
+            verdict_data = _VerdictData.model_validate(reply.data)
         except ValidationError as error:
             raise JudgeError(f"the judge did not answer with a verdict: {error}") from error
-        supported = [item for item in data.claims if quote_is_in(item.quote, evidence)]
-        unsupported = tuple(item.claim for item in data.claims if item not in supported)
+        supported = [
+            judged_claim
+            for judged_claim in verdict_data.claims
+            if quote_is_in(judged_claim.quote, evidence)
+        ]
+        unsupported = tuple(
+            judged_claim.claim
+            for judged_claim in verdict_data.claims
+            if judged_claim not in supported
+        )
         return FaithfulnessVerdict(len(supported), unsupported)
 
 

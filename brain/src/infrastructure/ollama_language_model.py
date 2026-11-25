@@ -83,12 +83,12 @@ class OllamaLanguageModel:
         }
         reply = self._parse_reply(self._post_chat(payload))
         try:
-            data = json.loads(reply.content)
+            parsed_content = json.loads(reply.content)
         except json.JSONDecodeError as error:
             raise LanguageModelError(NOT_A_JSON_OBJECT_MESSAGE) from error
-        if not isinstance(data, dict):
+        if not isinstance(parsed_content, dict):
             raise LanguageModelError(NOT_A_JSON_OBJECT_MESSAGE)
-        return StructuredReply(data=data, token_count=reply.token_count)
+        return StructuredReply(data=parsed_content, token_count=reply.token_count)
 
     def _base_payload(self, messages: list[ChatMessage]) -> dict[str, object]:
         payload: dict[str, object] = {

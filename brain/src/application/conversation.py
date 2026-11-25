@@ -62,16 +62,16 @@ class Conversation:
         tool = self._tools_by_name.get(tool_call.name)
         if tool is None:
             logger.warning("Unknown tool requested: %s", tool_call.name)
-            result = f"Error: unknown tool '{tool_call.name}'"
+            tool_result = f"Error: unknown tool '{tool_call.name}'"
         else:
             try:
-                result = tool.run(tool_call.arguments)
+                tool_result = tool.run(tool_call.arguments)
             except ToolError as error:
                 logger.warning("Tool %s failed: %s", tool_call.name, error)
-                result = f"Error: {error}"
+                tool_result = f"Error: {error}"
         return ChatMessage(
             role=Role.TOOL,
-            content=self._with_reminder(result, tool_call.name),
+            content=self._with_reminder(tool_result, tool_call.name),
             tool_name=tool_call.name,
         )
 

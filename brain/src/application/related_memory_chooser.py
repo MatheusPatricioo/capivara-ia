@@ -40,7 +40,10 @@ class RelatedMemoryChooser:
         logger.info(
             "Related memory for '%s': candidates %s; chose %r",
             subject,
-            ", ".join(f"'{item.discovery.title}' {item.similarity:.3f}" for item in candidates),
+            ", ".join(
+                f"'{candidate.discovery.title}' {candidate.similarity:.3f}"
+                for candidate in candidates
+            ),
             choice,
         )
         if choice not in options:
@@ -53,8 +56,8 @@ class RelatedMemoryChooser:
         self, subject: str, candidates: Sequence[RememberedDiscovery]
     ) -> list[ChatMessage]:
         option_list = "\n".join(
-            f"{position}: {item.discovery.title} — {_one_line(item.discovery.summary)}"
-            for position, item in enumerate(candidates, start=1)
+            f"{position}: {candidate.discovery.title} — {_one_line(candidate.discovery.summary)}"
+            for position, candidate in enumerate(candidates, start=1)
         )
         return [
             ChatMessage(

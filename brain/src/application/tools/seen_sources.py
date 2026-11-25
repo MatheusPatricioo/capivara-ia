@@ -10,10 +10,10 @@ class SeenSources:
         self._latest_results: tuple[str, ...] = ()
 
     def remember(self, urls: Iterable[str]) -> None:
-        results = tuple(url.strip() for url in urls)
-        self._comparable_urls.update(_comparable(url) for url in results)
-        if results:
-            self._latest_results = results
+        cleaned_urls = tuple(url.strip() for url in urls)
+        self._comparable_urls.update(_comparable(url) for url in cleaned_urls)
+        if cleaned_urls:
+            self._latest_results = cleaned_urls
 
     def contains(self, url: str) -> bool:
         """The same link written encoded ("Sat%C3%A9lites") or not ("Satélites") matches."""

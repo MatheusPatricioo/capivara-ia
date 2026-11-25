@@ -21,11 +21,11 @@ class FallbackWebSearcher:
 
     def search(self, query: str, max_results: int) -> list[SearchResult]:
         try:
-            results = self._primary.search(query, max_results)
+            main_results = self._primary.search(query, max_results)
         except WebSearchError as error:
             logger.warning("Main search failed (%s); trying the fallback", error)
             return self._fallback.search(query, max_results)
-        if results:
-            return results
+        if main_results:
+            return main_results
         logger.info("Main search found nothing for %r; trying the fallback", query)
         return self._fallback.search(query, max_results)

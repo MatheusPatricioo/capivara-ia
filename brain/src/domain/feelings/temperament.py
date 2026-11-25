@@ -26,9 +26,9 @@ class Temperament:
 
     def __post_init__(self) -> None:
         for trait in fields(self):
-            value = getattr(self, trait.name)
-            if not 0.0 <= value <= 1.0:
-                raise ValueError(f"{trait.name} must be between 0 and 1, got {value}")
+            trait_value = getattr(self, trait.name)
+            if not 0.0 <= trait_value <= 1.0:
+                raise ValueError(f"{trait.name} must be between 0 and 1, got {trait_value}")
 
     def resting_levels(self, baseline: Baseline) -> dict[Emotion, float]:
         """Where her emotions settle when nothing happens: curious and happy by default.
