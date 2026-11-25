@@ -5,6 +5,8 @@
 [ext_resource type="Script" uid="uid://2y24cmfmdof" path="res://scripts/capybara_body_animation.gd" id="3_capybara_body_animation"]
 [ext_resource type="PackedScene" path="res://assets/capybara/capybara.glb" id="4_capybara_model"]
 [ext_resource type="Script" path="res://scripts/capybara_brain_driver.gd" id="5_capybara_brain_driver"]
+[ext_resource type="Script" path="res://scripts/capybara_feelings.gd" id="6_capybara_feelings"]
+[ext_resource type="Script" path="res://scripts/capybara_emote.gd" id="7_capybara_emote"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_capybara"]
 radius = 0.4
@@ -29,6 +31,19 @@ script = ExtResource("2_capybara_wander")
 
 [node name="BrainDriver" type="Node" parent="."]
 script = ExtResource("5_capybara_brain_driver")
+
+[node name="Feelings" type="Node" parent="."]
+script = ExtResource("6_capybara_feelings")
+
+[node name="Emote" type="Label3D" parent="."]
+position = Vector3(0, 1.35, 0)
+billboard = 1
+no_depth_test = true
+modulate = Color(1, 1, 1, 0)
+outline_modulate = Color(0.15, 0.1, 0.05, 1)
+font_size = 72
+outline_size = 18
+script = ExtResource("7_capybara_emote")
 
 [node name="Body" type="Node3D" parent="."]
 script = ExtResource("3_capybara_body_animation")

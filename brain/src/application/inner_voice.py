@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Callable
 
 from src.application.attention_inbox import AttentionInbox
 from src.application.related_discoveries import RelatedDiscoveries
@@ -42,6 +43,9 @@ class InnerVoice:
     catches requests that share their key words). Each one says whether it is still
     waiting or was built. When she notices the thing built for a suggestion (same thing
     id), that line tells her it is what she asked for.
+
+    With feelings, a short description of how she feels (and why) comes right before
+    what she noticed, so her mood colours what she picks and how she tells it.
     """
 
     def __init__(
@@ -56,6 +60,7 @@ class InnerVoice:
         related_template: str = "",
         suggestions: WorldSuggestionArchive | None = None,
         suggestions_template: str = "",
+        feelings: Callable[[], str] | None = None,
     ) -> None:
         self._invitation = invitation
         self._catalog = catalog
@@ -67,11 +72,12 @@ class InnerVoice:
         self._related_template = related_template
         self._suggestions = suggestions
         self._suggestions_template = suggestions_template
+        self._feelings = feelings
         self._offered: tuple[PointOfAttention, ...] = ()
 
     def compose(self) -> str:
-        """Memory and earlier suggestions first, then related discoveries, what she noticed,
-        and the invitation last.
+        """Memory and earlier suggestions first, then related discoveries, how she feels,
+        what she noticed, and the invitation last.
 
         The end of the message is the part the model follows best.
         """
@@ -81,6 +87,7 @@ class InnerVoice:
             self._memory(),
             self._earlier_suggestions(suggestions),
             self._related_memories(),
+            self._feelings() if self._feelings is not None else "",
             self._noticed(suggestions),
             self._invitation,
         ]

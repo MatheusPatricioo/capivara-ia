@@ -11,6 +11,7 @@ from src.application.remembering_discovery_repository import RememberingDiscover
 from src.application.repeated_suggestions import RepeatedSuggestions
 from src.application.tools.conversation_discoveries import ConversationDiscoveries
 from src.application.tools.embodied_tool import EmbodiedTool
+from src.application.tools.feeling_tool import Feeler, FeelingTool, always, search_feeling
 from src.application.tools.recall_memory_tool import RecallMemoryTool
 from src.application.tools.save_discovery_tool import SaveDiscoveryTool
 from src.application.tools.seen_sources import SeenSources
@@ -21,6 +22,7 @@ from src.domain.capybara_hand import CapybaraHand
 from src.domain.chalkboard import Chalkboard
 from src.domain.discovery import DiscoveryRepository
 from src.domain.discovery_memory import DiscoveryMemory
+from src.domain.feelings.appraisal import EventKind
 from src.domain.language_model import StructuredLanguageModel
 from src.domain.tool import Tool
 from src.infrastructure.duckduckgo_web_searcher import DuckDuckGoWebSearcher
@@ -60,6 +62,7 @@ def build_capybara_tools(
     http_client: httpx.Client,
     body: Body | None = None,
     memory: DiscoveryMemory | None = None,
+    heart: Feeler | None = None,
 ) -> list[Tool]:
     """Creates fresh tools for one conversation. With a body, each tool walks to its place.
 
@@ -71,6 +74,9 @@ def build_capybara_tools(
 
     After saving a discovery, she may suggest one thing for her world (suggest_improvement),
     inspired by the discovery she just saved in this same conversation.
+
+    With a heart, she feels what comes out of her tools: a search that found something,
+    one that found nothing, a saved discovery, a wish made.
 
     There is no draw tool: every saved discovery is offered a drawing automatically, because
     with a draw tool she often said she would draw and never called it.
@@ -108,6 +114,12 @@ def build_capybara_tools(
         settings, http_client, saved_discoveries
     )
     tools: list[Tool] = [web_search_tool, save_discovery_tool, suggest_improvement_tool]
+    if heart is not None:
+        tools = [
+            FeelingTool(web_search_tool, heart, search_feeling, EventKind.SEARCH_FAILED),
+            FeelingTool(save_discovery_tool, heart, always(EventKind.DISCOVERY_SAVED)),
+            FeelingTool(suggest_improvement_tool, heart, always(EventKind.WISH_MADE)),
+        ]
     if memory is not None and settings.memory_recall_tool:
         # Agentic RAG: she decides when to look into her treasure, like a web search.
         tools.append(RecallMemoryTool(memory, settings.memory_recall_min_similarity))

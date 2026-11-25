@@ -4,11 +4,14 @@ import pytest
 from pydantic import ValidationError
 
 from src.domain.drawing import Drawing, Point, Stroke
+from src.domain.feelings.emotion import Emotion, EmotionalState
 from src.infrastructure.world_messages import (
+    CALM_EMOTION,
     MAX_DESCRIPTION_LENGTH,
     GoToMessage,
     NoticedMessage,
     chalkboard_message,
+    feelings_message,
     parse_world_event,
 )
 
@@ -27,6 +30,24 @@ def test_go_to_message_has_the_type_and_the_point() -> None:
 def test_rejects_a_go_to_message_without_point() -> None:
     with pytest.raises(ValidationError):
         GoToMessage(point="")
+
+
+def test_feelings_message_carries_her_strongest_emotion() -> None:
+    state = EmotionalState({Emotion.JOY: 0.7, Emotion.CURIOSITY: 0.4})
+
+    message = json.loads(feelings_message(state).model_dump_json())
+
+    assert (message["type"], message["emotion"], message["intensity"]) == ("feelings", "joy", 0.7)
+
+
+def test_feelings_message_is_calm_when_nothing_is_strong_enough() -> None:
+    assert feelings_message(EmotionalState({Emotion.JOY: 0.1})).emotion == CALM_EMOTION
+
+
+def test_feelings_message_tells_a_sad_state_is_negative() -> None:
+    state = EmotionalState({Emotion.SADNESS: 0.8})
+
+    assert feelings_message(state).valence < 0
 
 
 def test_chalkboard_message_lists_every_stroke_with_its_points() -> None:

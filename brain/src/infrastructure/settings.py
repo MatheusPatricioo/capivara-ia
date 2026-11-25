@@ -4,6 +4,8 @@ from typing import Literal
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from src.domain.feelings.needs import NeedRhythm
+from src.domain.feelings.temperament import Temperament
 from src.infrastructure.ollama_language_model import OllamaGenerationOptions
 from src.infrastructure.postgres_discovery_memory import SearchMode, memory_conninfo
 
@@ -59,6 +61,16 @@ class Settings(BaseSettings):
     # A new suggestion repeats an earlier one when their cosine similarity reaches this.
     # 0.80 was measured with nomic-embed-text; see .env.example.
     suggestion_repeat_min_similarity: float = Field(default=0.80, ge=0.0, le=1.0)
+    # Feelings: her emotional life, kept in <DISCOVERIES_DIR>/feelings.json.
+    feelings_enabled: bool = True
+    # Speeds up how fast her needs empty (10 = ten times faster), to watch her live.
+    feelings_time_scale: float = Field(default=1.0, gt=0)
+    # Her temperament, each trait from 0 to 1. The defaults are a curious, cheerful capybara.
+    temperament_curiosity: float = Field(default=0.9, ge=0.0, le=1.0)
+    temperament_cheerfulness: float = Field(default=0.8, ge=0.0, le=1.0)
+    temperament_patience: float = Field(default=0.6, ge=0.0, le=1.0)
+    temperament_sensitivity: float = Field(default=0.5, ge=0.0, le=1.0)
+    temperament_resilience: float = Field(default=0.7, ge=0.0, le=1.0)
     log_level: LogLevel = "INFO"
     log_file: Path = PROJECT_ROOT / "logs" / "capybara.log"
 
@@ -68,6 +80,18 @@ class Settings(BaseSettings):
             temperature=self.ollama_temperature,
             repeat_penalty=self.ollama_repeat_penalty,
         )
+
+    def temperament(self) -> Temperament:
+        return Temperament(
+            curiosity=self.temperament_curiosity,
+            cheerfulness=self.temperament_cheerfulness,
+            patience=self.temperament_patience,
+            sensitivity=self.temperament_sensitivity,
+            resilience=self.temperament_resilience,
+        )
+
+    def need_rhythm(self) -> NeedRhythm:
+        return NeedRhythm(time_scale=self.feelings_time_scale)
 
     def memory_db_conninfo(self) -> str:
         return memory_conninfo(

@@ -8,16 +8,23 @@ import httpx
 from src.application.attention_inbox import AttentionInbox
 from src.application.autonomous_loop import AutonomousLoop
 from src.application.conversation import Conversation
+from src.application.feelings_voice import FeelingsVoice
+from src.application.heart import Heart
 from src.application.inner_voice import InnerVoice
 from src.application.memory_query_expander import MemoryQueryExpander
 from src.application.metered_language_model import MeteredLanguageModel
 from src.application.related_discoveries import RelatedDiscoveries
 from src.application.related_memory_chooser import RelatedMemoryChooser
+from src.application.self_care import SelfCare
 from src.application.token_budget import HourlyTokenBudget
+from src.capybara_heart import build_heart
 from src.capybara_tools import TOOL_RESULT_REMINDER_OVERRIDES, build_capybara_tools
 from src.domain.attention import Attention
+from src.domain.body import Body
 from src.domain.chalkboard import Chalkboard
 from src.domain.discovery_memory import DiscoveryMemory
+from src.domain.feelings.appraisal import EmotionalEvent, EventKind
+from src.domain.feelings.behavior import cycle_pace
 from src.domain.language_model import StructuredLanguageModel
 from src.infrastructure.logging_setup import configure_logging
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
@@ -39,6 +46,7 @@ RELATED_TEMPLATE_NAME = "related_discoveries"
 SUGGESTIONS_TEMPLATE_NAME = "known_suggestions"
 EXPAND_MEMORY_QUERY_NAME = "expand_memory_query"
 CHOOSE_RELATED_MEMORY_NAME = "choose_related_memory"
+FEELINGS_TEMPLATE_NAME = "feelings"
 
 logger = logging.getLogger(__name__)
 
@@ -50,12 +58,19 @@ def print_thought(thought: str) -> None:
 SECONDS_PER_MINUTE = 60.0
 
 
-def attention_listener(inbox: AttentionInbox) -> Callable[[NoticedMessage], None]:
-    """Turns what the world reports into points of attention for her next cycles."""
+def attention_listener(
+    inbox: AttentionInbox, heart: Heart | None = None
+) -> Callable[[NoticedMessage], None]:
+    """Turns what the world reports into points of attention for her next cycles.
+
+    With a heart, every new thing also sparks a little curiosity and surprise.
+    """
 
     def notice(event: NoticedMessage) -> None:
         if inbox.notice(event.thing, event.description):
             logger.info("New point of attention: %s (%s)", event.thing, event.description)
+            if heart is not None:
+                heart.feel(EmotionalEvent(EventKind.NOTICED_SOMETHING))
         else:
             logger.debug("Already waiting or resting: %s", event.thing)
 
@@ -82,8 +97,20 @@ def build_related_discoveries(
 
 
 def build_inner_voice(
-    settings: Settings, attention_inbox: AttentionInbox, related: RelatedDiscoveries
+    settings: Settings,
+    attention_inbox: AttentionInbox,
+    related: RelatedDiscoveries,
+    heart: Heart | None = None,
 ) -> InnerVoice:
+    feelings = (
+        FeelingsVoice(
+            heart,
+            load_prompt(FEELINGS_TEMPLATE_NAME),
+            MarkdownSuggestionRepository(settings.discoveries_dir),
+        )
+        if heart is not None
+        else None
+    )
     return InnerVoice(
         invitation=load_prompt(INNER_VOICE_NAME),
         catalog=MarkdownDiscoveryRepository(settings.discoveries_dir),
@@ -95,7 +122,26 @@ def build_inner_voice(
         related_template=load_prompt(RELATED_TEMPLATE_NAME),
         suggestions=MarkdownSuggestionRepository(settings.discoveries_dir),
         suggestions_template=load_prompt(SUGGESTIONS_TEMPLATE_NAME),
+        feelings=feelings.compose if feelings is not None else None,
     )
+
+
+def _do_nothing() -> None:
+    pass
+
+
+def _steady_pace() -> float:
+    return 1.0
+
+
+def feeling_hooks(
+    heart: Heart | None, body: Body
+) -> tuple[Callable[[], None], Callable[[], float]]:
+    """What runs before each cycle (taking care of herself) and the pace between cycles
+    (slower when she is down, faster in a good tide). Without a heart, neither changes."""
+    if heart is None:
+        return _do_nothing, _steady_pace
+    return SelfCare(heart, body).take_care, lambda: cycle_pace(heart.check_in().emotions)
 
 
 def main() -> None:
@@ -111,11 +157,12 @@ def main() -> None:
     )
     system_prompt = load_prompt(SYSTEM_PROMPT_NAME)
     tool_result_reminder = load_prompt(TOOL_RESULT_REMINDER_NAME)
+    heart = build_heart(settings)
     with (
         WorldServer(
             settings.world_server_host,
             settings.world_server_port,
-            on_event=attention_listener(attention_inbox),
+            on_event=attention_listener(attention_inbox, heart),
         ) as world_server,
         httpx.Client(
             base_url=settings.ollama_base_url, timeout=settings.ollama_timeout_seconds
@@ -124,6 +171,9 @@ def main() -> None:
     ):
         body = WebSocketBody(world_server)
         body.show_chalkboard(chalkboard.drawings)
+        if heart is not None:
+            heart.watch(body.show_feelings)
+            body.show_feelings(heart.check_in())
         language_model = MeteredLanguageModel(
             OllamaLanguageModel(
                 client=http_client,
@@ -136,6 +186,7 @@ def main() -> None:
             settings,
             attention_inbox,
             build_related_discoveries(settings, memory, language_model),
+            heart,
         )
 
         def start_conversation() -> Conversation:
@@ -143,13 +194,14 @@ def main() -> None:
                 language_model,
                 system_prompt,
                 tools=build_capybara_tools(
-                    settings, chalkboard, language_model, http_client, body, memory
+                    settings, chalkboard, language_model, http_client, body, memory, heart
                 ),
                 max_steps=settings.max_tool_steps,
                 tool_result_reminder=tool_result_reminder,
                 tool_result_reminders=TOOL_RESULT_REMINDER_OVERRIDES,
             )
 
+        before_cycle, pace = feeling_hooks(heart, body)
         loop = AutonomousLoop(
             start_conversation,
             budget,
@@ -157,6 +209,8 @@ def main() -> None:
             settings.autonomous_cycle_interval_seconds,
             on_thought=print_thought,
             on_cycle_finished=inner_voice.release_offered,
+            before_cycle=before_cycle,
+            pace=pace,
         )
         print(
             f"A capivara está viva. Abra o mundo no Godot (ws://{settings.world_server_host}:"

@@ -200,6 +200,61 @@ def test_a_skipped_cycle_is_not_a_finished_cycle(
     assert finished_cycles == []
 
 
+def build_loop_with_feelings(
+    language_model: ThinkingLanguageModel,
+    budget: HourlyTokenBudget,
+    moments: list[str],
+    sleeps: list[float],
+    pace: float = 1.0,
+) -> AutonomousLoop:
+    def compose_inner_voice() -> str:
+        moments.append("inner voice")
+        return INNER_VOICE
+
+    return AutonomousLoop(
+        lambda: Conversation(language_model, "You are a capybara."),
+        budget,
+        compose_inner_voice,
+        INTERVAL_SECONDS,
+        sleep=sleeps.append,
+        before_cycle=lambda: moments.append("self care"),
+        pace=lambda: pace,
+    )
+
+
+def test_she_may_take_care_of_herself_before_thinking(
+    language_model: ThinkingLanguageModel, budget: HourlyTokenBudget, sleeps: list[float]
+) -> None:
+    moments: list[str] = []
+    loop = build_loop_with_feelings(language_model, budget, moments, sleeps)
+
+    loop.run_cycle()
+
+    assert moments == ["self care", "inner voice"]
+
+
+def test_a_skipped_cycle_does_not_take_care_of_her(
+    language_model: ThinkingLanguageModel, budget: HourlyTokenBudget, sleeps: list[float]
+) -> None:
+    moments: list[str] = []
+    loop = build_loop_with_feelings(language_model, budget, moments, sleeps)
+    budget.record(MAX_TOKENS_PER_HOUR)
+
+    loop.run_cycle()
+
+    assert moments == []
+
+
+def test_her_pace_stretches_the_interval_between_cycles(
+    language_model: ThinkingLanguageModel, budget: HourlyTokenBudget, sleeps: list[float]
+) -> None:
+    loop = build_loop_with_feelings(language_model, budget, [], sleeps, pace=1.5)
+
+    loop.run(cycles=2)
+
+    assert sleeps == [INTERVAL_SECONDS * 1.5]
+
+
 def test_a_failed_cycle_is_not_a_finished_cycle(budget: HourlyTokenBudget) -> None:
     finished_cycles: list[None] = []
     loop = build_loop_counting_finished_cycles(OfflineLanguageModel(), budget, finished_cycles)

@@ -2,8 +2,15 @@ import pytest
 
 from src.domain.body import Place
 from src.domain.drawing import Drawing, Point, Stroke
+from src.domain.feelings.emotion import Emotion
 from src.infrastructure.websocket_body import WebSocketBody
-from src.infrastructure.world_messages import GoToMessage, WorldMessage, chalkboard_message
+from src.infrastructure.world_messages import (
+    FeelingsMessage,
+    GoToMessage,
+    WorldMessage,
+    chalkboard_message,
+)
+from tests.fakes.emotional_lives import a_life
 
 SUN_DRAWING = Drawing(title="O sol", strokes=(Stroke(points=(Point(160, 150), Point(240, 150))),))
 
@@ -40,3 +47,13 @@ def test_show_chalkboard_sends_the_drawings_and_remembers_them(
     body.show_chalkboard((SUN_DRAWING,))
 
     assert broadcaster.sent == [(chalkboard_message((SUN_DRAWING,)), True)]
+
+
+def test_show_feelings_sends_her_strongest_emotion_and_remembers_it(
+    body: WebSocketBody, broadcaster: RecordingBroadcaster
+) -> None:
+    body.show_feelings(a_life({Emotion.LONELINESS: 0.6, Emotion.JOY: 0.2}))
+
+    message, remember = broadcaster.sent[0]
+    assert isinstance(message, FeelingsMessage)
+    assert (message.emotion, message.intensity, remember) == ("loneliness", 0.6, True)

@@ -6,7 +6,7 @@ import pytest
 
 from src.domain.world_suggestion import WorldSuggestion
 from src.infrastructure.markdown_suggestion_repository import MarkdownSuggestionRepository
-from src.mark_suggestion_built import FAILURE, SUCCESS, run
+from src.mark_suggestion_built import FAILURE, SUCCESS, run, waited_hours
 
 SUGGESTION = WorldSuggestion(
     request="Um laguinho com vitórias-régias",
@@ -83,3 +83,25 @@ def test_fails_with_a_message_for_an_invalid_thing_id(
 
     assert exit_code == FAILURE
     assert "not a world thing id" in capsys.readouterr().err
+
+
+def test_marking_a_wish_built_lets_her_feel_it(repository: MarkdownSuggestionRepository) -> None:
+    granted: list[WorldSuggestion] = []
+
+    run([FILE_NAME], repository, on_built=granted.append)
+
+    assert [suggestion.request for suggestion in granted] == [SUGGESTION.request]
+
+
+def test_a_failed_mark_does_not_let_her_feel_anything(
+    repository: MarkdownSuggestionRepository,
+) -> None:
+    granted: list[WorldSuggestion] = []
+
+    run(["2026-11-24-nao-existe.md"], repository, on_built=granted.append)
+
+    assert granted == []
+
+
+def test_she_waited_whole_days_for_her_wish() -> None:
+    assert waited_hours(SUGGESTION, date(2026, 11, 27)) == 72.0
