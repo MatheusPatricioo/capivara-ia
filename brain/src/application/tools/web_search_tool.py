@@ -2,7 +2,15 @@ import logging
 from collections.abc import Callable
 from datetime import date, datetime
 
+from pydantic import Field
+
 from src.application.tools.seen_sources import SeenSources
+from src.application.tools.tool_arguments import (
+    NonEmptyText,
+    ToolArguments,
+    parse_arguments,
+    tool_parameters,
+)
 from src.domain.language_model import ToolDefinition
 from src.domain.search_history import SearchHistory, SearchHistoryError
 from src.domain.search_log import FoundPage, SearchLog, SearchLogError, SearchRecord
@@ -23,6 +31,10 @@ ALREADY_SEARCHED_MESSAGE = (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class WebSearchArguments(ToolArguments):
+    query: NonEmptyText = Field(description="What to search for, written in Brazilian Portuguese.")
 
 
 def _local_now() -> datetime:
@@ -55,23 +67,11 @@ class WebSearchTool:
         return ToolDefinition(
             name="web_search",
             description="Searches the web and returns a few results with title, URL and snippet.",
-            parameters={
-                "type": "object",
-                "properties": {
-                    "query": {
-                        "type": "string",
-                        "description": "What to search for, written in Brazilian Portuguese.",
-                    },
-                },
-                "required": ["query"],
-            },
+            parameters=tool_parameters(WebSearchArguments),
         )
 
     def run(self, arguments: dict[str, object]) -> str:
-        query = arguments.get("query")
-        if not isinstance(query, str) or not query.strip():
-            raise ToolError("the 'query' argument must be a non-empty text")
-        query = query.strip()
+        query = parse_arguments(WebSearchArguments, arguments).query
         searched_on = self._previous_search_day(query)
         if searched_on is not None:
             logger.info("web_search skipped: '%s' was already searched on %s", query, searched_on)

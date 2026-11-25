@@ -95,9 +95,12 @@ def test_tells_the_model_the_saved_file_name(save_discovery_tool: SaveDiscoveryT
     assert save_discovery_tool.run(VALID_ARGUMENTS).startswith(f"Saved as {SAVED_FILE_NAME}.")
 
 
-def test_rejects_an_empty_source_list(save_discovery_tool: SaveDiscoveryTool) -> None:
-    with pytest.raises(ToolError, match="at least one source"):
-        save_discovery_tool.run(arguments_with(sources=[]))
+def test_cites_the_latest_search_when_the_source_list_is_empty(
+    save_discovery_tool: SaveDiscoveryTool, repository: InMemoryDiscoveryRepository
+) -> None:
+    save_discovery_tool.run(arguments_with(sources=[]))
+
+    assert repository.saved_discoveries[0].sources == tuple(SEARCHED_URLS)
 
 
 def test_refuses_to_save_without_any_search_result_and_offers_to_give_up(
@@ -190,7 +193,7 @@ def test_rejects_a_source_that_is_not_a_web_url(save_discovery_tool: SaveDiscove
 
 
 def test_rejects_a_source_that_is_not_text(save_discovery_tool: SaveDiscoveryTool) -> None:
-    with pytest.raises(ToolError, match="invalid source URL"):
+    with pytest.raises(ToolError, match="'sources.0' must be a text"):
         save_discovery_tool.run(arguments_with(sources=[42]))
 
 

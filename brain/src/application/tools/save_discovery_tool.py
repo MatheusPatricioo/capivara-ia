@@ -2,9 +2,17 @@ import logging
 from collections.abc import Callable
 from datetime import date
 
+from pydantic import Field, field_validator
+
 from src.application.chalkboard_artist import PinnedDrawing
 from src.application.tools.conversation_discoveries import ConversationDiscoveries
 from src.application.tools.seen_sources import SeenSources
+from src.application.tools.tool_arguments import (
+    NonEmptyText,
+    ToolArguments,
+    parse_arguments,
+    tool_parameters,
+)
 from src.domain.discovery import Discovery, DiscoveryRepository, DiscoveryStorageError
 from src.domain.language_model import ToolDefinition
 from src.domain.tool import ToolError
@@ -12,6 +20,31 @@ from src.domain.tool import ToolError
 ALLOWED_URL_PREFIXES = ("http://", "https://")
 
 logger = logging.getLogger(__name__)
+
+
+class SaveDiscoveryArguments(ToolArguments):
+    title: NonEmptyText = Field(description="Short title, in Brazilian Portuguese.")
+    topic: NonEmptyText = Field(
+        description="General theme in Brazilian Portuguese, e.g. 'estrelas'."
+    )
+    summary: NonEmptyText = Field(description="What you learned, in your own words, in Portuguese.")
+    # Empty and left out mean the same: the small model often leaves sources out, and the
+    # search it just made is the source. A plain list (no "null") keeps the schema simple.
+    sources: list[str] = Field(
+        default_factory=list,
+        description=(
+            "URLs from your web_search results where you found it. "
+            "If left out, the results of your latest search are cited."
+        ),
+    )
+
+    @field_validator("sources")
+    @classmethod
+    def _only_web_urls(cls, sources: list[str]) -> list[str]:
+        for source in sources:
+            if not source.strip().startswith(ALLOWED_URL_PREFIXES):
+                raise ValueError(f"invalid source URL: '{source}'")
+        return [source.strip() for source in sources]
 
 
 class SaveDiscoveryTool:
@@ -47,40 +80,16 @@ class SaveDiscoveryTool:
                 "The file name is chosen automatically. Title, topic and summary are always "
                 "written in Brazilian Portuguese, even when the pages were in another language."
             ),
-            parameters={
-                "type": "object",
-                "properties": {
-                    "title": {
-                        "type": "string",
-                        "description": "Short title, in Brazilian Portuguese.",
-                    },
-                    "topic": {
-                        "type": "string",
-                        "description": "General theme in Brazilian Portuguese, e.g. 'estrelas'.",
-                    },
-                    "summary": {
-                        "type": "string",
-                        "description": "What you learned, in your own words, in Portuguese.",
-                    },
-                    "sources": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": (
-                            "URLs from your web_search results where you found it. "
-                            "If left out, the results of your latest search are cited."
-                        ),
-                    },
-                },
-                "required": ["title", "topic", "summary"],
-            },
+            parameters=tool_parameters(SaveDiscoveryArguments),
         )
 
     def run(self, arguments: dict[str, object]) -> str:
+        parsed = parse_arguments(SaveDiscoveryArguments, arguments)
         discovery = Discovery(
-            title=self._required_text(arguments, "title"),
-            topic=self._required_text(arguments, "topic"),
-            summary=self._required_text(arguments, "summary"),
-            sources=self._sources(arguments),
+            title=parsed.title,
+            topic=parsed.topic,
+            summary=parsed.summary,
+            sources=self._sources(parsed.sources),
             discovered_on=self._today(),
         )
         try:
@@ -111,20 +120,10 @@ class SaveDiscoveryTool:
             return f"{message} At your chalkboard, this one did not become a drawing."
         return f"{message} {_describe_drawing(pinned_drawing)}"
 
-    @staticmethod
-    def _required_text(arguments: dict[str, object], name: str) -> str:
-        value = arguments.get(name)
-        if not isinstance(value, str) or not value.strip():
-            raise ToolError(f"the '{name}' argument must be a non-empty text")
-        return value.strip()
-
-    def _sources(self, arguments: dict[str, object]) -> tuple[str, ...]:
-        sources = arguments.get("sources")
-        if sources is None:
+    def _sources(self, sources: list[str]) -> tuple[str, ...]:
+        if not sources:
             return self._latest_search_results()
-        if not isinstance(sources, list):
-            raise ToolError("the 'sources' argument must be a list of URLs")
-        urls = tuple(self._valid_url(source) for source in sources)
+        urls = tuple(sources)
         self._ensure_sources_came_from_web_search(urls)
         return urls
 
@@ -144,20 +143,12 @@ class SaveDiscoveryTool:
 
     def _ensure_sources_came_from_web_search(self, urls: tuple[str, ...]) -> None:
         self._ensure_there_are_search_results()
-        if not urls:
-            raise ToolError("a discovery needs at least one source from your web_search results")
         for url in urls:
             if not self._seen_sources.contains(url):
                 raise ToolError(
                     f"source '{url}' did not come from your web_search results: "
                     "search first and cite only URLs it returned"
                 )
-
-    @staticmethod
-    def _valid_url(source: object) -> str:
-        if not isinstance(source, str) or not source.strip().startswith(ALLOWED_URL_PREFIXES):
-            raise ToolError(f"invalid source URL: '{source}'")
-        return source.strip()
 
 
 def _describe_drawing(pinned_drawing: PinnedDrawing) -> str:

@@ -201,17 +201,17 @@ def test_logs_a_warning_when_repeats_cannot_be_checked(
 
 
 def test_refuses_a_blank_request(tool: SuggestImprovementTool) -> None:
-    with pytest.raises(ToolError, match="needs a request"):
+    with pytest.raises(ToolError, match="'request' must not be empty"):
         tool.run({"request": "  ", "reason": "Porque sim."})
 
 
 def test_refuses_a_missing_reason(tool: SuggestImprovementTool) -> None:
-    with pytest.raises(ToolError, match="needs a reason"):
+    with pytest.raises(ToolError, match="'reason' is required"):
         tool.run({"request": "Vaga-lumes no jardim"})
 
 
 def test_refuses_a_request_that_is_not_text(tool: SuggestImprovementTool) -> None:
-    with pytest.raises(ToolError, match="needs a request"):
+    with pytest.raises(ToolError, match="'request' must be a text"):
         tool.run({"request": 42, "reason": "Porque sim."})
 
 

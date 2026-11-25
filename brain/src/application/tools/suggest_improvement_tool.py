@@ -2,8 +2,16 @@ import logging
 from collections.abc import Callable
 from datetime import date
 
+from pydantic import Field
+
 from src.application.repeated_suggestions import RepeatedSuggestions
 from src.application.tools.conversation_discoveries import ConversationDiscoveries
+from src.application.tools.tool_arguments import (
+    NonEmptyText,
+    ToolArguments,
+    parse_arguments,
+    tool_parameters,
+)
 from src.domain.language_model import ToolDefinition
 from src.domain.text_embedding import EmbeddingError
 from src.domain.tool import ToolError
@@ -15,6 +23,16 @@ from src.domain.world_suggestion import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class SuggestImprovementArguments(ToolArguments):
+    request: NonEmptyText = Field(
+        description=(
+            "What you would like in your world, short like a title, "
+            "e.g. 'Um laguinho com vitórias-régias'."
+        )
+    )
+    reason: NonEmptyText = Field(description="Why you want it, tied to what you just learned.")
 
 
 class SuggestImprovementTool:
@@ -51,23 +69,7 @@ class SuggestImprovementTool:
                 "and may build them someday: suggesting does not change your world now. "
                 "At most one per cycle. Written in Brazilian Portuguese."
             ),
-            parameters={
-                "type": "object",
-                "properties": {
-                    "request": {
-                        "type": "string",
-                        "description": (
-                            "What you would like in your world, short like a title, "
-                            "e.g. 'Um laguinho com vitórias-régias'."
-                        ),
-                    },
-                    "reason": {
-                        "type": "string",
-                        "description": "Why you want it, tied to what you just learned.",
-                    },
-                },
-                "required": ["request", "reason"],
-            },
+            parameters=tool_parameters(SuggestImprovementArguments),
         )
 
     def run(self, arguments: dict[str, object]) -> str:
@@ -99,10 +101,11 @@ class SuggestImprovementTool:
                 "suggestions come from what you just learned: save a discovery with "
                 "save_discovery first, then suggest something inspired by it"
             )
+        parsed = parse_arguments(SuggestImprovementArguments, arguments)
         try:
             return WorldSuggestion(
-                request=self._text(arguments, "request"),
-                reason=self._text(arguments, "reason"),
+                request=parsed.request,
+                reason=parsed.reason,
                 inspired_by=inspiration.title,
                 suggested_on=self._today(),
             )
@@ -121,9 +124,3 @@ class SuggestImprovementTool:
                 f"you already suggested something like this: '{earlier.request}'. "
                 "Suggest something different, or nothing this time"
             )
-
-    @staticmethod
-    def _text(arguments: dict[str, object], name: str) -> str:
-        """Blank or missing texts are left to WorldSuggestion, which knows the rules."""
-        value = arguments.get(name)
-        return value.strip() if isinstance(value, str) else ""
