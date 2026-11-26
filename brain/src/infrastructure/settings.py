@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     ollama_num_predict: int = Field(default=300, gt=0)
     ollama_temperature: float = Field(default=0.8, ge=0.0, le=2.0)
     ollama_repeat_penalty: float = Field(default=1.1, gt=0.0)
+    ollama_num_ctx: int = Field(default=8192, gt=0)
+    # How long Ollama keeps the model loaded after the last call. Reloading took
+    # about 8 s, felt as a slow first reply after a quiet while.
+    ollama_keep_alive: str = "30m"
     ollama_embedding_model: str = "nomic-embed-text"
     max_tool_steps: int = 5
     web_search_backend: str = "duckduckgo"
@@ -120,6 +124,7 @@ class Settings(BaseSettings):
             num_predict=self.ollama_num_predict,
             temperature=self.ollama_temperature,
             repeat_penalty=self.ollama_repeat_penalty,
+            num_ctx=self.ollama_num_ctx,
         )
 
     def temperament(self) -> Temperament:

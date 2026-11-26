@@ -119,6 +119,7 @@ def main() -> None:
             client=http_client,
             model=settings.ollama_model,
             generation_options=settings.ollama_generation_options(),
+            keep_alive=settings.ollama_keep_alive,
         )
         conversation = start_creator_conversation(
             settings, language_model, http_client, memory, heart

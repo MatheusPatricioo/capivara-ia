@@ -71,7 +71,7 @@ def test_generation_options_come_from_environment_variables(
     settings = Settings(_env_file=None)
 
     assert settings.ollama_generation_options() == OllamaGenerationOptions(
-        num_predict=150, temperature=0.5, repeat_penalty=1.2
+        num_predict=150, temperature=0.5, repeat_penalty=1.2, num_ctx=8192
     )
 
 
