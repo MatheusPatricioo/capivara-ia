@@ -230,6 +230,9 @@ def main() -> None:
     tool_result_reminder = load_prompt(TOOL_RESULT_REMINDER_NAME)
     heart = build_heart(settings)
     world_events = WorldEventRouter(on_noticed=attention_listener(attention_inbox, heart))
+    # Registered before the server opens: the world sends its voice mode as soon as it connects.
+    voice_mode = VoiceModeSwitch()
+    world_events.when_voice_mode_changed(voice_mode.switch_to)
     with (
         WorldServer(
             settings.world_server_host,
@@ -259,8 +262,6 @@ def main() -> None:
         )
 
         presence = creator_presence(settings)
-        voice_mode = VoiceModeSwitch()
-        world_events.when_voice_mode_changed(voice_mode.switch_to)
         creator_chat = build_world_creator_chat(
             start_creator_conversation(settings, language_model, http_client, memory, heart),
             presence,
