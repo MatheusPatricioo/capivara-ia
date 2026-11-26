@@ -5,9 +5,9 @@ from dataclasses import dataclass
 
 from src.application.capybara_speech import CapybaraMouth, CapybaraSpeech, SpeakerOutput
 from src.infrastructure.faster_whisper_speech_recognizer import FasterWhisperSpeechRecognizer
-from src.infrastructure.piper_speech_synthesizer import PiperSpeechSynthesizer
 from src.infrastructure.settings import Settings
 from src.infrastructure.sounddevice_audio import SounddeviceMicrophone, SounddeviceSpeaker
+from src.speech_synthesis import build_speech_synthesizer
 
 
 @dataclass(frozen=True)
@@ -19,7 +19,7 @@ class CapybaraVoice:
 def build_capybara_voice(settings: Settings) -> CapybaraVoice:
     """Loads both models up front, so the first reply is not delayed. Raises SpeechError
     when one of them is missing."""
-    synthesizer = PiperSpeechSynthesizer.load(settings.voice_model_path)
+    synthesizer = build_speech_synthesizer(settings)
     recognizer = FasterWhisperSpeechRecognizer.load(
         settings.speech_recognition_model,
         language=settings.speech_recognition_language,

@@ -73,11 +73,11 @@ def creator_presence(settings: Settings) -> CreatorPresence:
 
 def load_world_voice(settings: Settings) -> SpeechSynthesizer | None:
     """Her voice for the world, or None when it cannot be loaded: then she only shows
-    captions. Piper is imported here, so the brain runs without the voice extra."""
+    captions. The voice is imported here, so the brain runs without the voice extra."""
     try:
-        from src.infrastructure.piper_speech_synthesizer import PiperSpeechSynthesizer
+        from src.speech_synthesis import build_speech_synthesizer
 
-        return PiperSpeechSynthesizer.load(settings.voice_model_path)
+        return build_speech_synthesizer(settings)
     except ImportError:
         logger.warning('Her voice is off: install it with pip install ".[voice]"')
     except SpeechError as error:

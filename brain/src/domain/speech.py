@@ -47,6 +47,28 @@ class Speaker(Protocol):
     def play(self, audio: SpokenAudio) -> None: ...
 
 
+SEMITONES_PER_OCTAVE = 12
+
+
+@dataclass(frozen=True)
+class VoiceEffect:
+    """A change applied to her voice after any synthesizer made it, set in the .env."""
+
+    pitch_semitones: float = 0.0
+    """How much higher (or lower, when negative) she sounds; 12 semitones is an octave."""
+    speed: float = 1.0
+    """How fast she talks: 1.1 is 10% faster, whatever the pitch."""
+
+    @property
+    def is_neutral(self) -> bool:
+        return self.pitch_semitones == 0.0 and self.speed == 1.0
+
+    @property
+    def pitch_ratio(self) -> float:
+        """How many times higher every frequency gets: 2.0 for +12 semitones."""
+        return float(2 ** (self.pitch_semitones / SEMITONES_PER_OCTAVE))
+
+
 class VoiceMode(StrEnum):
     """How much she speaks out loud, chosen by her creator."""
 

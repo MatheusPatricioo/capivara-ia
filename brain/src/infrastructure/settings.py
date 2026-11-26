@@ -7,6 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from src.domain.feelings.needs import NeedRhythm
 from src.domain.feelings.temperament import Temperament
 from src.domain.letter import LetterRhythm
+from src.domain.speech import VoiceEffect
 from src.domain.weather import Sky
 from src.domain.world_clock import ClockMode, WorldClock
 from src.infrastructure.ollama_language_model import OllamaGenerationOptions
@@ -109,6 +110,14 @@ class Settings(BaseSettings):
     # Voice in the chat (python -m src.chat_with_capybara --voz), all local and offline:
     # Piper speaks with the voice file below, faster-whisper listens with a Whisper model.
     voice_model_path: Path = PROJECT_ROOT / "brain" / "voices" / "pt_BR-faber-medium.onnx"
+    # Which voice speaks: piper (the file above) or kokoro (pf_dora, a female voice).
+    voice_engine: Literal["piper", "kokoro"] = "piper"
+    kokoro_model_path: Path = PROJECT_ROOT / "brain" / "voices" / "kokoro" / "kokoro-v1.0.onnx"
+    kokoro_voices_path: Path = PROJECT_ROOT / "brain" / "voices" / "kokoro" / "voices-v1.0.bin"
+    kokoro_voice: str = "pf_dora"
+    # Applied after any voice: + semitones sound higher (like a child), speed 1.1 is 10% faster.
+    voice_pitch_semitones: float = Field(default=0.0, ge=-12.0, le=12.0)
+    voice_speed: float = Field(default=1.0, ge=0.5, le=2.0)
     # Whisper size: tiny, base, small, medium or large-v3. Bigger hears better but is slower.
     speech_recognition_model: str = "small"
     speech_recognition_language: str = "pt"
@@ -126,6 +135,9 @@ class Settings(BaseSettings):
             repeat_penalty=self.ollama_repeat_penalty,
             num_ctx=self.ollama_num_ctx,
         )
+
+    def voice_effect(self) -> VoiceEffect:
+        return VoiceEffect(self.voice_pitch_semitones, self.voice_speed)
 
     def temperament(self) -> Temperament:
         return Temperament(

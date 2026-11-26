@@ -20,6 +20,7 @@ dependencies = [
 # plays and records. Optional, so the text chat works without them.
 voice = [
     "faster-whisper",
+    "kokoro-onnx",
     "numpy",
     "piper-tts",
     "sounddevice",
@@ -65,5 +66,5 @@ strict = true
 
 [[tool.mypy.overrides]]
 # Voice libraries without type information; their objects are treated as Any.
-module = ["faster_whisper", "sounddevice"]
+module = ["faster_whisper", "kokoro_onnx", "sounddevice"]
 ignore_missing_imports = true
