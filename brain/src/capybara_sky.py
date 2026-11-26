@@ -2,8 +2,9 @@
 
 import httpx
 
+from src.application.world_now import SKY_NAMES
 from src.application.world_sky import SkyView, WorldSky
-from src.domain.weather import Sky, WeatherForecast
+from src.domain.weather import WeatherForecast
 from src.domain.world_clock import ClockMode, DayPhase
 from src.infrastructure.fixed_weather import FixedWeatherForecast
 from src.infrastructure.open_meteo_weather import OpenMeteoWeather
@@ -11,13 +12,6 @@ from src.infrastructure.settings import SECONDS_PER_MINUTE, Settings
 
 CLOCK_MODE_NAMES = {ClockMode.REAL: "horário real", ClockMode.FAST: "dia rápido"}
 PHASE_NAMES = {DayPhase.DAY: "dia", DayPhase.NIGHT: "noite"}
-SKY_NAMES = {
-    Sky.CLEAR: "céu limpo",
-    Sky.CLOUDY: "nublado",
-    Sky.FOG: "neblina",
-    Sky.RAIN: "chovendo",
-    Sky.STORM: "tempestade",
-}
 
 
 def build_weather_forecast(settings: Settings, client: httpx.Client) -> WeatherForecast | None:

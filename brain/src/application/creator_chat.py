@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Callable
 from typing import Protocol
 
 from src.application.conversation import Conversation, StepLimitReachedError
@@ -30,6 +31,9 @@ class CreatorChat:
 
     While they talk, her own thoughts wait (CreatorPresence) and she stops to listen.
     Messages are answered one at a time, by whoever calls answer (a single worker).
+
+    With world_now, each message reaches her with the time and weather of her world in
+    front of it: the hour changes while they talk, and she should know what she is seeing.
     """
 
     def __init__(
@@ -39,12 +43,14 @@ class CreatorChat:
         display: ConversationDisplay,
         mouth: Mouth,
         heart: Feeler | None = None,
+        world_now: Callable[[], str] | None = None,
     ) -> None:
         self._conversation = conversation
         self._presence = presence
         self._display = display
         self._mouth = mouth
         self._heart = heart
+        self._world_now = world_now
 
     def hear(self) -> None:
         """Called as soon as a message arrives, before it waits for its turn: her own
@@ -56,13 +62,18 @@ class CreatorChat:
         if self._heart is not None:
             self._heart.feel(EmotionalEvent(EventKind.TALKED_WITH_MATHEUS))
         try:
-            reply = self._conversation.send(message)
+            reply = self._conversation.send(self._with_world_now(message))
         except (LanguageModelError, StepLimitReachedError) as error:
             logger.warning("She could not answer her creator: %s", error)
             return None
         self._mark_exchange()
         self._mouth.say(reply)
         return reply
+
+    def _with_world_now(self, message: str) -> str:
+        if self._world_now is None:
+            return message
+        return f"{self._world_now()}\n\n{message}"
 
     def _mark_exchange(self) -> None:
         self._presence.mark_exchange()

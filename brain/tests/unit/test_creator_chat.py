@@ -116,6 +116,18 @@ def test_her_reply_is_said(chat: CreatorChat, mouth: RecordingMouth) -> None:
     assert mouth.said == [REPLY]
 
 
+def test_each_message_reaches_her_with_the_time_and_weather_of_her_world(
+    presence: CreatorPresence, display: RecordingDisplay, mouth: RecordingMouth
+) -> None:
+    conversation = Conversation(ReplyingLanguageModel(), "Você é uma capivara.")
+    world_now = "(Agora no seu mundinho: 21:30, de noite.)"
+    chat = CreatorChat(conversation, presence, display, mouth, world_now=lambda: world_now)
+
+    chat.answer(MESSAGE)
+
+    assert conversation.history[1].content == f"{world_now}\n\n{MESSAGE}"
+
+
 def test_her_reply_renews_the_quiet_time(
     chat: CreatorChat, presence: CreatorPresence, time: ManualTime
 ) -> None:

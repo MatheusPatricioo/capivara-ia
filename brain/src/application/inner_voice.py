@@ -49,6 +49,9 @@ class InnerVoice:
 
     With replies, her creator's answers to her letters come right before her feelings, which
     already carry the joy of reading them.
+
+    With world_now, the time of day and the weather come right after her feelings, so she
+    knows what she is seeing (at night the dark sky is already above her).
     """
 
     def __init__(
@@ -65,6 +68,7 @@ class InnerVoice:
         suggestions_template: str = "",
         feelings: Callable[[], str] | None = None,
         replies: Callable[[], str] | None = None,
+        world_now: Callable[[], str] | None = None,
     ) -> None:
         self._invitation = invitation
         self._catalog = catalog
@@ -78,11 +82,13 @@ class InnerVoice:
         self._suggestions_template = suggestions_template
         self._feelings = feelings
         self._replies = replies
+        self._world_now = world_now
         self._offered: tuple[PointOfAttention, ...] = ()
 
     def compose(self) -> str:
         """Memory and earlier suggestions first, then related discoveries, her creator's replies
-        to her letters, how she feels, what she noticed, and the invitation last.
+        to her letters, how she feels, the time and weather, what she noticed, and the
+        invitation last.
 
         The end of the message is the part the model follows best.
         """
@@ -94,6 +100,7 @@ class InnerVoice:
             self._related_memories(),
             self._replies() if self._replies is not None else "",
             self._feelings() if self._feelings is not None else "",
+            self._world_now() if self._world_now is not None else "",
             self._noticed(suggestions),
             self._invitation,
         ]

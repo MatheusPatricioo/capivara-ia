@@ -1,0 +1,1 @@
+(Agora no seu mundinho: {time}, {period}{weather}. É isso que você está vendo e sentindo neste momento: se é noite, o céu escuro e as estrelas já estão aí em cima de você; se está chovendo, a chuva está caindo aí agora. Não diga que queria ver uma coisa que já está vendo.)

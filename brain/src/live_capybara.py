@@ -19,6 +19,7 @@ from src.application.related_memory_chooser import RelatedMemoryChooser
 from src.application.self_care import SelfCare
 from src.application.token_budget import HourlyTokenBudget
 from src.application.voice_mode_switch import VoiceModeSwitch
+from src.application.world_now import WorldNow
 from src.capybara_chat import (
     build_world_creator_chat,
     creator_presence,
@@ -53,6 +54,7 @@ from src.long_term_memory import open_long_term_memory
 
 SYSTEM_PROMPT_NAME = "capybara"
 TOOL_RESULT_REMINDER_NAME = "tool_result_reminder"
+WORLD_NOW_NAME = "world_now"
 INNER_VOICE_NAME = "autonomous_cycle"
 MEMORY_TEMPLATE_NAME = "known_discoveries"
 NOTICED_TEMPLATE_NAME = "noticed_things"
@@ -109,6 +111,7 @@ def build_language_model(
             client=http_client,
             model=settings.ollama_model,
             generation_options=settings.ollama_generation_options(),
+            keep_alive=settings.ollama_keep_alive,
         ),
         budget,
     )
@@ -139,6 +142,7 @@ def build_inner_voice(
     related: RelatedDiscoveries,
     heart: Heart | None = None,
     replies: Callable[[], str] | None = None,
+    world_now: Callable[[], str] | None = None,
 ) -> InnerVoice:
     feelings = (
         FeelingsVoice(
@@ -162,6 +166,7 @@ def build_inner_voice(
         suggestions_template=load_prompt(SUGGESTIONS_TEMPLATE_NAME),
         feelings=feelings.compose if feelings is not None else None,
         replies=replies,
+        world_now=world_now,
     )
 
 
@@ -250,6 +255,8 @@ def main() -> None:
             heart.watch(body.show_feelings)
             body.show_feelings(heart.check_in())
         language_model = build_language_model(settings, http_client, budget)
+        world_sky = build_world_sky(settings, weather_client)
+        world_now = WorldNow(world_sky.look, load_prompt(WORLD_NOW_NAME)).compose
         letters = build_letters(
             settings, heart, world_server, world_events, language_model, system_prompt, body
         )
@@ -259,6 +266,7 @@ def main() -> None:
             build_related_discoveries(settings, memory, language_model),
             heart,
             replies=letters.reply_reader.compose if letters is not None else None,
+            world_now=world_now,
         )
 
         presence = creator_presence(settings)
@@ -269,6 +277,7 @@ def main() -> None:
             heart,
             voice=load_world_voice(settings),
             voice_mode=voice_mode,
+            world_now=world_now,
         )
 
         def start_conversation() -> Conversation:
@@ -300,7 +309,6 @@ def main() -> None:
             f"A capivara está viva. Abra o mundo no Godot (ws://{settings.world_server_host}:"
             f"{settings.world_server_port}). Ctrl+C para encerrar.\n"
         )
-        world_sky = build_world_sky(settings, weather_client)
         print(describe_sky(settings, world_sky.look()) + "\n")
         with (
             SkyBroadcaster(world_sky, world_server, SKY_PUBLISH_INTERVAL_SECONDS),

@@ -1,6 +1,7 @@
 """Builds her conversation with her creator, the same in the terminal chat and in the world."""
 
 import logging
+import time
 from collections.abc import Callable
 
 import httpx
@@ -91,10 +92,16 @@ def build_world_creator_chat(
     heart: Heart | None,
     voice: SpeechSynthesizer | None = None,
     voice_mode: VoiceModeSwitch | None = None,
+    world_now: Callable[[], str] | None = None,
 ) -> CreatorChat:
     mouth = CapybaraMouth(voice, WebSocketVoiceOutput(world_server), voice_mode)
     return CreatorChat(
-        conversation, presence, WebSocketConversationDisplay(world_server), mouth, heart
+        conversation,
+        presence,
+        WebSocketConversationDisplay(world_server),
+        mouth,
+        heart,
+        world_now=world_now,
     )
 
 
@@ -105,10 +112,12 @@ def listen_to_creator(chat: CreatorChat, worker: SerialWorker) -> Callable[[str]
     def on_creator_said(text: str) -> None:
         print(f"Criador: {text}\n", flush=True)
         chat.hear()
-        worker.submit(lambda: answer_and_print(text))
+        heard_at = time.monotonic()
+        worker.submit(lambda: answer_and_print(text, heard_at))
 
-    def answer_and_print(text: str) -> None:
+    def answer_and_print(text: str, heard_at: float) -> None:
         reply = chat.answer(text)
+        logger.info("Answered her creator %.1fs after he spoke", time.monotonic() - heard_at)
         if reply is not None:
             print(f"Capivara: {reply}\n", flush=True)
 

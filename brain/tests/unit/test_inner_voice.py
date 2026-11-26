@@ -457,3 +457,28 @@ def test_says_nothing_about_replies_when_there_are_none() -> None:
     )
 
     assert inner_voice.compose() == INVITATION
+
+
+WORLD_NOW = "(Agora no seu mundinho: 21:30, de noite, céu limpo, 18 °C.)"
+
+
+def test_tells_the_time_and_weather_after_how_she_feels_and_before_what_she_noticed(
+    attention: AttentionInbox,
+) -> None:
+    inner_voice = InnerVoice(
+        INVITATION,
+        FakeCatalog([]),
+        MEMORY_TEMPLATE,
+        MAX_REMEMBERED_DISCOVERIES,
+        attention=attention,
+        noticed_template=NOTICED_TEMPLATE,
+        feelings=lambda: FEELINGS,
+        world_now=lambda: WORLD_NOW,
+    )
+    attention.notice("night_sky", "estrelas no céu")
+
+    assert inner_voice.compose() == (
+        f"{FEELINGS}\n\n{WORLD_NOW}\n\n"
+        "(Você reparou em:\n- estrelas no céu\nPesquise se quiser.)\n\n"
+        f"{INVITATION}"
+    )
