@@ -123,6 +123,7 @@ def _build_world(scenario: AgentScenario, setup: AgentEvalSetup) -> _ScenarioWor
         ScriptedWebSearcher([page.search_result() for page in scenario.pages]),
         seen_sources=seen_sources,
         search_history=InMemorySearchHistory(scenario.earlier_searches, EVAL_DATE),
+        follow_up=setup.prompts.tool_result_reminder,
     )
     save_discovery = SaveDiscoveryTool(
         discoveries,

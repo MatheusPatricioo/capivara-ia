@@ -53,7 +53,11 @@ SEARCH_LOG_RELATIVE_PATH = "history/searches.jsonl"
 # Tools whose results skip the general reminder. After save_discovery, the reminder ("call
 # save_discovery now... then tell your creator") buried what had just happened and made her narrate
 # instead of acting. Measured on real moments after a save: 11/20 drawings with it, 16/20 without.
-TOOL_RESULT_REMINDER_OVERRIDES = {"save_discovery": ""}
+# web_search adds the reminder itself, only after real results (WEB_SEARCH_FOLLOW_UP_PROMPT_NAME):
+# after a refused or empty search, "tell your creator what you found" made her answer as if
+# someone had spoken to her.
+TOOL_RESULT_REMINDER_OVERRIDES = {"save_discovery": "", "web_search": ""}
+WEB_SEARCH_FOLLOW_UP_PROMPT_NAME = "tool_result_reminder"
 CHOOSE_DOODLE_PROMPT_NAME = "choose_doodle"
 # Added to every successful save: the moment a discovery can turn into a wish for her world.
 # Measured on real moments right after a save: 0/20 suggestions with the rule only in the
@@ -93,6 +97,7 @@ def build_capybara_tools(
         seen_sources=seen_sources,
         search_history=JsonSearchHistory(settings.discoveries_dir / SEARCH_HISTORY_FILE_NAME),
         search_log=JsonlSearchLog(settings.discoveries_dir / SEARCH_LOG_RELATIVE_PATH),
+        follow_up=load_prompt(WEB_SEARCH_FOLLOW_UP_PROMPT_NAME),
     )
     illustrator = _build_illustrator(settings, language_model, http_client)
     save_discovery_tool = SaveDiscoveryTool(

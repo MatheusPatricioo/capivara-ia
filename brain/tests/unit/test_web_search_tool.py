@@ -14,6 +14,7 @@ QUERY = "capybara diet"
 MAX_RESULTS = 2
 MAX_SNIPPET_LENGTH = 20
 WEB_SEARCH_TOOL_LOGGER = "src.application.tools.web_search_tool"
+FOLLOW_UP = "(Lembrete: conte o que descobriu.)"
 GRASS_RESULT = SearchResult(
     title="What capybaras eat",
     url="https://example.com/diet",
@@ -143,7 +144,23 @@ def test_says_there_is_nothing_to_save_when_there_are_no_results() -> None:
 
     output = tool.run({"query": QUERY})
 
-    assert output.startswith("No results found, so there is nothing from this search to save")
+    assert output.startswith("(A busca voltou vazia")
+
+
+def test_an_empty_search_does_not_get_the_follow_up() -> None:
+    tool = WebSearchTool(FakeWebSearcher([]), follow_up=FOLLOW_UP)
+
+    output = tool.run({"query": QUERY})
+
+    assert FOLLOW_UP not in output
+
+
+def test_real_results_end_with_the_follow_up() -> None:
+    tool = WebSearchTool(FakeWebSearcher([GRASS_RESULT]), follow_up=FOLLOW_UP)
+
+    output = tool.run({"query": QUERY})
+
+    assert output.endswith(f"\n\n{FOLLOW_UP}")
 
 
 def test_logs_how_many_results_were_returned(caplog: pytest.LogCaptureFixture) -> None:
@@ -259,7 +276,21 @@ def test_tells_the_model_when_it_already_searched_the_same_thing(
 
     output = build_tool_with_history(web_searcher, search_history).run({"query": QUERY})
 
-    assert output.startswith(f"You already searched '{QUERY}' on 2026-11-23")
+    assert output.startswith(
+        "(Na tela do computador: essa busca já está no seu histórico, "
+        f"feita em 23/11/2026: '{QUERY}'"
+    )
+
+
+def test_a_repeated_search_does_not_get_the_follow_up(
+    web_searcher: FakeWebSearcher, search_history: InMemorySearchHistory
+) -> None:
+    search_history.record(QUERY, SEARCH_DAY)
+    tool = WebSearchTool(web_searcher, search_history=search_history, follow_up=FOLLOW_UP)
+
+    output = tool.run({"query": QUERY})
+
+    assert FOLLOW_UP not in output
 
 
 def test_still_searches_when_the_history_is_broken(web_searcher: FakeWebSearcher) -> None:
