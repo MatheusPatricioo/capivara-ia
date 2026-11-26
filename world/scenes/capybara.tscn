@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://scripts/capybara_emote.gd" id="7_capybara_emote"]
 [ext_resource type="Script" path="res://scripts/capybara_listening.gd" id="8_capybara_listening"]
 [ext_resource type="Script" path="res://scripts/capybara_speech_balloon.gd" id="9_capybara_speech_balloon"]
+[ext_resource type="Script" path="res://scripts/capybara_voice.gd" id="10_capybara_voice"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_capybara"]
 radius = 0.4
@@ -62,6 +63,11 @@ outline_size = 12
 autowrap_mode = 3
 width = 400.0
 script = ExtResource("9_capybara_speech_balloon")
+
+[node name="Voice" type="AudioStreamPlayer3D" parent="."]
+position = Vector3(0, 0.6, 0)
+unit_size = 12.0
+script = ExtResource("10_capybara_voice")
 
 [node name="Body" type="Node3D" parent="."]
 script = ExtResource("3_capybara_body_animation")

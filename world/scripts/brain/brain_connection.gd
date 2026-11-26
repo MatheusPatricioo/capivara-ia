@@ -27,6 +27,11 @@ signal listening_requested(seconds: float)
 ## Something she says, for the speech balloon. speech_id grows with every speech, so an
 ## older one that arrives late can be dropped.
 signal speech_received(speech_id: int, caption: String)
+## Her voice for the speech of the same speech_id: 16-bit mono PCM samples (little endian)
+## at sample_rate Hz. Only sent when the speech came with audio (her voice is on).
+signal voice_received(speech_id: int, pcm: PackedByteArray, sample_rate: int)
+## Her creator switched her voice: VOICE_MODE_MUTE or VOICE_MODE_CONVERSATION.
+signal voice_mode_changed(mode: StringName)
 ## Her creator sent her a message, so the world can show she is thinking about it.
 signal creator_message_sent(text: String)
 signal connection_changed(is_connected: bool)
@@ -36,6 +41,18 @@ const DEFAULT_URL: String = "ws://127.0.0.1:8765"
 const URL_ENVIRONMENT_VARIABLE: String = "CAPYBARA_BRAIN_URL"
 ## Seconds between two connection attempts while the brain is offline.
 const RECONNECT_DELAY_SECONDS: float = 3.0
+## Largest message the world accepts. The default (64 KiB) is too small for her voice:
+## a few seconds of speech in base64 already pass it. Same limit as the brain (MAX_AUDIO_BYTES).
+const INBOUND_BUFFER_BYTES: int = 8 * 1024 * 1024
+
+## Only captions, no voice.
+const VOICE_MODE_MUTE: StringName = &"mute"
+## She says her replies to her creator out loud.
+const VOICE_MODE_CONVERSATION: StringName = &"conversation"
+
+## The voice mode her creator chose. Sent to the brain on every connection, so a
+## restarted brain learns it again.
+var voice_mode: StringName = VOICE_MODE_CONVERSATION
 
 var _socket: WebSocketPeer = WebSocketPeer.new()
 var _url: String = DEFAULT_URL
@@ -67,6 +84,7 @@ func _process(delta: float) -> void:
 func _connect_to_brain() -> void:
 	_seconds_until_reconnect = RECONNECT_DELAY_SECONDS
 	_socket = WebSocketPeer.new()
+	_socket.inbound_buffer_size = INBOUND_BUFFER_BYTES
 	var error: Error = _socket.connect_to_url(_url)
 	if error != OK:
 		push_warning("Could not start a connection to the brain at %s (error %d)" % [_url, error])
@@ -109,6 +127,21 @@ func send_creator_message(text: String) -> bool:
 	return true
 
 
+## Switches her voice. Kept even while the brain is offline: it is sent when it connects.
+func set_voice_mode(mode: StringName) -> void:
+	if mode == voice_mode:
+		return
+	voice_mode = mode
+	voice_mode_changed.emit(mode)
+	_send_voice_mode()
+
+
+func _send_voice_mode() -> void:
+	if not _is_connected:
+		return
+	_socket.send_text(JSON.stringify({"type": "voice_mode", "mode": String(voice_mode)}))
+
+
 func _read_messages() -> void:
 	while _socket.get_available_packet_count() > 0:
 		_handle_message(_socket.get_packet().get_string_from_utf8())
@@ -145,9 +178,25 @@ func _handle_message(text: String) -> void:
 		"listening":
 			listening_requested.emit(float(message.get("seconds", 0.0)))
 		"speech":
-			speech_received.emit(int(message.get("speech_id", 0)), str(message.get("caption", "")))
+			_handle_speech(message)
 		_:
 			push_warning("Unknown message type from the brain: %s" % message.get("type"))
+
+
+## The caption goes to the balloon and, when it came with audio, her voice to her body.
+func _handle_speech(message: Dictionary) -> void:
+	var speech_id: int = int(message.get("speech_id", 0))
+	speech_received.emit(speech_id, str(message.get("caption", "")))
+	var audio_field: Variant = message.get("audio")
+	if not audio_field is Dictionary:
+		return
+	var audio: Dictionary = audio_field
+	var pcm: PackedByteArray = Marshalls.base64_to_raw(str(audio.get("pcm16_base64", "")))
+	var sample_rate: int = int(audio.get("sample_rate", 0))
+	if pcm.is_empty() or sample_rate <= 0:
+		push_warning("The brain sent a speech with audio that cannot be played")
+		return
+	voice_received.emit(speech_id, pcm, sample_rate)
 
 
 func _set_connected(is_connected: bool) -> void:
@@ -155,4 +204,6 @@ func _set_connected(is_connected: bool) -> void:
 		return
 	_is_connected = is_connected
 	print("Brain %s (%s)" % ["connected" if is_connected else "disconnected", _url])
+	if is_connected:
+		_send_voice_mode()
 	connection_changed.emit(is_connected)

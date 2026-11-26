@@ -4,10 +4,11 @@ extends CanvasLayer
 ## Where her creator talks with her, at the bottom of the screen. Closed, it is a small
 ## "Conversar" button (Enter also opens it). Open, a dark rounded bar with the text field
 ## and a send button; Esc closes it. It stays open after sending, so the conversation
-## flows, and her replies appear in the balloon above her.
+## flows, and her replies appear in the balloon above her. The Voz/Mudo pill in the bar
+## switches whether she also says them out loud.
 
 const LAYER: int = 5
-const BAR_WIDTH: float = 560.0
+const BAR_WIDTH: float = 620.0
 const BOTTOM_MARGIN: float = 28.0
 const FONT_SIZE: int = 18
 const KEYCAP_FONT_SIZE: int = 12
@@ -118,6 +119,7 @@ func _build_bar() -> PanelContainer:
 	_message_field.add_theme_font_size_override("font_size", FONT_SIZE)
 	_message_field.text_submitted.connect(func(_text: String) -> void: _send())
 	row.add_child(_message_field)
+	row.add_child(_build_voice_toggle())
 
 	var send_button: Button = Button.new()
 	send_button.text = SEND_BUTTON_TEXT
@@ -131,6 +133,27 @@ func _build_bar() -> PanelContainer:
 	send_button.pressed.connect(_send)
 	row.add_child(send_button)
 	return bar
+
+
+## Outlined in the accent color while her voice is on, faded while she is muted.
+func _build_voice_toggle() -> VoiceModeToggle:
+	var toggle: VoiceModeToggle = VoiceModeToggle.new()
+	var voice_on_style: StyleBoxFlat = _rounded(Color(0, 0, 0, 0), 18.0, Vector2(14.0, 6.0))
+	voice_on_style.border_color = ACCENT_COLOR
+	voice_on_style.set_border_width_all(1)
+	var muted_style: StyleBoxFlat = _rounded(Color(0, 0, 0, 0), 18.0, Vector2(14.0, 6.0))
+	muted_style.border_color = MUTED_TEXT_COLOR
+	muted_style.set_border_width_all(1)
+	toggle.add_theme_stylebox_override("normal", muted_style)
+	toggle.add_theme_stylebox_override("hover", muted_style)
+	toggle.add_theme_stylebox_override("pressed", voice_on_style)
+	toggle.add_theme_stylebox_override("hover_pressed", voice_on_style)
+	toggle.add_theme_color_override("font_color", MUTED_TEXT_COLOR)
+	toggle.add_theme_color_override("font_hover_color", TEXT_COLOR)
+	toggle.add_theme_color_override("font_pressed_color", ACCENT_COLOR)
+	toggle.add_theme_color_override("font_hover_pressed_color", ACCENT_HOVER_COLOR)
+	toggle.add_theme_font_size_override("font_size", FONT_SIZE - 2)
+	return toggle
 
 
 ## A small pill with the label and the key that also opens it, drawn as a keycap.
