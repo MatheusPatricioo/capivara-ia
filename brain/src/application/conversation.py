@@ -43,6 +43,10 @@ class Conversation:
         self._before_step = before_step
 
     @property
+    def tool_names(self) -> set[str]:
+        return set(self._tools_by_name)
+
+    @property
     def history(self) -> tuple[ChatMessage, ...]:
         return tuple(self._history)
 

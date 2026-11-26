@@ -21,6 +21,26 @@ def test_emphasis_marks_are_not_said(written_text: str, expected_speech: str) ->
     assert speakable_text(written_text) == expected_speech
 
 
+def test_a_tool_written_as_text_is_not_said() -> None:
+    written = (
+        "Adoro vitória-régias!\n\n"
+        "Save_discovery:\n- Título: Vitória-Régias\n- Resumo: Plantas bonitas.\n\n"
+        "Pronto!"
+    )
+
+    assert speakable_text(written) == "Adoro vitória-régias! Pronto!"
+
+
+def test_a_tool_written_with_portuguese_fields_is_not_said() -> None:
+    written = "Que lindo!\nSuggest_improvement:\nRequisito: Um laguinho\nRazão: sombra"
+
+    assert speakable_text(written) == "Que lindo!"
+
+
+def test_talking_about_a_search_is_still_said() -> None:
+    assert speakable_text("Pesquisei sobre estrelas hoje.") == "Pesquisei sobre estrelas hoje."
+
+
 def test_a_markdown_link_keeps_only_its_text() -> None:
     written_text = "Li na [Wikipédia](https://pt.wikipedia.org/wiki/Capivara) hoje."
 

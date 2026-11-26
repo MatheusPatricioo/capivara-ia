@@ -31,6 +31,8 @@ logger = logging.getLogger(__name__)
 SYSTEM_PROMPT_NAME = "capybara"
 TOOL_RESULT_REMINDER_NAME = "tool_result_reminder"
 FEELINGS_TEMPLATE_NAME = "feelings"
+CREATOR_CHAT_PROMPT_NAME = "creator_chat"
+CHAT_TOOL_NAMES = frozenset({"web_search", "recall_memory"})
 SECONDS_PER_MINUTE = 60.0
 
 
@@ -55,13 +57,17 @@ def start_creator_conversation(
     memory: DiscoveryMemory,
     heart: Heart | None,
 ) -> Conversation:
-    """Her tools without a body: while they talk she stays put, facing her creator."""
+    """Her tools without a body: while they talk she stays put, facing her creator.
+
+    A chat is talking, not working: she can search and remember (CHAT_TOOL_NAMES), and
+    the chat prompt asks for short spoken replies. With every tool she wrote saves and
+    wishes as text in the middle of the talk and repeated the same paragraph."""
+    tools = build_capybara_tools(settings, language_model, http_client, memory=memory, heart=heart)
+    system_prompt = system_prompt_with_feelings(settings, heart)
     return Conversation(
         language_model,
-        system_prompt_with_feelings(settings, heart),
-        tools=build_capybara_tools(
-            settings, language_model, http_client, memory=memory, heart=heart
-        ),
+        f"{system_prompt}\n\n{load_prompt(CREATOR_CHAT_PROMPT_NAME)}",
+        tools=[tool for tool in tools if tool.definition.name in CHAT_TOOL_NAMES],
         max_steps=settings.max_tool_steps,
         tool_result_reminder=load_prompt(TOOL_RESULT_REMINDER_NAME),
         tool_result_reminders=TOOL_RESULT_REMINDER_OVERRIDES,

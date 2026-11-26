@@ -18,13 +18,22 @@ EMOJI = re.compile(
 )
 SPACE_BEFORE_PUNCTUATION = re.compile(r"\s+([,.!?;:])")
 WHITESPACE = re.compile(r"\s+")
+# A tool call the model wrote as text instead of calling it, like "Save_discovery:" and
+# the "- Título: ..." lines under it: never said or shown, it is not part of her talk.
+TOOL_WRITTEN_AS_TEXT = re.compile(
+    r"^[ \t]*[*`#]*[ \t]*(?:save_discovery|suggest_improvement|web_search|recall_memory)\b.*"
+    r"(?:\n[ \t]*(?:[-*\u2022]|[\w\u00C0-\u00FF ]{1,20}:).*)*",
+    re.IGNORECASE | re.MULTILINE,
+)
 
 
 def speakable_text(written_text: str) -> str:
     """Her written reply as it should be said out loud. A synthesizer reads every symbol,
     so markdown marks, emojis and web addresses would come out as noise ("asterisco",
-    "agá tê tê pê"). Line breaks become spaces: the punctuation already gives the pauses."""
-    text = MARKDOWN_LINK.sub(r"\1", written_text)
+    "agá tê tê pê"), and a tool written as text is not talk at all. Line breaks become
+    spaces: the punctuation already gives the pauses."""
+    text = TOOL_WRITTEN_AS_TEXT.sub("", written_text)
+    text = MARKDOWN_LINK.sub(r"\1", text)
     text = WEB_ADDRESS.sub("", text)
     text = LINE_MARKER.sub("", text)
     text = EMPHASIS_MARK.sub("", text)
