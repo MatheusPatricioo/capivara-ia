@@ -3,7 +3,7 @@ text chat works without the voice libraries (pip install ".[voice]") installed."
 
 from dataclasses import dataclass
 
-from src.application.capybara_speech import CapybaraSpeech
+from src.application.capybara_speech import CapybaraMouth, CapybaraSpeech, SpeakerOutput
 from src.infrastructure.faster_whisper_speech_recognizer import FasterWhisperSpeechRecognizer
 from src.infrastructure.piper_speech_synthesizer import PiperSpeechSynthesizer
 from src.infrastructure.settings import Settings
@@ -26,5 +26,5 @@ def build_capybara_voice(settings: Settings) -> CapybaraVoice:
         device=settings.speech_recognition_device,
         compute_type=settings.speech_recognition_compute_type,
     )
-    speech = CapybaraSpeech(recognizer, synthesizer, SounddeviceSpeaker())
-    return CapybaraVoice(speech, SounddeviceMicrophone())
+    mouth = CapybaraMouth(synthesizer, SpeakerOutput(SounddeviceSpeaker()))
+    return CapybaraVoice(CapybaraSpeech(recognizer, mouth), SounddeviceMicrophone())

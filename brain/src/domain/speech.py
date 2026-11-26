@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Protocol
 
 BYTES_PER_SAMPLE = 2
@@ -44,3 +45,23 @@ class Speaker(Protocol):
     """Plays audio out loud and returns when it is over."""
 
     def play(self, audio: SpokenAudio) -> None: ...
+
+
+class VoiceMode(StrEnum):
+    """How much she speaks out loud, chosen by her creator."""
+
+    MUTE = "mute"
+    """Only the caption, no voice."""
+    CONVERSATION = "conversation"
+    """She says her replies to her creator out loud."""
+
+
+class VoiceOutput(Protocol):
+    """Where her words come out: a caption to read and, when there is one, her voice."""
+
+    @property
+    def plays_audio(self) -> bool:
+        """False when nobody would hear it, so the voice is not even synthesized."""
+        ...
+
+    def speak(self, caption: str, audio: SpokenAudio | None) -> None: ...

@@ -17,7 +17,11 @@ class ConversationDisplay(Protocol):
         """She stops and pays attention to her creator for the given seconds."""
         ...
 
-    def show_reply(self, reply: str) -> None: ...
+
+class Mouth(Protocol):
+    """How her reply comes out: a caption and, when her voice is on, her voice."""
+
+    def say(self, written_reply: str) -> None: ...
 
 
 class CreatorChat:
@@ -33,11 +37,13 @@ class CreatorChat:
         conversation: Conversation,
         presence: CreatorPresence,
         display: ConversationDisplay,
+        mouth: Mouth,
         heart: Feeler | None = None,
     ) -> None:
         self._conversation = conversation
         self._presence = presence
         self._display = display
+        self._mouth = mouth
         self._heart = heart
 
     def hear(self) -> None:
@@ -46,7 +52,7 @@ class CreatorChat:
         self._mark_exchange()
 
     def answer(self, message: str) -> str | None:
-        """Her reply, already shown; None when she could not think of one."""
+        """Her reply, already said; None when she could not think of one."""
         if self._heart is not None:
             self._heart.feel(EmotionalEvent(EventKind.TALKED_WITH_MATHEUS))
         try:
@@ -55,7 +61,7 @@ class CreatorChat:
             logger.warning("She could not answer her creator: %s", error)
             return None
         self._mark_exchange()
-        self._display.show_reply(reply)
+        self._mouth.say(reply)
         return reply
 
     def _mark_exchange(self) -> None:

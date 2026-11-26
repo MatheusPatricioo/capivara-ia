@@ -13,6 +13,7 @@ from src.application.world_sky import SkyView
 from src.domain.diary import DiaryDay, DiaryEntry
 from src.domain.feelings.emotion import EmotionalState
 from src.domain.letter import MAX_LETTER_LENGTH, Reply, SavedLetter
+from src.domain.speech import VoiceMode
 
 WORLD_DATE_FORMAT = "%Y-%m-%dT%H:%M"
 
@@ -107,14 +108,26 @@ class ListeningMessage(BaseModel):
     seconds: float = Field(gt=0.0)
 
 
+class SpeechAudio(BaseModel):
+    """Her voice: 16-bit mono PCM, little endian, in base64, because JSON only carries text.
+    The world plays it from these bytes, without writing a file."""
+
+    sample_rate: int = Field(gt=0)
+    pcm16_base64: str = Field(min_length=1)
+
+
 class SpeechMessage(BaseModel):
-    """Something she says, shown in a speech balloon above her. Never remembered: a world
-    that connects later must not hear old replies."""
+    """Something she says, shown in a speech balloon above her and, when there is audio,
+    said by her voice. Never remembered: a world that connects later must not hear old
+    replies."""
 
     type: Literal["speech"] = "speech"
     speech_id: int = Field(ge=1)
-    """Grows with every speech: the world drops one older than the speech it is showing."""
+    """Grows with every speech: the world drops one older than the speech it is showing,
+    and a new one interrupts the one still playing."""
     caption: str = Field(min_length=1)
+    audio: SpeechAudio | None = None
+    """None when her voice is off (Mute) or could not be made: then only the caption."""
 
 
 WorldMessage = (
@@ -191,7 +204,20 @@ class CreatorSaidMessage(BaseModel):
     text: CreatorMessageText
 
 
-WorldEvent = NoticedMessage | LetterOpenedMessage | LetterRepliedMessage | CreatorSaidMessage
+class VoiceModeMessage(BaseModel):
+    """Sent by the world when it connects and whenever her creator switches her voice."""
+
+    type: Literal["voice_mode"] = "voice_mode"
+    mode: VoiceMode
+
+
+WorldEvent = (
+    NoticedMessage
+    | LetterOpenedMessage
+    | LetterRepliedMessage
+    | CreatorSaidMessage
+    | VoiceModeMessage
+)
 _WORLD_EVENT_ADAPTER: TypeAdapter[WorldEvent] = TypeAdapter(
     Annotated[WorldEvent, Field(discriminator="type")]
 )

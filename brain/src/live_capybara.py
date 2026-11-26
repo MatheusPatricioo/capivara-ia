@@ -18,10 +18,12 @@ from src.application.related_discoveries import RelatedDiscoveries
 from src.application.related_memory_chooser import RelatedMemoryChooser
 from src.application.self_care import SelfCare
 from src.application.token_budget import HourlyTokenBudget
+from src.application.voice_mode_switch import VoiceModeSwitch
 from src.capybara_chat import (
     build_world_creator_chat,
     creator_presence,
     listen_to_creator,
+    load_world_voice,
     start_creator_conversation,
 )
 from src.capybara_diary import build_diary_keeper
@@ -257,11 +259,15 @@ def main() -> None:
         )
 
         presence = creator_presence(settings)
+        voice_mode = VoiceModeSwitch()
+        world_events.when_voice_mode_changed(voice_mode.switch_to)
         creator_chat = build_world_creator_chat(
             start_creator_conversation(settings, language_model, http_client, memory, heart),
             presence,
             world_server,
             heart,
+            voice=load_world_voice(settings),
+            voice_mode=voice_mode,
         )
 
         def start_conversation() -> Conversation:

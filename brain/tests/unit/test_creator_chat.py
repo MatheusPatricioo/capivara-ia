@@ -37,13 +37,17 @@ class OfflineLanguageModel:
 class RecordingDisplay:
     def __init__(self) -> None:
         self.listening_seconds: list[float] = []
-        self.replies: list[str] = []
 
     def show_listening(self, seconds: float) -> None:
         self.listening_seconds.append(seconds)
 
-    def show_reply(self, reply: str) -> None:
-        self.replies.append(reply)
+
+class RecordingMouth:
+    def __init__(self) -> None:
+        self.said: list[str] = []
+
+    def say(self, written_reply: str) -> None:
+        self.said.append(written_reply)
 
 
 @pytest.fixture
@@ -62,22 +66,32 @@ def display() -> RecordingDisplay:
 
 
 @pytest.fixture
+def mouth() -> RecordingMouth:
+    return RecordingMouth()
+
+
+@pytest.fixture
 def heart() -> RecordingFeeler:
     return RecordingFeeler()
 
 
 @pytest.fixture
 def chat(
-    presence: CreatorPresence, display: RecordingDisplay, heart: RecordingFeeler
+    presence: CreatorPresence,
+    display: RecordingDisplay,
+    mouth: RecordingMouth,
+    heart: RecordingFeeler,
 ) -> CreatorChat:
     conversation = Conversation(ReplyingLanguageModel(), "Você é uma capivara.")
-    return CreatorChat(conversation, presence, display, heart)
+    return CreatorChat(conversation, presence, display, mouth, heart)
 
 
 @pytest.fixture
-def offline_chat(presence: CreatorPresence, display: RecordingDisplay) -> CreatorChat:
+def offline_chat(
+    presence: CreatorPresence, display: RecordingDisplay, mouth: RecordingMouth
+) -> CreatorChat:
     conversation = Conversation(OfflineLanguageModel(), "Você é uma capivara.")
-    return CreatorChat(conversation, presence, display)
+    return CreatorChat(conversation, presence, display, mouth)
 
 
 def test_hearing_a_message_starts_the_conversation(
@@ -96,10 +110,10 @@ def test_hearing_a_message_makes_her_listen_for_the_quiet_time(
     assert display.listening_seconds == [QUIET_SECONDS]
 
 
-def test_her_reply_is_shown(chat: CreatorChat, display: RecordingDisplay) -> None:
+def test_her_reply_is_said(chat: CreatorChat, mouth: RecordingMouth) -> None:
     chat.answer(MESSAGE)
 
-    assert display.replies == [REPLY]
+    assert mouth.said == [REPLY]
 
 
 def test_her_reply_renews_the_quiet_time(
@@ -122,12 +136,10 @@ def test_talking_with_her_creator_is_felt_by_her_heart(
     assert heart.felt == [EmotionalEvent(EventKind.TALKED_WITH_MATHEUS)]
 
 
-def test_a_failed_answer_shows_no_reply(
-    offline_chat: CreatorChat, display: RecordingDisplay
-) -> None:
+def test_a_failed_answer_says_nothing(offline_chat: CreatorChat, mouth: RecordingMouth) -> None:
     offline_chat.answer(MESSAGE)
 
-    assert display.replies == []
+    assert mouth.said == []
 
 
 def test_a_failed_answer_is_logged(

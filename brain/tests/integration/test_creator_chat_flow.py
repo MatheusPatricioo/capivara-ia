@@ -81,4 +81,5 @@ def test_her_reply_arrives_as_a_clean_caption(
         "type": "speech",
         "speech_id": 1,
         "caption": "Oi, criador! Hoje eu li sobre vaga-lumes.",
+        "audio": None,
     }

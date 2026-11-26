@@ -1,23 +1,30 @@
 """Builds her conversation with her creator, the same in the terminal chat and in the world."""
 
+import logging
 from collections.abc import Callable
 
 import httpx
 
+from src.application.capybara_speech import CapybaraMouth
 from src.application.conversation import Conversation
 from src.application.creator_chat import CreatorChat
 from src.application.creator_presence import CreatorPresence
 from src.application.feelings_voice import FeelingsVoice
 from src.application.heart import Heart
 from src.application.metered_language_model import ChattingAndStructuredLanguageModel
+from src.application.voice_mode_switch import VoiceModeSwitch
 from src.capybara_tools import TOOL_RESULT_REMINDER_OVERRIDES, build_capybara_tools
 from src.domain.discovery_memory import DiscoveryMemory
+from src.domain.speech import SpeechError, SpeechSynthesizer
 from src.infrastructure.markdown_suggestion_repository import MarkdownSuggestionRepository
 from src.infrastructure.prompt_loader import load_prompt
 from src.infrastructure.serial_worker import SerialWorker
 from src.infrastructure.settings import Settings
 from src.infrastructure.websocket_conversation_display import WebSocketConversationDisplay
+from src.infrastructure.websocket_voice_output import WebSocketVoiceOutput
 from src.infrastructure.world_server import WorldServer
+
+logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT_NAME = "capybara"
 TOOL_RESULT_REMINDER_NAME = "tool_result_reminder"
@@ -63,13 +70,32 @@ def creator_presence(settings: Settings) -> CreatorPresence:
     return CreatorPresence(settings.conversation_quiet_minutes * SECONDS_PER_MINUTE)
 
 
+def load_world_voice(settings: Settings) -> SpeechSynthesizer | None:
+    """Her voice for the world, or None when it cannot be loaded: then she only shows
+    captions. Piper is imported here, so the brain runs without the voice extra."""
+    try:
+        from src.infrastructure.piper_speech_synthesizer import PiperSpeechSynthesizer
+
+        return PiperSpeechSynthesizer.load(settings.voice_model_path)
+    except ImportError:
+        logger.warning('Her voice is off: install it with pip install ".[voice]"')
+    except SpeechError as error:
+        logger.warning("Her voice is off: %s", error)
+    return None
+
+
 def build_world_creator_chat(
     conversation: Conversation,
     presence: CreatorPresence,
     world_server: WorldServer,
     heart: Heart | None,
+    voice: SpeechSynthesizer | None = None,
+    voice_mode: VoiceModeSwitch | None = None,
 ) -> CreatorChat:
-    return CreatorChat(conversation, presence, WebSocketConversationDisplay(world_server), heart)
+    mouth = CapybaraMouth(voice, WebSocketVoiceOutput(world_server), voice_mode)
+    return CreatorChat(
+        conversation, presence, WebSocketConversationDisplay(world_server), mouth, heart
+    )
 
 
 def listen_to_creator(chat: CreatorChat, worker: SerialWorker) -> Callable[[str], None]:

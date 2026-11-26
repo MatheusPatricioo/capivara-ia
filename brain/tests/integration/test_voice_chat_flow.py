@@ -2,7 +2,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from src.application.capybara_speech import CapybaraSpeech
+from src.application.capybara_speech import CapybaraMouth, CapybaraSpeech, SpeakerOutput
 from src.application.conversation import Conversation
 from src.domain.language_model import ChatMessage, Role, ToolDefinition
 from tests.fakes.speech import (
@@ -43,7 +43,8 @@ def speaker() -> RecordingSpeaker:
 
 @pytest.fixture
 def speech(speaker: RecordingSpeaker) -> CapybaraSpeech:
-    return CapybaraSpeech(ScriptedRecognizer(), RecordingSynthesizer(), speaker)
+    mouth = CapybaraMouth(RecordingSynthesizer(), SpeakerOutput(speaker))
+    return CapybaraSpeech(ScriptedRecognizer(), mouth)
 
 
 @pytest.fixture

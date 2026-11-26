@@ -46,3 +46,18 @@ class RecordingSpeaker:
 
     def play(self, audio: SpokenAudio) -> None:
         self.played_audios.append(audio)
+
+
+class RecordingVoiceOutput:
+    """Keeps every caption and audio it was asked to speak."""
+
+    def __init__(self, plays_audio: bool = True) -> None:
+        self._plays_audio = plays_audio
+        self.spoken: list[tuple[str, SpokenAudio | None]] = []
+
+    @property
+    def plays_audio(self) -> bool:
+        return self._plays_audio
+
+    def speak(self, caption: str, audio: SpokenAudio | None) -> None:
+        self.spoken.append((caption, audio))
