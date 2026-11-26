@@ -47,6 +47,14 @@ class Speaker(Protocol):
     def play(self, audio: SpokenAudio) -> None: ...
 
 
+class Microphone(Protocol):
+    """Records between start_recording and stop_recording, like a push-to-talk button."""
+
+    def start_recording(self) -> None: ...
+
+    def stop_recording(self) -> SpokenAudio: ...
+
+
 SEMITONES_PER_OCTAVE = 12
 
 

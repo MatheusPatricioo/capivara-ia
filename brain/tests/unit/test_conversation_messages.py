@@ -7,6 +7,8 @@ from src.domain.speech import VoiceMode
 from src.infrastructure.world_messages import (
     MAX_CREATOR_MESSAGE_LENGTH,
     CreatorSaidMessage,
+    CreatorTalkingMessage,
+    HeardMessage,
     ListeningMessage,
     SpeechAudio,
     SpeechMessage,
@@ -71,3 +73,15 @@ def test_parses_the_voice_mode_her_creator_chose() -> None:
 
 def test_ignores_an_unknown_voice_mode() -> None:
     assert parse_world_event('{"type": "voice_mode", "mode": "shout"}') is None
+
+
+def test_parses_her_creator_pressing_the_talk_button() -> None:
+    event = parse_world_event('{"type": "creator_talking", "talking": true}')
+
+    assert event == CreatorTalkingMessage(talking=True)
+
+
+def test_heard_message_carries_what_she_understood() -> None:
+    message = HeardMessage(text="Oi, capivara!")
+
+    assert json.loads(message.model_dump_json()) == {"type": "heard", "text": "Oi, capivara!"}

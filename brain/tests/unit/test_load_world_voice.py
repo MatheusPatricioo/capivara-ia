@@ -9,7 +9,7 @@ from src.infrastructure.settings import Settings
 
 @pytest.fixture
 def settings_without_voice_file(tmp_path: Path) -> Settings:
-    return Settings(voice_model_path=tmp_path / "missing-voice.onnx")
+    return Settings(_env_file=None, voice_model_path=tmp_path / "missing-voice.onnx")
 
 
 def test_without_the_voice_file_she_has_no_voice(settings_without_voice_file: Settings) -> None:

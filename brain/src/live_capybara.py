@@ -24,6 +24,8 @@ from src.capybara_chat import (
     build_world_creator_chat,
     creator_presence,
     listen_to_creator,
+    listen_to_creator_voice,
+    load_world_ears,
     load_world_voice,
     start_creator_conversation,
 )
@@ -47,6 +49,7 @@ from src.infrastructure.serial_worker import SerialWorker
 from src.infrastructure.settings import Settings
 from src.infrastructure.sky_broadcaster import SkyBroadcaster
 from src.infrastructure.websocket_body import WebSocketBody
+from src.infrastructure.websocket_conversation_display import WebSocketConversationDisplay
 from src.infrastructure.world_event_router import WorldEventRouter
 from src.infrastructure.world_messages import NoticedMessage
 from src.infrastructure.world_server import WorldServer
@@ -270,6 +273,7 @@ def main() -> None:
         )
 
         presence = creator_presence(settings)
+        ears = load_world_ears(settings)
         creator_chat = build_world_creator_chat(
             start_creator_conversation(settings, language_model, http_client, memory, heart),
             presence,
@@ -315,6 +319,12 @@ def main() -> None:
             SerialWorker("creator-chat") as chat_worker,
         ):
             world_events.when_creator_said(listen_to_creator(creator_chat, chat_worker))
+            if ears is not None:
+                world_events.when_creator_talking(
+                    listen_to_creator_voice(
+                        creator_chat, chat_worker, ears, WebSocketConversationDisplay(world_server)
+                    )
+                )
             try:
                 loop.run()
             except KeyboardInterrupt:

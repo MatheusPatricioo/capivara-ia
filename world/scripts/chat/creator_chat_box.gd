@@ -8,7 +8,7 @@ extends CanvasLayer
 ## switches whether she also says them out loud.
 
 const LAYER: int = 5
-const BAR_WIDTH: float = 620.0
+const BAR_WIDTH: float = 700.0
 const BOTTOM_MARGIN: float = 28.0
 const FONT_SIZE: int = 18
 const KEYCAP_FONT_SIZE: int = 12
@@ -21,6 +21,8 @@ const OFFLINE_PLACEHOLDER: String = "O cérebro dela está desligado"
 const OPEN_BUTTON_TEXT: String = "Conversar"
 const OPEN_KEY_TEXT: String = "Enter"
 const SEND_BUTTON_TEXT: String = "Enviar"
+const HEARD_TEMPLATE: String = "Ela ouviu: %s"
+const HEARD_NOTHING_TEXT: String = "Ela não ouviu nada. Segure Falar e fale de novo."
 
 const BAR_COLOR: Color = Color(0.12, 0.09, 0.07, 0.82)
 const BUTTON_HOVER_COLOR: Color = Color(0.2, 0.15, 0.11, 0.9)
@@ -119,6 +121,7 @@ func _build_bar() -> PanelContainer:
 	_message_field.add_theme_font_size_override("font_size", FONT_SIZE)
 	_message_field.text_submitted.connect(func(_text: String) -> void: _send())
 	row.add_child(_message_field)
+	row.add_child(_build_talk_button())
 	row.add_child(_build_voice_toggle())
 
 	var send_button: Button = Button.new()
@@ -133,6 +136,28 @@ func _build_bar() -> PanelContainer:
 	send_button.pressed.connect(_send)
 	row.add_child(send_button)
 	return bar
+
+
+## Held down while her creator talks out loud: the brain records the microphone.
+func _build_talk_button() -> TalkButton:
+	var talk_button: TalkButton = TalkButton.new()
+	var idle_style: StyleBoxFlat = _rounded(Color(0, 0, 0, 0), 18.0, Vector2(14.0, 6.0))
+	idle_style.border_color = ACCENT_COLOR
+	idle_style.set_border_width_all(1)
+	talk_button.add_theme_stylebox_override("normal", idle_style)
+	talk_button.add_theme_stylebox_override("hover", idle_style)
+	talk_button.add_theme_stylebox_override("pressed", _rounded(ACCENT_COLOR, 18.0, Vector2(14.0, 6.0)))
+	talk_button.add_theme_color_override("font_color", ACCENT_COLOR)
+	talk_button.add_theme_color_override("font_hover_color", ACCENT_HOVER_COLOR)
+	talk_button.add_theme_color_override("font_pressed_color", BAR_COLOR)
+	talk_button.add_theme_font_size_override("font_size", FONT_SIZE - 2)
+	talk_button.heard.connect(_show_heard)
+	return talk_button
+
+
+## What she understood shows in the empty field for a moment, so he knows she got it.
+func _show_heard(text: String) -> void:
+	_message_field.placeholder_text = HEARD_TEMPLATE % text if not text.is_empty() else HEARD_NOTHING_TEXT
 
 
 ## Outlined in the accent color while her voice is on, faded while she is muted.

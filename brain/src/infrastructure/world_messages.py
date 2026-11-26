@@ -130,6 +130,14 @@ class SpeechMessage(BaseModel):
     """None when her voice is off (Mute) or could not be made: then only the caption."""
 
 
+class HeardMessage(BaseModel):
+    """What she understood when her creator talked to her out loud ("" when nothing),
+    so the world can show it. Never remembered."""
+
+    type: Literal["heard"] = "heard"
+    text: str
+
+
 WorldMessage = (
     GoToMessage
     | FeelingsMessage
@@ -138,6 +146,7 @@ WorldMessage = (
     | DiaryMessage
     | ListeningMessage
     | SpeechMessage
+    | HeardMessage
 )
 
 MAX_THING_ID_LENGTH = 64
@@ -211,12 +220,21 @@ class VoiceModeMessage(BaseModel):
     mode: VoiceMode
 
 
+class CreatorTalkingMessage(BaseModel):
+    """Sent by the world when her creator presses (true) and releases (false) the talk
+    button: the brain records the microphone in between."""
+
+    type: Literal["creator_talking"] = "creator_talking"
+    talking: bool
+
+
 WorldEvent = (
     NoticedMessage
     | LetterOpenedMessage
     | LetterRepliedMessage
     | CreatorSaidMessage
     | VoiceModeMessage
+    | CreatorTalkingMessage
 )
 _WORLD_EVENT_ADAPTER: TypeAdapter[WorldEvent] = TypeAdapter(
     Annotated[WorldEvent, Field(discriminator="type")]

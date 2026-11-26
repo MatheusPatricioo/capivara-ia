@@ -4,7 +4,12 @@ import pytest
 
 from src.domain.speech import VoiceMode
 from src.infrastructure.world_event_router import WorldEventRouter
-from src.infrastructure.world_messages import CreatorSaidMessage, NoticedMessage, VoiceModeMessage
+from src.infrastructure.world_messages import (
+    CreatorSaidMessage,
+    CreatorTalkingMessage,
+    NoticedMessage,
+    VoiceModeMessage,
+)
 
 
 @pytest.fixture
@@ -55,3 +60,22 @@ def test_warns_when_nobody_uses_the_voice_mode(
         router.route(VoiceModeMessage(mode=VoiceMode.MUTE))
 
     assert "nobody uses it" in caplog.text
+
+
+def test_hands_when_her_creator_starts_and_stops_talking(router: WorldEventRouter) -> None:
+    talking: list[bool] = []
+    router.when_creator_talking(talking.append)
+
+    router.route(CreatorTalkingMessage(talking=True))
+    router.route(CreatorTalkingMessage(talking=False))
+
+    assert talking == [True, False]
+
+
+def test_warns_when_her_creator_talks_out_loud_and_she_has_no_ears(
+    router: WorldEventRouter, caplog: pytest.LogCaptureFixture
+) -> None:
+    with caplog.at_level(logging.WARNING):
+        router.route(CreatorTalkingMessage(talking=True))
+
+    assert "she has no ears" in caplog.text

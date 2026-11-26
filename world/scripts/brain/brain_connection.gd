@@ -34,6 +34,8 @@ signal voice_received(speech_id: int, pcm: PackedByteArray, sample_rate: int)
 signal voice_mode_changed(mode: StringName)
 ## Her creator sent her a message, so the world can show she is thinking about it.
 signal creator_message_sent(text: String)
+## What she understood when her creator talked out loud ("" when she heard nothing).
+signal creator_heard(text: String)
 signal connection_changed(is_connected: bool)
 
 const DEFAULT_URL: String = "ws://127.0.0.1:8765"
@@ -127,6 +129,15 @@ func send_creator_message(text: String) -> bool:
 	return true
 
 
+## Her creator pressed (true) or released (false) the talk button: the brain records the
+## microphone in between. False while the brain is offline: nobody is there to hear.
+func set_creator_talking(talking: bool) -> bool:
+	if not _is_connected:
+		return false
+	_socket.send_text(JSON.stringify({"type": "creator_talking", "talking": talking}))
+	return true
+
+
 ## Switches her voice. Kept even while the brain is offline: it is sent when it connects.
 func set_voice_mode(mode: StringName) -> void:
 	if mode == voice_mode:
@@ -179,6 +190,11 @@ func _handle_message(text: String) -> void:
 			listening_requested.emit(float(message.get("seconds", 0.0)))
 		"speech":
 			_handle_speech(message)
+		"heard":
+			var heard_text: String = str(message.get("text", ""))
+			creator_heard.emit(heard_text)
+			if not heard_text.is_empty():
+				creator_message_sent.emit(heard_text)
 		_:
 			push_warning("Unknown message type from the brain: %s" % message.get("type"))
 

@@ -1,5 +1,5 @@
 from src.infrastructure.websocket_body import MessageBroadcaster
-from src.infrastructure.world_messages import ListeningMessage
+from src.infrastructure.world_messages import HeardMessage, ListeningMessage
 
 
 class WebSocketConversationDisplay:
@@ -11,3 +11,7 @@ class WebSocketConversationDisplay:
 
     def show_listening(self, seconds: float) -> None:
         self._broadcaster.broadcast(ListeningMessage(seconds=seconds))
+
+    def show_heard(self, text: str) -> None:
+        """What she understood from his voice, or "" when she heard nothing."""
+        self._broadcaster.broadcast(HeardMessage(text=text))
