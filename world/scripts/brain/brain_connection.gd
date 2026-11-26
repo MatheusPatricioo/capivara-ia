@@ -36,6 +36,8 @@ signal voice_mode_changed(mode: StringName)
 signal creator_message_sent(text: String)
 ## What she understood when her creator talked out loud ("" when she heard nothing).
 signal creator_heard(text: String)
+## Her creator pressed (true) or released (false) the talk button: she hushes while he talks.
+signal creator_talking_changed(talking: bool)
 signal connection_changed(is_connected: bool)
 
 const DEFAULT_URL: String = "ws://127.0.0.1:8765"
@@ -132,6 +134,7 @@ func send_creator_message(text: String) -> bool:
 ## Her creator pressed (true) or released (false) the talk button: the brain records the
 ## microphone in between. False while the brain is offline: nobody is there to hear.
 func set_creator_talking(talking: bool) -> bool:
+	creator_talking_changed.emit(talking)
 	if not _is_connected:
 		return false
 	_socket.send_text(JSON.stringify({"type": "creator_talking", "talking": talking}))

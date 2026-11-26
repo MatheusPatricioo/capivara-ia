@@ -8,16 +8,20 @@ extends AudioStreamPlayer3D
 const NO_SPEECH_YET: int = 0
 
 var _played_speech_id: int = NO_SPEECH_YET
+var _creator_is_talking: bool = false
 
 
 func _ready() -> void:
 	Brain.voice_received.connect(_on_voice_received)
+	Brain.creator_talking_changed.connect(_on_creator_talking_changed)
 	Brain.voice_mode_changed.connect(_on_voice_mode_changed)
 	Brain.connection_changed.connect(_on_connection_changed)
 
 
 func _on_voice_received(speech_id: int, pcm: PackedByteArray, sample_rate: int) -> void:
 	if speech_id <= _played_speech_id or Brain.voice_mode == Brain.VOICE_MODE_MUTE:
+		return
+	if _creator_is_talking:
 		return
 	_played_speech_id = speech_id
 	stream = _wav_from(pcm, sample_rate)
@@ -32,6 +36,13 @@ func _wav_from(pcm: PackedByteArray, sample_rate: int) -> AudioStreamWAV:
 	wav.mix_rate = sample_rate
 	wav.data = pcm
 	return wav
+
+
+## When her creator starts talking she hushes at once, and says nothing over him.
+func _on_creator_talking_changed(talking: bool) -> void:
+	_creator_is_talking = talking
+	if talking:
+		stop()
 
 
 ## Muting her also silences the reply she is saying right now.
