@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://scenes/props/food_bowl.tscn" id="41_food_bowl"]
 [ext_resource type="PackedScene" path="res://scenes/props/pond.tscn" id="43_pond"]
 [ext_resource type="PackedScene" path="res://scenes/ui/computer_screen.tscn" id="50_computer_screen"]
+[ext_resource type="Script" uid="uid://ddwx2l1m22h0l" path="res://scripts/chat/creator_chat_box.gd" id="creator_chat_box"]
 [ext_resource type="PackedScene" path="res://scenes/props/fireflies.tscn" id="fireflies"]
 [ext_resource type="Script" uid="uid://g3qbbps3p0nj" path="res://scripts/props/flower_bed.gd" id="flower_bed"]
 [ext_resource type="PackedScene" uid="uid://ckq8b6fcxsk6v" path="res://assets/nature/Models/GLTF format/flower_purpleA.glb" id="kit_flower_purpleA"]
@@ -109,7 +110,6 @@
 [ext_resource type="PackedScene" path="res://scenes/props/waterfall.tscn" id="waterfall"]
 [ext_resource type="Script" uid="uid://cfp3tmwrvk1xx" path="res://scripts/world_sky.gd" id="world_sky"]
 [ext_resource type="PackedScene" path="res://scenes/props/writing_desk.tscn" id="writing_desk"]
-[ext_resource type="Script" path="res://scripts/chat/creator_chat_box.gd" id="creator_chat_box"]
 [ext_resource type="Script" uid="uid://np7fn8eueqpg" path="res://scripts/writing_desk/writing_desk_viewer.gd" id="writing_desk_viewer"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
@@ -207,7 +207,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
 shape = SubResource("BoxShape3D_floor")
 
 [node name="Capybara" parent="." unique_id=951207900 instance=ExtResource("1_capybara")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.11967622, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Capybara" unique_id=1340388870]
 transform = Transform3D(1, 0, 0, 0, 0.70710677, 0.70710677, 0, -0.70710677, 0.70710677, 0, 6, 6)
@@ -978,7 +978,7 @@ script = ExtResource("8_world_navigation")
 [node name="WritingDeskViewer" type="CanvasLayer" parent="." unique_id=976436633]
 script = ExtResource("writing_desk_viewer")
 
-[node name="CreatorChatBox" type="CanvasLayer" parent="."]
+[node name="CreatorChatBox" type="CanvasLayer" parent="." unique_id=281783728]
 script = ExtResource("creator_chat_box")
 
 [node name="Observables" type="Node3D" parent="." unique_id=188773998]
