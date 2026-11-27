@@ -21,7 +21,7 @@ static func is_on() -> bool:
 	return CLIP_ARGUMENT in OS.get_cmdline_user_args()
 
 
-## "auto", "close", "medium" or "wide", as passed; "auto" when not given.
+## "auto" or the name of one shot (see ClipShot.named), as passed; "auto" when not given.
 static func requested_shot() -> String:
 	var shot: String = _text_argument(SHOT_ARGUMENT_PREFIX).to_lower()
 	return shot if not shot.is_empty() else DEFAULT_SHOT

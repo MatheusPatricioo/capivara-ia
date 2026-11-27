@@ -10,6 +10,9 @@ extends Camera3D
 ## out of the way: when the usual spot is blocked, the camera walks around her to the first
 ## side with a clear view; only when every side is blocked does it come closer, in front of
 ## the obstacle, and it goes back out slowly once the view is clear.
+## Between shots it can cut (cut_to) or glide (glide_to): a glide travels from one framing
+## to the other, starting and stopping gently, like an operator moving the camera. Within a
+## shot it plays the shot's own slow movement (an arc, a dolly, a tilt) on top.
 
 ## Angles tried around her, in degrees, when the usual spot is blocked: nearest first.
 const DETOUR_DEGREES: Array[float] = [35.0, -35.0, 70.0, -70.0, 110.0, -110.0]
@@ -25,6 +28,9 @@ const LAG_DEGREES: float = 45.0
 const LOOK_ROOM_FULL_SPEED: float = 2.0
 ## Below this speed, in m/s, she counts as standing still.
 const STANDING_SPEED: float = 0.05
+## The lowest the camera goes, in meters above her feet, after the Reels lens shift lowers
+## it: a camera under the ground films the sky from below.
+const MIN_CAMERA_HEIGHT: float = 0.15
 
 ## How quickly the camera catches up with her position. Higher follows tighter.
 @export var follow_sharpness: float = 6.0
@@ -54,7 +60,13 @@ const STANDING_SPEED: float = 0.05
 @export var reels_frame_shift: float = 0.11
 
 var _target: Capybara = null
+## The framing of this frame, movement included: everything that places the camera reads it.
 var _shot: ClipShot = ClipShot.medium()
+## The framing before the movement: the shot itself, or part of the way along a glide.
+var _base_shot: ClipShot = ClipShot.medium()
+## The shot whose movement plays, and for how long it has been playing.
+var _moving_shot: ClipShot = ClipShot.medium()
+var _move_elapsed: float = 0.0
 var _pivot: Vector3 = Vector3.ZERO
 var _yaw: float = 0.0
 var _distance: float = 0.0
@@ -64,6 +76,11 @@ var _detour: float = 0.0
 var _focus_point: Vector3 = Vector3.ZERO
 var _has_focus: bool = false
 var _is_framing_for_reels: bool = false
+## The glide in progress: from one framing to the shot it ends on; null when not gliding.
+var _glide_from: ClipShot = null
+var _glide_target: ClipShot = null
+var _glide_seconds: float = 0.0
+var _glide_elapsed: float = 0.0
 
 
 func follow(target: Capybara) -> void:
@@ -87,24 +104,47 @@ func clear_focus() -> void:
 	_has_focus = false
 
 
-## Changes the framing at once, with no movement in between: a cut.
+## Changes the framing at once, with no movement in between: a cut. It stops any glide,
+## and the new shot's movement starts from the beginning.
 func cut_to(shot: ClipShot) -> void:
+	_glide_target = null
+	_base_shot = shot
+	_moving_shot = shot
+	_move_elapsed = 0.0
 	_shot = shot
 	fov = shot.field_of_view
 	if _target == null:
 		return
-	# A cut has no smoothing to catch up with: only the look room.
+	# A cut has no smoothing to catch up with: only the look room. It forgets the old
+	# detour, so the usual spot is tried first.
 	_pivot = _framed_point()
+	_detour = 0.0
 	_detour = _choose_detour(_desired_yaw())
 	_yaw = _desired_yaw() + _detour
 	_distance = _clear_distance(_yaw, _shot.distance)
 	_place()
 
 
+## Travels from the current framing to this shot over these seconds. It leaves from the
+## framing of this frame, movement and any glide in progress included, so it never jumps.
+## The new shot's movement starts along with the glide.
+func glide_to(shot: ClipShot, seconds: float) -> void:
+	if _target == null or seconds <= 0.0:
+		cut_to(shot)
+		return
+	_glide_from = _shot
+	_glide_target = shot
+	_glide_seconds = seconds
+	_glide_elapsed = 0.0
+	_moving_shot = shot
+	_move_elapsed = 0.0
+
+
 func _process(delta: float) -> void:
 	if _target == null:
 		return
-	_pivot = _pivot.lerp(_aim_point(), _smoothing(follow_sharpness, delta))
+	_advance_framing(delta)
+	_pivot =_pivot.lerp(_aim_point(), _smoothing(follow_sharpness, delta))
 	_detour = _choose_detour(_desired_yaw())
 	_yaw = lerp_angle(_yaw, _desired_yaw() + _detour, _smoothing(turn_sharpness, delta))
 	var clear_distance: float = _clear_distance(_yaw, _shot.distance)
@@ -114,6 +154,57 @@ func _process(delta: float) -> void:
 	else:
 		_distance = lerpf(_distance, clear_distance, _smoothing(release_sharpness, delta))
 	_place()
+
+
+## The framing of this frame: the base (part of the way along any glide) plus the part of
+## the shot's movement done so far. Like an operator, the movement stops where its next
+## step would put something between the camera and her: otherwise the obstacle rules
+## would make the camera jump closer or to another side in the middle of a slow move.
+func _advance_framing(delta: float) -> void:
+	_advance_glide(delta)
+	var elapsed_before: float = _move_elapsed
+	_move_elapsed += delta
+	var next_framing: ClipShot = ClipShot.moved(_base_shot, _moving_shot, _movement_progress())
+	if _moving_into_obstacle(next_framing):
+		_move_elapsed = elapsed_before
+		next_framing = ClipShot.moved(_base_shot, _moving_shot, _movement_progress())
+	_shot = next_framing
+	fov = _shot.field_of_view
+
+
+## True when the next framing would see her less clearly than this one: the movement may
+## never make the view worse. That covers both obstacle rules (coming closer and walking
+## around to another side), and still lets the movement go on while it helps or changes
+## nothing, for example when she stands by the fence.
+func _moving_into_obstacle(next_framing: ClipShot) -> bool:
+	if _moving_shot.move_seconds <= 0.0:
+		return false
+	return _clear_fraction_of(next_framing) < _clear_fraction_of(_shot)
+
+
+## How much of the framing's distance is free of obstacles, from 0 to 1.
+func _clear_fraction_of(framing: ClipShot) -> float:
+	var yaw: float = _desired_yaw_for(framing) + _detour
+	return _clear_distance(yaw, framing.distance) / framing.distance
+
+
+## smoothstep eases the glide: slow at the start, faster in the middle and slow at the end.
+func _advance_glide(delta: float) -> void:
+	if _glide_target == null:
+		return
+	_glide_elapsed += delta
+	var progress: float = minf(_glide_elapsed / _glide_seconds, 1.0)
+	_base_shot = ClipShot.blended(_glide_from, _glide_target, smoothstep(0.0, 1.0, progress))
+	if progress >= 1.0:
+		_base_shot = _glide_target
+		_glide_target = null
+
+
+## From 0 to 1, eased like the glide, then held at 1: the movement ends at rest.
+func _movement_progress() -> float:
+	if _moving_shot.move_seconds <= 0.0:
+		return 0.0
+	return smoothstep(0.0, 1.0, minf(_move_elapsed / _moving_shot.move_seconds, 1.0))
 
 
 ## True while the camera is far from its place around her, still swinging after she turned.
@@ -127,6 +218,9 @@ func is_lagging_behind() -> bool:
 
 func _place() -> void:
 	global_position = _pivot + _direction_to_camera(_yaw) * _distance
+	# v_offset lowers the camera by the Reels shift: keep it above the ground after that.
+	var lowest_height: float = _target.global_position.y + MIN_CAMERA_HEIGHT + _reels_shift_meters()
+	global_position.y = maxf(global_position.y, lowest_height)
 	look_at(_look_point() + Vector3.UP * _shot.headroom, Vector3.UP)
 	v_offset = -_reels_shift_meters()
 
@@ -178,11 +272,15 @@ func _ground_velocity() -> Vector3:
 ## one side. With a focus, the front is toward the object, which stays still while she
 ## fidgets.
 func _desired_yaw() -> float:
+	return _desired_yaw_for(_shot)
+
+
+func _desired_yaw_for(shot: ClipShot) -> float:
 	var front: Vector3 = _target.facing_direction()
 	if _has_focus:
 		var to_focus: Vector3 = _focus_point - _target.global_position
 		front = Vector3(to_focus.x, 0.0, to_focus.z).normalized()
-	return atan2(front.x, front.z) + side * deg_to_rad(_shot.yaw_degrees)
+	return atan2(front.x, front.z) + side * deg_to_rad(shot.yaw_degrees)
 
 
 func _direction_to_camera(yaw: float) -> Vector3:
@@ -191,12 +289,14 @@ func _direction_to_camera(yaw: float) -> Vector3:
 
 
 ## Keeps the current detour while it stays clear, so the camera does not hesitate between
-## two sides. The usual spot wins back as soon as it is clear again.
+## two sides, nor swing back to the usual spot in the middle of a slow move the moment it
+## clears (swinging fast, it would brush past obstacles and jump closer). A cut chooses
+## again from the usual spot.
 func _choose_detour(usual_yaw: float) -> float:
-	if _is_clear(usual_yaw):
-		return 0.0
 	if _detour != 0.0 and _is_clear(usual_yaw + _detour):
 		return _detour
+	if _is_clear(usual_yaw):
+		return 0.0
 	for detour_degrees: float in DETOUR_DEGREES:
 		var detour: float = deg_to_rad(detour_degrees * side)
 		if _is_clear(usual_yaw + detour):
