@@ -27,3 +27,6 @@ CLAUDE.md
 
 # Doodle sample: embedding cache (rebuilt from the labels when missing)
 /brain/doodles/*.cache.json
+
+# Temporary Godot settings written by record_clip.ps1 during a recording
+/world/override.cfg
