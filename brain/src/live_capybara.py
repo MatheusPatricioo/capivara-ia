@@ -40,12 +40,14 @@ from src.domain.discovery_memory import DiscoveryMemory
 from src.domain.feelings.appraisal import EmotionalEvent, EventKind
 from src.domain.feelings.behavior import cycle_pace
 from src.domain.language_model import StructuredLanguageModel
+from src.infrastructure.jsonl_search_log import SEARCH_LOG_RELATIVE_PATH, JsonlSearchLog
 from src.infrastructure.logging_setup import configure_logging
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
 from src.infrastructure.markdown_suggestion_repository import MarkdownSuggestionRepository
 from src.infrastructure.model_warm_up import warm_up_in_background
 from src.infrastructure.ollama_language_model import OllamaLanguageModel
 from src.infrastructure.prompt_loader import load_prompt
+from src.infrastructure.saved_files_reader import SavedFilesReader
 from src.infrastructure.serial_worker import SerialWorker
 from src.infrastructure.settings import Settings
 from src.infrastructure.sky_broadcaster import SkyBroadcaster
@@ -53,6 +55,7 @@ from src.infrastructure.websocket_body import WebSocketBody
 from src.infrastructure.websocket_conversation_display import WebSocketConversationDisplay
 from src.infrastructure.world_event_router import WorldEventRouter
 from src.infrastructure.world_messages import NoticedMessage
+from src.infrastructure.world_request_handler import WorldRequestHandler
 from src.infrastructure.world_server import WorldServer
 from src.long_term_memory import open_long_term_memory
 
@@ -230,6 +233,14 @@ def think_aloud_and_write(diary_keeper: DiaryKeeper) -> Callable[[str], None]:
     return print_and_keep
 
 
+def build_saved_things_answerer(settings: Settings) -> WorldRequestHandler:
+    """Lets the world show her notes, drawings and searches without reading the disk."""
+    return WorldRequestHandler(
+        SavedFilesReader(settings.discoveries_dir),
+        JsonlSearchLog(settings.discoveries_dir / SEARCH_LOG_RELATIVE_PATH),
+    )
+
+
 def main() -> None:
     settings = Settings()
     configure_logging(settings.log_file, settings.log_level)
@@ -247,6 +258,7 @@ def main() -> None:
             settings.world_server_host,
             settings.world_server_port,
             on_event=world_events.route,
+            on_request=build_saved_things_answerer(settings).handle,
         ) as world_server,
         httpx.Client(
             base_url=settings.ollama_base_url, timeout=settings.ollama_timeout_seconds

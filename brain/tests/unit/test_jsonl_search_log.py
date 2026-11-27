@@ -92,3 +92,39 @@ def test_raises_search_log_error_when_the_file_cannot_be_written(tmp_path: Path)
 
     with pytest.raises(SearchLogError):
         JsonlSearchLog(folder_in_place_of_the_file).append(MOON_SEARCH)
+
+
+def test_reads_back_the_searches_newest_first(search_log: JsonlSearchLog) -> None:
+    search_log.append(MOON_SEARCH)
+    search_log.append(EMPTY_SEARCH)
+
+    assert [record.query for record in search_log.newest_first()] == [
+        "corações de polvo",
+        "fases da lua",
+    ]
+
+
+def test_reads_back_the_pages_a_search_found(search_log: JsonlSearchLog) -> None:
+    search_log.append(MOON_SEARCH)
+
+    assert search_log.newest_first()[0].results == MOON_SEARCH.results
+
+
+def test_reading_before_any_search_gives_an_empty_history(search_log: JsonlSearchLog) -> None:
+    assert search_log.newest_first() == []
+
+
+def test_skips_a_broken_line_and_keeps_the_others(
+    search_log: JsonlSearchLog, log_file: Path
+) -> None:
+    log_file.parent.mkdir(parents=True)
+    log_file.write_text('{"query": "sem data"\n' + json.dumps(MOON_SEARCH_LINE) + "\n", "utf-8")
+
+    assert [record.query for record in search_log.newest_first()] == ["fases da lua"]
+
+
+def test_skips_a_line_without_a_query(search_log: JsonlSearchLog, log_file: Path) -> None:
+    log_file.parent.mkdir(parents=True)
+    log_file.write_text('{"searched_at": "2026-11-23T10:15:02-03:00", "results": []}\n', "utf-8")
+
+    assert search_log.newest_first() == []
