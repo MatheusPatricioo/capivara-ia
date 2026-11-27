@@ -75,6 +75,15 @@ class OllamaLanguageModel:
             self._recovered_tool_call_count += 1
         return recovered
 
+    def warm_up(self) -> None:
+        """Loads the model into memory without generating anything (a chat with no
+        messages), with the same options as her real calls, so Ollama does not load it
+        again for them. The first reply then skips the slow load from disk.
+
+        Raises LanguageModelError when Ollama cannot load it.
+        """
+        self._post_chat(self._base_payload([]))
+
     def complete_json(
         self, messages: list[ChatMessage], schema: dict[str, object]
     ) -> StructuredReply:

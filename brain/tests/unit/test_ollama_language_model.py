@@ -170,6 +170,40 @@ def test_sends_the_generation_options(received_requests: list[httpx.Request]) ->
     }
 
 
+def test_warm_up_asks_ollama_to_load_the_model_without_messages(
+    healthy_ollama: OllamaLanguageModel, received_requests: list[httpx.Request]
+) -> None:
+    healthy_ollama.warm_up()
+
+    sent = json.loads(received_requests[0].content)
+    assert (sent["model"], sent["messages"]) == (MODEL_NAME, [])
+
+
+def test_warm_up_loads_the_model_with_the_same_options_as_her_replies(
+    received_requests: list[httpx.Request],
+) -> None:
+    def reply_successfully(request: httpx.Request) -> httpx.Response:
+        received_requests.append(request)
+        return httpx.Response(200, json={"message": {"role": "assistant", "content": ""}})
+
+    client = httpx.Client(base_url=OLLAMA_URL, transport=httpx.MockTransport(reply_successfully))
+    language_model = OllamaLanguageModel(
+        client=client, model=MODEL_NAME, generation_options=GENERATION_OPTIONS, keep_alive="30m"
+    )
+
+    language_model.warm_up()
+
+    sent = json.loads(received_requests[0].content)
+    assert (sent["options"]["num_ctx"], sent["keep_alive"]) == (4096, "30m")
+
+
+def test_warm_up_raises_when_ollama_is_offline() -> None:
+    offline_ollama = build_language_model(lambda request: httpx.Response(500))
+
+    with pytest.raises(LanguageModelError):
+        offline_ollama.warm_up()
+
+
 def test_sends_tool_definitions_in_the_ollama_format(
     healthy_ollama: OllamaLanguageModel, received_requests: list[httpx.Request]
 ) -> None:
