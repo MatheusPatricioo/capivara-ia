@@ -43,6 +43,7 @@ from src.domain.language_model import StructuredLanguageModel
 from src.infrastructure.logging_setup import configure_logging
 from src.infrastructure.markdown_discovery_repository import MarkdownDiscoveryRepository
 from src.infrastructure.markdown_suggestion_repository import MarkdownSuggestionRepository
+from src.infrastructure.model_warm_up import warm_up_in_background
 from src.infrastructure.ollama_language_model import OllamaLanguageModel
 from src.infrastructure.prompt_loader import load_prompt
 from src.infrastructure.serial_worker import SerialWorker
@@ -108,16 +109,16 @@ def build_attention_inbox(settings: Settings) -> AttentionInbox:
 def build_language_model(
     settings: Settings, http_client: httpx.Client, budget: HourlyTokenBudget
 ) -> MeteredLanguageModel:
-    """The local model, with every call counted against the hourly token budget."""
-    return MeteredLanguageModel(
-        OllamaLanguageModel(
-            client=http_client,
-            model=settings.ollama_model,
-            generation_options=settings.ollama_generation_options(),
-            keep_alive=settings.ollama_keep_alive,
-        ),
-        budget,
+    """The local model, with every call counted against the hourly token budget. It starts
+    loading in the background right away, so the first reply does not wait for the disk."""
+    ollama_model = OllamaLanguageModel(
+        client=http_client,
+        model=settings.ollama_model,
+        generation_options=settings.ollama_generation_options(),
+        keep_alive=settings.ollama_keep_alive,
     )
+    warm_up_in_background(ollama_model)
+    return MeteredLanguageModel(ollama_model, budget)
 
 
 def build_related_discoveries(
@@ -319,6 +320,7 @@ def main() -> None:
             SerialWorker("creator-chat") as chat_worker,
         ):
             world_events.when_creator_said(listen_to_creator(creator_chat, chat_worker))
+            world_events.when_conversation_ended(creator_chat.end_conversation)
             if ears is not None:
                 world_events.when_creator_talking(
                     listen_to_creator_voice(

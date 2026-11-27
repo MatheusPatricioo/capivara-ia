@@ -140,6 +140,36 @@ def test_her_reply_renews_the_quiet_time(
     assert presence.is_talking()
 
 
+def test_ending_the_conversation_lets_her_go_back_to_her_life(
+    chat: CreatorChat, presence: CreatorPresence
+) -> None:
+    chat.hear()
+
+    chat.end_conversation()
+
+    assert not presence.is_talking()
+
+
+def test_a_reply_after_the_end_is_still_said(chat: CreatorChat, mouth: RecordingMouth) -> None:
+    chat.hear()
+    chat.end_conversation()
+
+    chat.answer(MESSAGE)
+
+    assert mouth.said == [REPLY]
+
+
+def test_a_reply_after_the_end_does_not_make_her_listen_again(
+    chat: CreatorChat, presence: CreatorPresence, display: RecordingDisplay
+) -> None:
+    chat.hear()
+    chat.end_conversation()
+
+    chat.answer(MESSAGE)
+
+    assert (presence.is_talking(), display.listening_seconds) == (False, [QUIET_SECONDS])
+
+
 def test_talking_with_her_creator_is_felt_by_her_heart(
     chat: CreatorChat, heart: RecordingFeeler
 ) -> None:

@@ -66,9 +66,15 @@ class CreatorChat:
         except (LanguageModelError, StepLimitReachedError) as error:
             logger.warning("She could not answer her creator: %s", error)
             return None
-        self._mark_exchange()
+        if self._presence.mark_reply():
+            self._display.show_listening(self._presence.quiet_seconds)
         self._mouth.say(reply)
         return reply
+
+    def end_conversation(self) -> None:
+        """He closed the chat: she goes back to her own life right away. A reply still on
+        its way is said, but she no longer stops to listen."""
+        self._presence.end()
 
     def _with_world_now(self, message: str) -> str:
         if self._world_now is None:

@@ -4,7 +4,8 @@ extends CanvasLayer
 ## Where her creator talks with her, at the bottom of the screen. Closed, it is a small
 ## "Conversar" button (Enter also opens it). Open, a dark rounded bar with the text field
 ## and a send button; Esc closes it. It stays open after sending, so the conversation
-## flows, and her replies appear in the balloon above her. The Voz/Mudo pill in the bar
+## flows, and her replies appear in the balloon above her. Enter on an empty field ends
+## the conversation: the bar closes and she goes back to her own life. The Voz/Mudo pill in the bar
 ## switches whether she also says them out loud.
 
 const LAYER: int = 5
@@ -79,12 +80,19 @@ func _input(event: InputEvent) -> void:
 func _send() -> void:
 	var message: String = _message_field.text.strip_edges()
 	if message.is_empty():
+		_end_conversation()
 		return
 	if not Brain.send_creator_message(message):
 		_message_field.placeholder_text = OFFLINE_PLACEHOLDER
 		return
 	_message_field.clear()
 	_message_field.grab_focus()
+
+
+func _end_conversation() -> void:
+	_message_field.clear()
+	close()
+	Brain.end_conversation()
 
 
 func _is_enter(event: InputEvent) -> bool:

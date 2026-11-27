@@ -3,6 +3,7 @@ from collections.abc import Callable
 
 from src.domain.speech import VoiceMode
 from src.infrastructure.world_messages import (
+    ConversationEndedMessage,
     CreatorSaidMessage,
     CreatorTalkingMessage,
     LetterOpenedMessage,
@@ -29,6 +30,7 @@ class WorldEventRouter:
         self._on_creator_said: Callable[[str], None] | None = None
         self._on_voice_mode: Callable[[VoiceMode], None] | None = None
         self._on_creator_talking: Callable[[bool], None] | None = None
+        self._on_conversation_ended: Callable[[], None] | None = None
 
     def when_letter_opened(self, handler: Callable[[str], None]) -> None:
         self._on_letter_opened = handler
@@ -48,6 +50,9 @@ class WorldEventRouter:
         """The handler gets True when he starts talking out loud and False when he stops."""
         self._on_creator_talking = handler
 
+    def when_conversation_ended(self, handler: Callable[[], None]) -> None:
+        self._on_conversation_ended = handler
+
     def route(self, event: WorldEvent) -> None:
         match event:
             case NoticedMessage():
@@ -62,6 +67,8 @@ class WorldEventRouter:
                 self._voice_mode_changed(event.mode)
             case CreatorTalkingMessage():
                 self._creator_talking(event.talking)
+            case ConversationEndedMessage():
+                self._conversation_ended()
 
     def _letter_opened(self, file_name: str) -> None:
         if self._on_letter_opened is None:
@@ -92,3 +99,9 @@ class WorldEventRouter:
             logger.warning("Her creator talked out loud, but she has no ears (voice extra?)")
             return
         self._on_creator_talking(talking)
+
+    def _conversation_ended(self) -> None:
+        if self._on_conversation_ended is None:
+            logger.warning("Her creator ended a conversation, but nobody was talking with him")
+            return
+        self._on_conversation_ended()

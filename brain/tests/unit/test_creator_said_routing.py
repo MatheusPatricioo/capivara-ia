@@ -5,6 +5,7 @@ import pytest
 from src.domain.speech import VoiceMode
 from src.infrastructure.world_event_router import WorldEventRouter
 from src.infrastructure.world_messages import (
+    ConversationEndedMessage,
     CreatorSaidMessage,
     CreatorTalkingMessage,
     NoticedMessage,
@@ -42,6 +43,26 @@ def test_other_events_do_not_reach_the_creator_handler(router: WorldEventRouter)
     router.route(NoticedMessage(thing="pond", description="um lago"))
 
     assert heard == []
+
+
+def test_hands_the_end_of_the_conversation_to_the_registered_handler(
+    router: WorldEventRouter,
+) -> None:
+    endings: list[str] = []
+    router.when_conversation_ended(lambda: endings.append("ended"))
+
+    router.route(ConversationEndedMessage())
+
+    assert endings == ["ended"]
+
+
+def test_warns_when_nobody_handles_the_end_of_the_conversation(
+    router: WorldEventRouter, caplog: pytest.LogCaptureFixture
+) -> None:
+    with caplog.at_level(logging.WARNING):
+        router.route(ConversationEndedMessage())
+
+    assert "nobody was talking with him" in caplog.text
 
 
 def test_hands_the_chosen_voice_mode_to_the_registered_handler(router: WorldEventRouter) -> None:

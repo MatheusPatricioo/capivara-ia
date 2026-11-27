@@ -38,6 +38,8 @@ signal creator_message_sent(text: String)
 signal creator_heard(text: String)
 ## Her creator pressed (true) or released (false) the talk button: she hushes while he talks.
 signal creator_talking_changed(talking: bool)
+## Her creator closed the chat: she stops listening and goes back to her own life.
+signal conversation_ended
 signal connection_changed(is_connected: bool)
 
 const DEFAULT_URL: String = "ws://127.0.0.1:8765"
@@ -129,6 +131,14 @@ func send_creator_message(text: String) -> bool:
 	_socket.send_text(JSON.stringify({"type": "creator_said", "text": text}))
 	creator_message_sent.emit(text)
 	return true
+
+
+## Her creator does not want to talk anymore. The world lets her go at once, even while
+## the brain is offline; the brain, when connected, resumes her thoughts without waiting.
+func end_conversation() -> void:
+	conversation_ended.emit()
+	if _is_connected:
+		_socket.send_text(JSON.stringify({"type": "conversation_ended"}))
 
 
 ## Her creator pressed (true) or released (false) the talk button: the brain records the
