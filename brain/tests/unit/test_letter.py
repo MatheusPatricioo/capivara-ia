@@ -118,3 +118,20 @@ def test_an_unanswered_letter_has_no_new_reply() -> None:
 def test_cannot_read_the_reply_of_an_unanswered_letter() -> None:
     with pytest.raises(InvalidLetterError):
         Letter(NOW, "Oi, criador!").reply_seen()
+
+
+def test_a_fresh_reply_has_not_moved_her_yet() -> None:
+    letter = Letter(NOW, "Oi, criador!").answered(Reply(NOW, "Oi!"))
+
+    assert letter.reply is not None and not letter.reply.felt_by_her
+
+
+def test_a_felt_reply_is_remembered_as_felt() -> None:
+    letter = Letter(NOW, "Oi, criador!").answered(Reply(NOW, "Oi!")).reply_felt()
+
+    assert letter.reply is not None and letter.reply.felt_by_her
+
+
+def test_cannot_feel_the_reply_of_an_unanswered_letter() -> None:
+    with pytest.raises(InvalidLetterError):
+        Letter(NOW, "Oi, criador!").reply_felt()
