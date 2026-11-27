@@ -141,15 +141,15 @@ O `record_clip.ps1` grava a capivara com o Movie Maker do Godot e gera os MP4s e
 
 | `-Shot` | O que mostra |
 |---|---|
-| `Auto` (padrão) | Edita como uma série: abre com o plano aberto, corta entre médio e fechado a cada 4 a 6 s, e vai para o fechado quando ela fala ou muda de sentimento |
+| `Auto` (padrão) | Edita como uma série: abre com o plano aberto, corta entre médio e fechado a cada 4 a 6 s, e vai para o fechado quando ela fala ou muda de sentimento. Quando ela chega ao computador, à caixa de correio, ao pote ou à casinha, corta por cima do ombro (ela e o objeto no mesmo quadro), alternando com o rosto dela, até ela sair |
 | `Close` | O rosto e o corpo, a 2,6 m |
 | `Medium` | Ela inteira e o que está em volta, a 3,3 m |
 | `Wide` | Ela no mundo, a 6,5 m, para abrir um episódio |
 
-Os valores de cada plano ficam em `world/scripts/clip/clip_shot.gd`, para a série toda ter a mesma cara. Quando uma árvore, uma casa ou um móvel fica entre a câmera e ela, a câmera dá a volta para um lado livre. Ela enxerga os objetos com colisão por um raio e os que são só decoração pelo mapa de navegação, onde eles são buracos.
+Os valores de cada plano ficam em `world/scripts/clip/clip_shot.gd`, para a série toda ter a mesma cara. Quando uma árvore, uma casa ou um móvel fica entre a câmera e ela, a câmera dá a volta para um lado livre. Ela enxerga os objetos com colisão por um raio e os que são só decoração pelo mapa de navegação, onde eles são buracos. Se ela vira rápido e a câmera fica para trás, mostrando o lado ou as costas dela por mais de meio segundo, o diretor corta direto para a frente dela, como um editor faria.
 
 **Detalhes da gravação:**
-- Os 3 primeiros segundos (`-WarmupSeconds`) são gravados e cortados fora: é quando o cérebro conecta, o céu de verdade chega e passam as primeiras engasgadas.
+- **O clipe começa quando o cérebro está pronto:** o mundo conectou e o céu de verdade chegou (no mínimo 1 s depois de abrir, para as primeiras engasgadas passarem). O jogo (`clip_recorder.gd`) anota esse instante num arquivinho `.json` ao lado do vídeo, grava `-Seconds` a partir dali e se fecha; o script corta o vídeo exatamente nesse ponto. Se o cérebro não ficar pronto em `-BrainReadySeconds` (60 s), a gravação para com um erro, sem gerar clipe.
 - O jogo é renderizado na resolução exata do vídeo numa janela com metade do tamanho. Uma janela maior que o monitor, como 1080×1920 numa tela 1080p, deixava cada quadro uns 60 ms mais lento.
 - **Sincronia com o cérebro:** o Movie Maker avança o jogo 1/30 s por quadro e ignora o tempo real, então pode correr mais rápido ou mais devagar que o cérebro. No modo clipe, um marca-passo (`clip_pacer.gd`) segura o jogo para nunca passar do relógio. Se o computador não der conta, o script avisa no fim quando a diferença passa de 5%. Nos testes, ficou entre 0,95× e 1,00×.
 

@@ -34,10 +34,10 @@ param(
     [int]$Seconds = 20,
     [ValidateRange(1, 120)]
     [int]$Fps = 30,
-    # Recorded before the clip and cut off: the brain connects, the real sky arrives and the
-    # first stutters pass. The clip itself still lasts -Seconds.
-    [ValidateRange(0, 30)]
-    [int]$WarmupSeconds = 3,
+    # The clip starts only once the brain is ready (the world connected and her real sky
+    # arrived). If that takes longer than this, the recording stops with an error.
+    [ValidateRange(5, 600)]
+    [int]$BrainReadySeconds = 60,
     [string]$OutputDir = "D:\clipes",
     [string]$GodotPath = $env:GODOT_PATH,
     # ffmpeg.exe, or a folder that holds it (searched inside). Without it: the PATH, then
@@ -228,19 +228,23 @@ if (-not $Resolution) {
 # 2. The brain, so the capybara is alive in the clip.
 Start-BrainIfNeeded
 
-# 3. The recording. --quit-after counts frames, and with the Movie Maker each frame is
-#    exactly 1/FPS of game time.
+# 3. The recording. The game decides when the clip starts and ends (ClipRecorder in
+#    world/scripts/clip): it waits for the brain, plays -Seconds from then, writes that
+#    moment to a marker file and closes. --quit-after (in frames, each exactly 1/FPS of game
+#    time) is only a safety net, in case the game never closes by itself.
 $clipName = "capivara-" + (Get-Date -Format "yyyyMMdd-HHmmss")
 $aviPath = Join-Path $OutputDir "$clipName.avi"
-$frameCount = ($WarmupSeconds + $Seconds) * $Fps
-Write-Host "Recording $WarmupSeconds s of warm-up + $Seconds s ($frameCount frames at $Fps FPS, $Resolution, shot $Shot) with $resolvedGodotPath..."
+$markerPath = Join-Path $OutputDir "$clipName.json"
+$safetyFrameCount = ($BrainReadySeconds + $Seconds + 10) * $Fps
+Write-Host "Recording $Seconds s from the moment the brain is ready ($Fps FPS, $Resolution, shot $Shot) with $resolvedGodotPath..."
 # What comes after "--" goes to the game itself (ClipMode in world/scripts/clip).
 $godotArguments = @(
     "--path", $worldDirectory,
     "--fixed-fps", $Fps,
     "--write-movie", $aviPath,
-    "--quit-after", $frameCount,
-    "--", "--clip", "--clip-shot=$($Shot.ToLower())", "--clip-warmup=$WarmupSeconds"
+    "--quit-after", $safetyFrameCount,
+    "--", "--clip", "--clip-shot=$($Shot.ToLower())", "--clip-seconds=$Seconds",
+    "--clip-brain-wait=$BrainReadySeconds", "--clip-marker=$($markerPath -replace '\\', '/')"
 )
 # The Movie Maker ignores --resolution. An override.cfg next to project.godot overrides
 # settings for one run, and is removed right after:
@@ -274,6 +278,20 @@ finally {
 if (-not (Test-Path $aviPath)) {
     throw "Godot finished without writing $aviPath."
 }
+if (-not (Test-Path $markerPath)) {
+    Remove-Item -Path $aviPath -Confirm:$false
+    throw "Godot closed before the clip ended (no $markerPath). Was the window closed?"
+}
+$marker = Get-Content -Path $markerPath -Raw | ConvertFrom-Json
+Remove-Item -Path $markerPath -Confirm:$false
+if ($null -ne $marker.error) {
+    Remove-Item -Path $aviPath -Confirm:$false
+    throw "No clip: $($marker.error). Is the brain running at ws://${BrainHost}:$BrainPort?"
+}
+# Everything before this moment (loading, connecting, the default sky) is cut off.
+$storyStartSeconds = [double]$marker.story_start_seconds
+$storyStart = $storyStartSeconds.ToString([cultureinfo]::InvariantCulture)
+Write-Host ("The brain was ready at {0:N1} s of game time; the clip starts there." -f $storyStartSeconds)
 # Real time from the first frame written (the file is created) to the last one: Godot's
 # start (loading the scene) and exit are left out.
 $aviFile = Get-Item $aviPath
@@ -285,16 +303,16 @@ $reelsPath = Join-Path $OutputDir "$clipName-reels.mp4"
 $clipPaths = @()
 if ($isVertical) {
     Invoke-Ffmpeg -Description "Converting to the vertical MP4..." -Arguments (
-        @("-ss", $WarmupSeconds, "-i", $aviPath, "-vf", $toTvRange) + $h264Arguments + $audioArguments + @("-movflags", "+faststart", $reelsPath)
+        @("-ss", $storyStart, "-t", $Seconds, "-i", $aviPath, "-vf", $toTvRange) + $h264Arguments + $audioArguments + @("-movflags", "+faststart", $reelsPath)
     )
     $clipPaths += $reelsPath
 }
 else {
     Invoke-Ffmpeg -Description "Converting to the horizontal MP4..." -Arguments (
-        @("-ss", $WarmupSeconds, "-i", $aviPath, "-vf", $toTvRange) + $h264Arguments + $audioArguments + @("-movflags", "+faststart", $horizontalPath)
+        @("-ss", $storyStart, "-t", $Seconds, "-i", $aviPath, "-vf", $toTvRange) + $h264Arguments + $audioArguments + @("-movflags", "+faststart", $horizontalPath)
     )
     Invoke-Ffmpeg -Description "Converting to the vertical 1080x1920 MP4 ($VerticalMode)..." -Arguments (
-        @("-ss", $WarmupSeconds, "-i", $aviPath, "-filter_complex", (Get-VerticalFilter), "-map", "[reels]", "-map", "0:a?") +
+        @("-ss", $storyStart, "-t", $Seconds, "-i", $aviPath, "-filter_complex", (Get-VerticalFilter), "-map", "[reels]", "-map", "0:a?") +
         $h264Arguments + $audioArguments + @("-movflags", "+faststart", $reelsPath)
     )
     $clipPaths += $horizontalPath, $reelsPath
@@ -314,7 +332,8 @@ if (-not $KeepAvi) {
 }
 
 $realSeconds = $recordingSeconds
-$gameSeconds = $WarmupSeconds + $Seconds
+# The whole recording, wait included, ran under the Movie Maker.
+$gameSeconds = [math]::Round($storyStartSeconds + $Seconds + 0.5, 1)
 $gameSpeed = $gameSeconds / $realSeconds
 Write-Host ("Game time {0} s in {1:N1} s of real time: the game ran at {2:N2}x real time." -f $gameSeconds, $realSeconds, $gameSpeed)
 if ([math]::Abs($gameSpeed - 1) -gt $syncTolerance) {

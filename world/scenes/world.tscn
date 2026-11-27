@@ -114,6 +114,7 @@
 [ext_resource type="Script" path="res://scripts/clip/clip_camera.gd" id="clip_camera"]
 [ext_resource type="Script" path="res://scripts/clip/clip_director.gd" id="clip_director"]
 [ext_resource type="Script" path="res://scripts/clip/clip_pacer.gd" id="clip_pacer"]
+[ext_resource type="Script" path="res://scripts/clip/clip_recorder.gd" id="clip_recorder"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 
@@ -1044,10 +1045,14 @@ description = "uma clareira lá fora, depois da cerca, com pedras em roda e luzi
 [node name="ClipCamera" type="Camera3D" parent="."]
 script = ExtResource("clip_camera")
 
-[node name="ClipDirector" type="Node" parent="." node_paths=PackedStringArray("capybara", "clip_camera")]
+[node name="ClipRecorder" type="Node" parent="."]
+script = ExtResource("clip_recorder")
+
+[node name="ClipDirector" type="Node" parent="." node_paths=PackedStringArray("capybara", "clip_camera", "recorder")]
 script = ExtResource("clip_director")
 capybara = NodePath("../Capybara")
 clip_camera = NodePath("../ClipCamera")
+recorder = NodePath("../ClipRecorder")
 
 [node name="ClipPacer" type="Node" parent="."]
 script = ExtResource("clip_pacer")

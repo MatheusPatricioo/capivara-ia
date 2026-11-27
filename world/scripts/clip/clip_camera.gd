@@ -18,6 +18,9 @@ const MAP_CHECK_STEP: float = 0.4
 ## A ground point this far from where she can walk, in meters, is inside an obstacle. The
 ## map keeps about half a meter from objects, so a little less than that still counts as free.
 const MAP_TOLERANCE: float = 0.45
+## Degrees between where the camera is around her and where it should be, past which it
+## counts as lagging: she turned faster than the camera follows.
+const LAG_DEGREES: float = 45.0
 
 ## How quickly the camera catches up with her position. Higher follows tighter.
 @export var follow_sharpness: float = 6.0
@@ -27,6 +30,9 @@ const MAP_TOLERANCE: float = 0.45
 @export var release_sharpness: float = 2.0
 ## Meters kept between the camera and whatever blocked the view.
 @export var obstacle_margin: float = 0.3
+## How far the camera turns its eyes from her toward the object she uses: 0 looks only
+## at her, 1 only at the object.
+@export var focus_weight: float = 0.5
 ## The closest the camera ever gets, in meters, even with an obstacle right behind her.
 @export var min_distance: float = 1.6
 ## A side counts as clear when the camera can stand at least this fraction of the shot's
@@ -43,10 +49,24 @@ var _yaw: float = 0.0
 var _distance: float = 0.0
 ## Extra angle around her to get past an obstacle, in radians; 0 when the usual spot is clear.
 var _detour: float = 0.0
+## The object she is using, framed together with her; only while _has_focus.
+var _focus_point: Vector3 = Vector3.ZERO
+var _has_focus: bool = false
 
 
 func follow(target: Capybara) -> void:
 	_target = target
+
+
+## Frames her together with this object (the computer, the mailbox...): the shot's angle
+## counts from the direction she looks at it, and the camera looks between her and it.
+func focus_on(object_position: Vector3) -> void:
+	_focus_point = object_position
+	_has_focus = true
+
+
+func clear_focus() -> void:
+	_has_focus = false
 
 
 ## Changes the framing at once, with no movement in between: a cut.
@@ -77,9 +97,26 @@ func _process(delta: float) -> void:
 	_place()
 
 
+## True while the camera is far from its place around her, still swinging after she turned.
+## Not when an obstacle keeps it aside: that place already counts the detour.
+func is_lagging_behind() -> bool:
+	if _target == null:
+		return false
+	var place_yaw: float = _desired_yaw() + _detour
+	return absf(angle_difference(_yaw, place_yaw)) > deg_to_rad(LAG_DEGREES)
+
+
 func _place() -> void:
 	global_position = _pivot + _direction_to_camera(_yaw) * _distance
-	look_at(_pivot + Vector3.UP * _shot.headroom, Vector3.UP)
+	look_at(_look_point() + Vector3.UP * _shot.headroom, Vector3.UP)
+
+
+## Her head, or a point between her head and the object she uses, at her head's height.
+func _look_point() -> Vector3:
+	if not _has_focus:
+		return _pivot
+	var focus_at_head_height: Vector3 = Vector3(_focus_point.x, _pivot.y, _focus_point.z)
+	return _pivot.lerp(focus_at_head_height, focus_weight)
 
 
 func _aim_point() -> Vector3:
@@ -87,9 +124,13 @@ func _aim_point() -> Vector3:
 
 
 ## The angle around her where the camera stands: in front of her face, turned a little to
-## one side.
+## one side. With a focus, the front is toward the object, which stays still while she
+## fidgets.
 func _desired_yaw() -> float:
 	var front: Vector3 = _target.facing_direction()
+	if _has_focus:
+		var to_focus: Vector3 = _focus_point - _target.global_position
+		front = Vector3(to_focus.x, 0.0, to_focus.z).normalized()
 	return atan2(front.x, front.z) + side * deg_to_rad(_shot.yaw_degrees)
 
 

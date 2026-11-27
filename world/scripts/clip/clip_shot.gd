@@ -52,9 +52,17 @@ static func wide() -> ClipShot:
 	return ClipShot.new(6.5, 28.0, 30.0, 50.0, 0.4, 0.3)
 
 
-## The shot with this name ("close", "medium" or "wide"); null for any other name.
+## Over her shoulder, from behind and to one side: her and what she is using (the
+## computer, the mailbox...) in the same frame. Used with ClipCamera.focus_on.
+static func activity() -> ClipShot:
+	return ClipShot.new(2.8, 14.0, 135.0, 48.0, 0.45, 0.1)
+
+
+## The shot with this name ("close", "medium", "wide" or "activity"); null for any other.
 static func named(shot_name: String) -> ClipShot:
 	match shot_name:
+		"activity":
+			return activity()
 		"close":
 			return close()
 		"medium":
