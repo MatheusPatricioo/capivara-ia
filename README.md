@@ -131,6 +131,7 @@ Duas lições do baseline. Com o mesmo código, duas rodadas de 25 execuções v
 
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/) (para o PostgreSQL da memória de longo prazo)
 - [Godot 4](https://godotengine.org/download) (só para ver o mundo 3D)
+- **Só no Windows:** o `libpq.dll` do PostgreSQL no PATH. O Smart App Control do Windows 11 bloqueia a DLL não assinada do `psycopg[binary]`, então no Windows o projeto instala o `psycopg` puro, que usa o libpq do sistema. Baixe o zip de binários da [EnterpriseDB](https://www.enterprisedb.com/download-postgresql-binaries) (as DLLs são assinadas), copie `libpq.dll`, `libssl-3-x64.dll`, `libcrypto-3-x64.dll`, `libintl-9.dll` e `libiconv-2.dll` da pasta `pgsql\bin` para uma pasta como `C:\tools\libpq` e coloque essa pasta no PATH. Para conferir: `python -c "import psycopg; print(psycopg.pq.__impl__)"` deve mostrar `python`.
 
 ### Instalação
 

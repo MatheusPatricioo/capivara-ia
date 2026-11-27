@@ -8,7 +8,10 @@ dependencies = [
     "httpx",
     "pillow",
     # PostgreSQL driver (version 3) and its connection pool, for the long-term memory.
-    "psycopg[binary]",
+    # On Windows, Smart App Control blocks the unsigned DLL of psycopg[binary], so there
+    # psycopg uses its pure Python implementation with a signed libpq.dll on the PATH.
+    "psycopg[binary]; sys_platform != 'win32'",
+    "psycopg; sys_platform == 'win32'",
     "psycopg-pool",
     "pydantic",
     "pydantic-settings",
