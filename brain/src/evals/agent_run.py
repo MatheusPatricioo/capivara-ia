@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from enum import StrEnum
 
+from src.application.tools.web_search_tool import ALREADY_SEARCHED_PREFIX
 from src.domain.discovery import Discovery
 from src.domain.world_suggestion import WorldSuggestion
 from src.evals.agent_scenarios import Expectations
@@ -17,8 +18,23 @@ SUGGEST_IMPROVEMENT = "suggest_improvement"
 # Parts of the tools' own messages that reveal a broken rule. The tools enforce the rules;
 # these checks count how often the model tried to break them.
 INVENTED_SOURCE_MARKERS = ("did not come from your web_search results", "no web_search results")
-REPEATED_SEARCH_MARKER = "You already searched"
+REPEATED_SEARCH_MARKER = ALREADY_SEARCHED_PREFIX
 SUGGESTION_BEFORE_SAVING_MARKER = "save a discovery with save_discovery first"
+
+# In a cycle of her own nobody talked to her: a reply opening like this treats a tool
+# message as someone speaking, like answering "tá bom" to a refused search.
+ACKNOWLEDGING_OPENINGS = (
+    "tá bom",
+    "ta bom",
+    "ok",
+    "okay",
+    "certo",
+    "beleza",
+    "entendi",
+    "tudo bem",
+)
+# The cycle ends with her answer, so a search she only announces never happens.
+ANNOUNCED_SEARCH_MARKERS = ("vou pesquisar", "vou lá pesquisar", "vou procurar", "vou buscar")
 
 
 class RunOutcome(StrEnum):
@@ -87,7 +103,22 @@ def _rule_checks(run: AgentRun) -> list[CheckResult]:
             "no_suggestion_before_saving",
             not _failed_with(run, SUGGEST_IMPROVEMENT, SUGGESTION_BEFORE_SAVING_MARKER),
         ),
+        CheckResult("no_acknowledging_reply", not _opens_acknowledging(run.final_answer)),
+        CheckResult("no_announced_search", not _announces_search(run.final_answer)),
     ]
+
+
+def _opens_acknowledging(answer: str) -> bool:
+    opening = answer.strip().lower()
+    return any(
+        opening.startswith(word) and not opening[len(word) : len(word) + 1].isalpha()
+        for word in ACKNOWLEDGING_OPENINGS
+    )
+
+
+def _announces_search(answer: str) -> bool:
+    lowered = answer.lower()
+    return any(marker in lowered for marker in ANNOUNCED_SEARCH_MARKERS)
 
 
 def _expectation_checks(run: AgentRun, expect: Expectations) -> list[CheckResult]:

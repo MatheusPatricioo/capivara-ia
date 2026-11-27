@@ -1,7 +1,7 @@
 import logging
 from typing import Protocol
 
-from src.application.chalkboard_artist import ChalkboardArtist, PinnedDrawing
+from src.application.drawing_artist import DrawingArtist, SavedDrawing
 from src.domain.discovery import Discovery
 from src.domain.doodle import Doodle, DoodleLibrary, UnknownCategoryError
 from src.domain.drawing import Drawing, DrawingStorageError, InvalidDrawingError
@@ -33,15 +33,15 @@ class IllustrateDiscovery:
         category_chooser: CategoryChooser,
         doodle_library: DoodleLibrary,
         hand: DrawingHand,
-        artist: ChalkboardArtist,
+        artist: DrawingArtist,
     ) -> None:
         self._category_chooser = category_chooser
         self._doodle_library = doodle_library
         self._hand = hand
         self._artist = artist
 
-    def illustrate(self, discovery: Discovery) -> PinnedDrawing | None:
-        """Returns the pinned drawing, or None when nothing fits or drawing failed.
+    def illustrate(self, discovery: Discovery) -> SavedDrawing | None:
+        """Returns the saved drawing, or None when nothing fits or drawing failed.
 
         A failure never undoes the saved discovery: it is only logged.
         """

@@ -32,6 +32,9 @@ class OllamaGenerationOptions:
     num_predict: int
     temperature: float
     repeat_penalty: float
+    num_ctx: int = 4096
+    """Tokens the model can read at once. Ollama silently drops the start of a longer
+    conversation, which is where her system prompt (who she is) lives."""
 
 
 class OllamaLanguageModel:
@@ -40,10 +43,12 @@ class OllamaLanguageModel:
         client: httpx.Client,
         model: str,
         generation_options: OllamaGenerationOptions | None = None,
+        keep_alive: str | None = None,
     ) -> None:
         self._client = client
         self._model = model
         self._generation_options = generation_options
+        self._keep_alive = keep_alive
         self._recovered_tool_call_count = 0
 
     @property
@@ -83,12 +88,12 @@ class OllamaLanguageModel:
         }
         reply = self._parse_reply(self._post_chat(payload))
         try:
-            data = json.loads(reply.content)
+            parsed_content = json.loads(reply.content)
         except json.JSONDecodeError as error:
             raise LanguageModelError(NOT_A_JSON_OBJECT_MESSAGE) from error
-        if not isinstance(data, dict):
+        if not isinstance(parsed_content, dict):
             raise LanguageModelError(NOT_A_JSON_OBJECT_MESSAGE)
-        return StructuredReply(data=data, token_count=reply.token_count)
+        return StructuredReply(data=parsed_content, token_count=reply.token_count)
 
     def _base_payload(self, messages: list[ChatMessage]) -> dict[str, object]:
         payload: dict[str, object] = {
@@ -98,6 +103,8 @@ class OllamaLanguageModel:
         }
         if self._generation_options:
             payload["options"] = asdict(self._generation_options)
+        if self._keep_alive is not None:
+            payload["keep_alive"] = self._keep_alive
         return payload
 
     def _post_chat(self, payload: dict[str, object]) -> httpx.Response:
@@ -158,11 +165,25 @@ class OllamaLanguageModel:
         if not isinstance(content, str) or not isinstance(raw_tool_calls, list):
             raise LanguageModelError(UNEXPECTED_FORMAT_MESSAGE)
         tool_calls = tuple(cls._parse_tool_call(raw_tool_call) for raw_tool_call in raw_tool_calls)
+        cls._log_timing(body)
         return ChatMessage(
             role=Role.ASSISTANT,
             content=content,
             tool_calls=tool_calls,
             token_count=cls._token_count(body),
+        )
+
+    @staticmethod
+    def _log_timing(body: dict[str, object]) -> None:
+        """Where the time of a reply went: reading the prompt or writing the answer.
+        Ollama reports durations in nanoseconds."""
+        logger.info(
+            "Ollama reply: read %s tokens in %.1fs, wrote %s tokens in %.1fs (%.1fs in all)",
+            body.get("prompt_eval_count", "?"),
+            _seconds(body.get("prompt_eval_duration")),
+            body.get("eval_count", "?"),
+            _seconds(body.get("eval_duration")),
+            _seconds(body.get("total_duration")),
         )
 
     @staticmethod
@@ -183,3 +204,10 @@ class OllamaLanguageModel:
         if not isinstance(name, str) or not isinstance(arguments, dict):
             raise LanguageModelError(UNEXPECTED_FORMAT_MESSAGE)
         return ToolCall(name=name, arguments=arguments)
+
+
+NANOSECONDS_PER_SECOND = 1_000_000_000
+
+
+def _seconds(nanoseconds: object) -> float:
+    return nanoseconds / NANOSECONDS_PER_SECOND if isinstance(nanoseconds, int) else 0.0

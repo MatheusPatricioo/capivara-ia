@@ -4,14 +4,13 @@ extends Marker3D
 ## A place in the world with a purpose (sleeping, eating, working...). The marker position
 ## is where the capybara stands when using it. The brain refers to it by point_id.
 
-## Emitted when the capybara arrives here, so the object can react (the chalkboard starts
-## drawing when she reaches it).
+## Emitted when the capybara arrives here, so the object can react to her.
 signal capybara_arrived
 
 const GROUP: StringName = &"interaction_points"
 const NEVER: int = -1
 
-## Identifier shared with the brain, like bed, food_bowl, computer or chalkboard.
+## Identifier shared with the brain, like dog_house, food_bowl, computer or pond.
 @export var point_id: StringName
 
 var _last_arrival_msec: int = NEVER

@@ -5,8 +5,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 from src.application.attention_inbox import AttentionInbox
-from src.application.chalkboard_artist import PinnedDrawing
 from src.application.conversation import Conversation, StepLimitReachedError
+from src.application.drawing_artist import SavedDrawing
 from src.application.inner_voice import InnerVoice
 from src.application.related_discoveries import RelatedDiscoveries
 from src.application.repeated_suggestions import RepeatedSuggestions
@@ -123,6 +123,7 @@ def _build_world(scenario: AgentScenario, setup: AgentEvalSetup) -> _ScenarioWor
         ScriptedWebSearcher([page.search_result() for page in scenario.pages]),
         seen_sources=seen_sources,
         search_history=InMemorySearchHistory(scenario.earlier_searches, EVAL_DATE),
+        follow_up=setup.prompts.tool_result_reminder,
     )
     save_discovery = SaveDiscoveryTool(
         discoveries,
@@ -165,8 +166,8 @@ def _build_inner_voice(
     )
 
 
-def _no_drawing(discovery: Discovery) -> PinnedDrawing | None:
-    """The chalkboard is left out of the eval: drawing choices are not what is measured here."""
+def _no_drawing(discovery: Discovery) -> SavedDrawing | None:
+    """Drawings are left out of the eval: drawing choices are not what is measured here."""
     return None
 
 

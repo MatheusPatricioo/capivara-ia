@@ -7,12 +7,12 @@ from typing import Self
 from websockets.exceptions import ConnectionClosed
 from websockets.sync.server import Server, ServerConnection, serve
 
-from src.infrastructure.world_messages import NoticedMessage, WorldMessage, parse_world_event
+from src.infrastructure.world_messages import WorldEvent, WorldMessage, parse_world_event
 
 logger = logging.getLogger(__name__)
 
 
-def _ignore_event(event: NoticedMessage) -> None:
+def _ignore_event(event: WorldEvent) -> None:
     pass
 
 
@@ -21,17 +21,17 @@ class WorldServer:
 
     It runs in a background thread, so the agent loop can stay synchronous.
     Messages sent with remember=True are replayed to worlds that connect later,
-    so a world opened after a drawing still shows the current chalkboard.
+    so a world opened later still shows how she feels and the current sky.
 
-    Events sent by the world (like NoticedMessage) are validated and handed to on_event,
-    which runs in the server thread. Invalid messages are logged and dropped.
+    Events sent by the world (NoticedMessage, LetterOpenedMessage) are validated and handed
+    to on_event, which runs in the server thread. Invalid messages are logged and dropped.
     """
 
     def __init__(
         self,
         host: str,
         port: int,
-        on_event: Callable[[NoticedMessage], None] = _ignore_event,
+        on_event: Callable[[WorldEvent], None] = _ignore_event,
     ) -> None:
         self._host = host
         self._port = port

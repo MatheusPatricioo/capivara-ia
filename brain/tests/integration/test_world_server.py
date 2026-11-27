@@ -7,7 +7,7 @@ from collections.abc import Callable, Iterator
 import pytest
 from websockets.sync.client import ClientConnection, connect
 
-from src.infrastructure.world_messages import GoToMessage, NoticedMessage, chalkboard_message
+from src.infrastructure.world_messages import GoToMessage, NoticedMessage, SkyMessage
 from src.infrastructure.world_server import WorldServer
 
 LOCAL_HOST = "127.0.0.1"
@@ -57,12 +57,16 @@ def test_sends_a_broadcast_message_to_the_connected_world(
 
 
 def test_replays_remembered_messages_to_a_world_that_connects_later(server: WorldServer) -> None:
-    server.broadcast(chalkboard_message(()), remember=True)
+    server.broadcast(
+        SkyMessage(day_fraction=0.5, day_length_seconds=3600.0, weather="rain"), remember=True
+    )
 
     with connect_world(server) as late_world:
         assert json.loads(late_world.recv(timeout=WAIT_TIMEOUT_SECONDS)) == {
-            "type": "chalkboard",
-            "drawings": [],
+            "type": "sky",
+            "day_fraction": 0.5,
+            "day_length_seconds": 3600.0,
+            "weather": "rain",
         }
 
 

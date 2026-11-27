@@ -197,16 +197,18 @@ class PostgresDiscoveryMemory:
         embeddings: list[str],
     ) -> None:
         connection.execute(DELETE_CHUNKS, {"discovery_id": discovery_id})
-        for position, (content, embedding) in enumerate(zip(chunks, embeddings, strict=True)):
-            connection.execute(
-                INSERT_CHUNK,
-                {
-                    "discovery_id": discovery_id,
-                    "position": position,
-                    "content": content,
-                    "embedding": embedding,
-                },
-            )
+        chunk_rows = [
+            {
+                "discovery_id": discovery_id,
+                "position": position,
+                "content": content,
+                "embedding": embedding,
+            }
+            for position, (content, embedding) in enumerate(zip(chunks, embeddings, strict=True))
+        ]
+        # executemany sends every chunk in one pipeline, instead of one round trip per chunk.
+        with connection.cursor() as cursor:
+            cursor.executemany(INSERT_CHUNK, chunk_rows)
 
     @staticmethod
     def _embed(embedder: TextEmbedder, texts: list[str]) -> list[str]:

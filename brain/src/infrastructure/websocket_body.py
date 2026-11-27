@@ -1,12 +1,10 @@
 from typing import Protocol
 
 from src.domain.body import Place
-from src.domain.drawing import Drawing
 from src.domain.feelings.emotional_life import EmotionalLife
 from src.infrastructure.world_messages import (
     GoToMessage,
     WorldMessage,
-    chalkboard_message,
     feelings_message,
 )
 
@@ -23,9 +21,6 @@ class WebSocketBody:
 
     def go_to(self, place: Place) -> None:
         self._broadcaster.broadcast(GoToMessage(point=place.value))
-
-    def show_chalkboard(self, drawings: tuple[Drawing, ...]) -> None:
-        self._broadcaster.broadcast(chalkboard_message(drawings), remember=True)
 
     def show_feelings(self, life: EmotionalLife) -> None:
         """Remembered, so a world opened later shows how she feels right away."""

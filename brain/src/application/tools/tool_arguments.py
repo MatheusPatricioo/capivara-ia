@@ -73,5 +73,5 @@ def _without_noise(schema: Any) -> Any:
             if key not in SCHEMA_NOISE_KEYS or not isinstance(value, str)
         }
     if isinstance(schema, list):
-        return [_without_noise(item) for item in schema]
+        return [_without_noise(nested_schema) for nested_schema in schema]
     return schema

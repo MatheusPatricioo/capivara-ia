@@ -1,7 +1,7 @@
 class_name DrawingsTab
 extends MarginContainer
 
-## The Drawings tab: a gallery of the capybara's chalkboard drawings, newest first, and a
+## The Drawings tab: a gallery of the capybara's drawings, newest first, and a
 ## button that opens the discoveries folder in the system file explorer. The cards flow
 ## like words in a paragraph: as many per row as the screen width fits, centered.
 

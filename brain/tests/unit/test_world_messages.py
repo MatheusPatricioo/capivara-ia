@@ -3,21 +3,14 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from src.domain.drawing import Drawing, Point, Stroke
 from src.domain.feelings.emotion import Emotion, EmotionalState
 from src.infrastructure.world_messages import (
     CALM_EMOTION,
     MAX_DESCRIPTION_LENGTH,
     GoToMessage,
     NoticedMessage,
-    chalkboard_message,
     feelings_message,
     parse_world_event,
-)
-
-STAR_DRAWING = Drawing(
-    title="Estrela",
-    strokes=(Stroke(points=(Point(200, 60), Point(250, 220), Point(120, 120))),),
 )
 
 
@@ -48,26 +41,6 @@ def test_feelings_message_tells_a_sad_state_is_negative() -> None:
     state = EmotionalState({Emotion.SADNESS: 0.8})
 
     assert feelings_message(state).valence < 0
-
-
-def test_chalkboard_message_lists_every_stroke_with_its_points() -> None:
-    message = chalkboard_message((STAR_DRAWING,))
-
-    assert json.loads(message.model_dump_json()) == {
-        "type": "chalkboard",
-        "drawings": [
-            {
-                "title": "Estrela",
-                "strokes": [
-                    {"points": [{"x": 200, "y": 60}, {"x": 250, "y": 220}, {"x": 120, "y": 120}]},
-                ],
-            }
-        ],
-    }
-
-
-def test_empty_chalkboard_message_has_no_drawings() -> None:
-    assert chalkboard_message(()).drawings == []
 
 
 def noticed_payload(**fields: object) -> str:

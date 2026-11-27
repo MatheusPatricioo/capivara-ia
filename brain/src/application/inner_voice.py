@@ -19,7 +19,7 @@ SUGGESTIONS_PLACEHOLDER = "{suggestions}"
 MAX_REMEMBERED_SUGGESTIONS = 10
 """Enough to avoid asking twice; older wishes were either built or long forgotten."""
 WAITING_LABEL = "esperando"
-BUILT_LABEL = "o Matheus construiu!"
+BUILT_LABEL = "o criador construiu!"
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +46,12 @@ class InnerVoice:
 
     With feelings, a short description of how she feels (and why) comes right before
     what she noticed, so her mood colours what she picks and how she tells it.
+
+    With replies, her creator's answers to her letters come right before her feelings, which
+    already carry the joy of reading them.
+
+    With world_now, the time of day and the weather come right after her feelings, so she
+    knows what she is seeing (at night the dark sky is already above her).
     """
 
     def __init__(
@@ -61,6 +67,8 @@ class InnerVoice:
         suggestions: WorldSuggestionArchive | None = None,
         suggestions_template: str = "",
         feelings: Callable[[], str] | None = None,
+        replies: Callable[[], str] | None = None,
+        world_now: Callable[[], str] | None = None,
     ) -> None:
         self._invitation = invitation
         self._catalog = catalog
@@ -73,11 +81,14 @@ class InnerVoice:
         self._suggestions = suggestions
         self._suggestions_template = suggestions_template
         self._feelings = feelings
+        self._replies = replies
+        self._world_now = world_now
         self._offered: tuple[PointOfAttention, ...] = ()
 
     def compose(self) -> str:
-        """Memory and earlier suggestions first, then related discoveries, how she feels,
-        what she noticed, and the invitation last.
+        """Memory and earlier suggestions first, then related discoveries, her creator's replies
+        to her letters, how she feels, the time and weather, what she noticed, and the
+        invitation last.
 
         The end of the message is the part the model follows best.
         """
@@ -87,7 +98,9 @@ class InnerVoice:
             self._memory(),
             self._earlier_suggestions(suggestions),
             self._related_memories(),
+            self._replies() if self._replies is not None else "",
             self._feelings() if self._feelings is not None else "",
+            self._world_now() if self._world_now is not None else "",
             self._noticed(suggestions),
             self._invitation,
         ]
@@ -162,7 +175,7 @@ class InnerVoice:
         if built_wish is None:
             return f"- {description}"
         return (
-            f'- {description} (é o que você pediu pro Matheus: "{built_wish.request}". '
+            f'- {description} (é o que você pediu pro criador: "{built_wish.request}". '
             "Ele construiu pra você!)"
         )
 

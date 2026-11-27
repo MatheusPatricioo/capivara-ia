@@ -2,11 +2,11 @@
 
 [![CI](https://github.com/MatheusPatricioo/corvo-ia/actions/workflows/ci.yml/badge.svg)](https://github.com/MatheusPatricioo/corvo-ia/actions/workflows/ci.yml)
 
-**Um agente de IA autônomo com corpo: uma capivara que explora a internet, pensa em voz alta numa lousa e guarda o que aprende.**
+**Um agente de IA autônomo com corpo: uma capivara que explora a internet, rabisca o que descobre e guarda o que aprende.**
 
 ## A ideia
 
-Capivara IA é uma capivara que vive num pequeno mundo 3D, comandada por um cérebro de IA. Sozinha, ela pesquisa assuntos na internet, rabisca ideias numa lousa e salva suas descobertas em textos e desenhos. Dá para acompanhar tudo em tempo real.
+Capivara IA é uma capivara que vive num pequeno mundo 3D, comandada por um cérebro de IA. Sozinha, ela pesquisa assuntos na internet, rabisca ideias no computador e salva suas descobertas em textos e desenhos. Dá para acompanhar tudo em tempo real.
 
 ## Arquitetura
 
@@ -54,14 +54,14 @@ Resultado nas 30 perguntas do eval ([relatório](brain/evals/reports/2026-11-24-
 
 As variantes sem rerank usam o melhor limite de similaridade achado no próprio conjunto, o que as favorece, e mesmo assim ficam bem abaixo. Os prefixos sozinhos até pioram o recall@1: só rendem junto com os pedaços e a busca híbrida. No eval do agente, a nova versão passou em tudo em 76% das execuções, dentro da faixa do baseline (68% a 84%).
 
-### Desenhos na lousa
+### Desenhos
 
 Toda descoberta salva vira um rascunho de alguma coisa dela. A escolha do que desenhar usa **retrieve and rerank**:
 
 1. **Retrieve:** o título e o resumo da descoberta viram um embedding, comparado com rótulos em português das 345 categorias do Quick, Draw!. As 5 mais parecidas viram candidatas.
 2. **Rerank:** o LLM lê a descoberta e escolhe uma das 5, ou responde "nenhuma" quando nada nela é desenhável (como "Independência do Brasil"). A resposta é restrita a essas opções e conferida no código.
 
-A capivara então pega um rabisco real, feito por uma pessoa, dessa categoria como referência e **redesenha com a mão dela**: um pouco inclinado, com outras proporções, os traços fora do lugar e uma linha levemente ondulada, então nenhum desenho sai igual a outro. Cada desenho é salvo como PNG em estilo Paint (traço preto sobre fundo branco) na pasta de descobertas.
+A capivara então pega um rabisco real, feito por uma pessoa, dessa categoria como referência e **redesenha com a mão dela**: um pouco inclinado, com outras proporções, os traços fora do lugar e uma linha levemente ondulada, então nenhum desenho sai igual a outro. Cada desenho é salvo como PNG em estilo Paint (traço preto sobre fundo branco) na pasta de descobertas e aparece na aba **Desenhos** do computador do mundo.
 
 **Próxima etapa planejada:** hoje ela reinterpreta um rabisco que já existe. O plano é ela criar desenhos inéditos com o [Sketch-RNN](https://magenta.tensorflow.org/sketch-rnn-demo) (Google Magenta), uma rede neural pequena treinada no Quick, Draw! que desenha traço por traço e pode partir de um rabisco existente para criar uma variação. Ela vai rodar localmente e de graça, como o resto do projeto.
 
@@ -85,7 +85,7 @@ python -m src.mark_suggestion_built                 # lista as sugestões espera
 python -m src.mark_suggestion_built 2026-11-24-um-laguinho-com-vitorias-regias.md --thing-id water_lilies
 ```
 
-Isso troca a linha `- **Situação:** pendente` do arquivo por `construída` (editar a linha à mão também funciona). A partir daí, a voz interior conta a ela quais pedidos o Matheus construiu e quais ainda estão esperando. O `--thing-id` é opcional: é o `thing_id` do `Observable` que coloquei no mundo para o pedido. Quando ela passa perto dele, repara na coisa e fica sabendo que é o que ela pediu.
+Isso troca a linha `- **Situação:** pendente` do arquivo por `construída` (editar a linha à mão também funciona). A partir daí, a voz interior conta a ela quais pedidos o criador construiu e quais ainda estão esperando. O `--thing-id` é opcional: é o `thing_id` do `Observable` que coloquei no mundo para o pedido. Quando ela passa perto dele, repara na coisa e fica sabendo que é o que ela pediu.
 
 ### Evals: medindo a capivara
 
@@ -114,6 +114,7 @@ Duas lições do baseline. Com o mesmo código, duas rodadas de 25 execuções v
 - **Cérebro:** Python 3.12, Pydantic, WebSocket
 - **LLM:** Ollama (local), atrás da interface `LanguageModel` do domínio, então trocar de provedor é escrever um novo adapter sem mexer nas regras do agente
 - **Memória:** Markdown, PostgreSQL + pgvector (Docker Compose), psycopg 3
+- **Voz (opcional):** Piper (texto para fala) e faster-whisper (fala para texto), os dois locais e offline, com sounddevice para tocar e gravar
 - **Qualidade:** pytest, ruff, mypy (strict)
 
 ## Como começar
@@ -121,7 +122,7 @@ Duas lições do baseline. Com o mesmo código, duas rodadas de 25 execuções v
 ### Pré-requisitos
 
 - [Python 3.12+](https://www.python.org/downloads/)
-- [Ollama](https://ollama.com/download) com o modelo de conversa `qwen2.5:7b` e o modelo de embedding `nomic-embed-text` (que escolhe o rabisco da lousa e dá à capivara a memória por significado):
+- [Ollama](https://ollama.com/download) com o modelo de conversa `qwen2.5:7b` e o modelo de embedding `nomic-embed-text` (que escolhe o que ela desenha e dá à capivara a memória por significado):
 
   ```bash
   ollama pull qwen2.5:7b
@@ -189,9 +190,29 @@ python -m src.chat_with_capybara
 
 Digite `sair` para encerrar o chat.
 
+#### Conversar por voz
+
+Ela também pode falar em voz alta, e você pode falar com ela pelo microfone. O texto continua igual: o que ela diz aparece na tela, e você pode digitar quando quiser. Tudo roda na sua máquina, sem internet depois dos downloads.
+
+Uma vez só, instale as bibliotecas de voz e baixe a voz em português (na raiz do projeto):
+
+```bash
+pip install ".[voice]"
+python -m piper.download_voices pt_BR-faber-medium --download-dir brain/voices
+```
+
+Depois, ligue o chat com `--voz`:
+
+```bash
+cd brain
+python -m src.chat_with_capybara --voz
+```
+
+Para falar, aperte Enter com a linha vazia, fale e aperte Enter de novo. Na primeira vez, o modelo do Whisper (`small`, ~480 MB) é baixado sozinho. O tamanho do modelo, o idioma e o uso de GPU ficam em `SPEECH_RECOGNITION_*`, no `brain/.env`.
+
 ### Ver a capivara viva
 
-No modo vivo ninguém fala com a capivara: a cada poucos minutos ela decide sozinha o que fazer (pesquisar algo, salvar uma descoberta, desenhar na lousa ou só descansar), e o corpo dela acompanha no mundo 3D.
+No modo vivo, a cada poucos minutos ela decide sozinha o que fazer (pesquisar algo, salvar uma descoberta e rabiscar um desenho dela, ou só descansar), e o corpo dela acompanha no mundo 3D.
 
 No Windows, um comando liga tudo: o Ollama (se ainda não estiver rodando), a memória no Docker (abrindo o Docker Desktop se precisar, e esperando o banco ficar pronto), o cérebro numa janela própria do PowerShell, com os logs visíveis, e o mundo no Godot:
 
@@ -216,9 +237,11 @@ Para ligar cada parte à mão:
 
 Atalho no Windows: abrir o mundo pelo editor do Godot e apertar Play já basta. Se nenhum cérebro responder em 4 segundos, o próprio mundo roda o `start.ps1 -SkipWorld` (Ollama, memória e cérebro, sem abrir outro Godot), e o aviso na tela mostra "Ligando o cérebro...". Ele tenta uma vez por Play, e fechar o jogo não desliga o cérebro. Para desligar esse atalho, defina a variável de ambiente `CAPYBARA_BRAIN_AUTOSTART=0`.
 
-O Godot é opcional: com ele fechado, a capivara continua pesquisando, salvando e desenhando do mesmo jeito. O mundo só mostra o que o cérebro faz e, ao abrir, já recebe a lousa atual. O contrário não vale: sem o cérebro, ela só passeia, e o mundo mostra o aviso "Cérebro desconectado" no canto da tela até ele ligar.
+O Godot é opcional: com ele fechado, a capivara continua pesquisando, salvando e desenhando do mesmo jeito. O mundo só mostra o que o cérebro faz e, ao abrir, já recebe como ela está se sentindo e o céu do momento. O contrário não vale: sem o cérebro, ela só passeia, e o mundo mostra o aviso "Cérebro desconectado" no canto da tela até ele ligar.
 
-No mundo, ela vai até o computador antes de pesquisar e antes de salvar, e até a lousa antes de desenhar. A lousa é a galeria dela: mostra os três desenhos (PNG) mais recentes da pasta de descobertas, sem legenda, e se atualiza sozinha quando aparece um novo. Um desenho novo não aparece pronto: o espaço dele fica em branco até ela chegar à lousa, e aí o giz percorre os traços na ordem em que ela os fez (de 1,5 a 5 segundos, conforme o tamanho do desenho). Toda descoberta (Markdown) e todo desenho (PNG) ficam na pasta de descobertas (`DISCOVERIES_DIR` no `brain/.env`, ou `discoveries/` por padrão).
+Para conversar com ela no mundo, aperte **Enter**, escreva e aperte Enter de novo (Esc fecha a caixa). A resposta aparece num balão em cima dela. Enquanto vocês conversam, ela para de andar, vira para a câmera e pausa os próprios pensamentos antes do próximo passo. Ela volta à rotina depois de `CONVERSATION_QUIET_MINUTES` (2 por padrão) sem mensagem nova.
+
+No mundo, ela vai até o computador antes de pesquisar e antes de salvar, e o desenho de cada descoberta sai ali mesmo. Para ver os desenhos, clique no computador e abra a aba **Desenhos**. Toda descoberta (Markdown) e todo desenho (PNG) ficam na pasta de descobertas (`DISCOVERIES_DIR` no `brain/.env`, ou `discoveries/` por padrão).
 
 Aperte `Ctrl+C` para encerrar. O intervalo entre os ciclos e o limite de tokens por hora ficam no `brain/.env` (`AUTONOMOUS_CYCLE_INTERVAL_SECONDS`, `MAX_TOKENS_PER_HOUR`).
 
@@ -254,14 +277,14 @@ python -m src.run_evals --repeats 5 --label nome-da-mudanca
 ## Créditos
 
 - Kits de natureza e móveis por [Kenney](https://kenney.nl) (CC0)
-- Rabiscos da lousa: amostra do dataset [Quick, Draw!](https://github.com/googlecreativelab/quickdraw-dataset) do Google, sob licença [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Os traços foram convertidos para pares `[x, y]` e só 30 rabiscos por categoria foram guardados (`brain/doodles/quickdraw_sample.json`, gerado por `python -m src.download_quickdraw_sample`).
+- Rabiscos de referência dos desenhos: amostra do dataset [Quick, Draw!](https://github.com/googlecreativelab/quickdraw-dataset) do Google, sob licença [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Os traços foram convertidos para pares `[x, y]` e só 30 rabiscos por categoria foram guardados (`brain/doodles/quickdraw_sample.json`, gerado por `python -m src.download_quickdraw_sample`).
 - Modelo da capivara gerado com TRELLIS (Microsoft, MIT)
 
 ## Status
 
 🚧 Em desenvolvimento ativo.
 
-- **Funcionando:** chat e modo vivo autônomo, pesquisa na web, descobertas salvas em Markdown, rascunhos na lousa escolhidos por embeddings e desenhados traço por traço, memória de longo prazo com RAG (busca híbrida com pgvector e full-text, RRF e rerank com LLM) e ferramenta de memória opcional (agentic RAG), evals automatizados com LLM-as-judge, CI, sugestões de melhorias para o mundo (com a aba Sugestões no computador e a capivara reconhecendo o que foi construído), mundo 3D conectado ao cérebro por WebSocket e limite de tokens por hora.
+- **Funcionando:** chat e modo vivo autônomo, pesquisa na web, descobertas salvas em Markdown, rascunhos das descobertas escolhidos por embeddings, memória de longo prazo com RAG (busca híbrida com pgvector e full-text, RRF e rerank com LLM) e ferramenta de memória opcional (agentic RAG), evals automatizados com LLM-as-judge, CI, sugestões de melhorias para o mundo (com a aba Sugestões no computador e a capivara reconhecendo o que foi construído), mundo 3D conectado ao cérebro por WebSocket e limite de tokens por hora.
 - **Próximos passos** (técnicas de IA usadas no mercado, nesta ordem, sempre com ferramentas gratuitas):
   1. ~~**CI:** `ruff`, `mypy` e `pytest` (com PostgreSQL + pgvector) a cada push, no GitHub Actions.~~ ✔
   2. ~~**Evals automatizados:** RAG (recall@k, MRR, acerto da decisão), agente (checagens de regras e expectativas) e fidelidade com LLM-as-judge.~~ ✔ (veja [Evals](#evals-medindo-a-capivara))
@@ -274,3 +297,5 @@ python -m src.run_evals --repeats 5 --label nome-da-mudanca
   9. **Multiagente:** papéis separados (pesquisadora, revisora que confere as fontes, artista) num fluxo orquestrado, medido pelos evals.
   10. **Fine-tuning com LoRA:** um modelo pequeno ajustado (Unsloth, no Colab grátis) com os logs de uso de ferramentas dela, comparado ao modelo base pelos evals.
   11. **Visão e desenhos inéditos:** um modelo de visão local confere se o desenho parece o que ela quis desenhar, e o Sketch-RNN cria desenhos inéditos em vez de escolher rabiscos prontos.
+  12. **Dia, noite e o clima real:** o mundo segue o horário de verdade e o clima da cidade, por uma API gratuita de previsão do tempo. À noite ela dorme na casinha, e na chuva fica em casa, pensativa. Para testar rápido, `WORLD_CLOCK_MODE=fast` no `brain/.env` faz o dia inteiro durar `WORLD_FAST_DAY_MINUTES` (60 por padrão): a cada hora amanhece no minuto 15 e anoitece no minuto 45. O clima vem da [Open-Meteo](https://open-meteo.com) (gratuita, sem chave), de Belo Horizonte por padrão (`WEATHER_LATITUDE`/`WEATHER_LONGITUDE`), e é sempre o real, nos dois modos: quando chove em BH, chove no jogo. Para testar a chuva sem esperar, `WEATHER_OVERRIDE=rain` (ou `clear`, `cloudy`, `fog`, `storm`) fixa o céu. *Técnica: dados externos influenciando comportamento e emoção.* (Feito: o relógio com os dois modos, o clima de BH e o céu no Godot, com sol, lua, nuvens, neblina e chuva. Falta ela dormir à noite e ficar em casa, pensativa, na chuva.)
+  13. **Caixa de cartas:** quando o criador some, ela escreve cartinhas e deixa numa caixa de correio clicável no mundo. Ele pode responder, e ela lê na próxima vez. Combina com o sistema de saudade que já existe. *Técnica: comunicação assíncrona e memória do que os dois conversaram.* (Feito: ela escreve as cartas quando sente saudade, no máximo uma a cada `LETTER_MIN_HOURS_BETWEEN` horas e parando quando `LETTER_MAX_UNREAD` cartas esperam sem ser lidas. Ficam em `cartas/`, na pasta de descobertas. Ela vai até a caixa de correio, ao lado da casinha, deixar cada carta, e a bandeirinha sobe enquanto alguma está sem ler. Clicando na caixa, as cartas abrem numa folha de papel, e abrir uma carta a marca como lida. Embaixo de cada carta dá para escrever uma resposta, que fica guardada no mesmo arquivo, na seção "Resposta do criador". Falta ela ler a resposta.) Mais para frente: um **webhook** (Discord ou ntfy.sh, ambos gratuitos) avisa no celular quando ela escreve uma carta.

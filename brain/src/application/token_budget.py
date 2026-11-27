@@ -1,3 +1,4 @@
+import threading
 import time
 from collections import deque
 from collections.abc import Callable
@@ -9,6 +10,8 @@ class HourlyTokenBudget:
     """Limits how many tokens the agent may spend in any sliding window of one hour.
 
     Each spending is kept with its time; spendings older than one hour stop counting.
+    The loop and the chat with her creator spend from it in two threads, so a lock
+    keeps one from changing the spendings while the other is summing them.
     """
 
     def __init__(
@@ -19,14 +22,17 @@ class HourlyTokenBudget:
         self._max_tokens_per_hour = max_tokens_per_hour
         self._clock = clock
         self._spendings: deque[tuple[float, int]] = deque()
+        self._lock = threading.Lock()
 
     def record(self, tokens: int) -> None:
-        self._spendings.append((self._clock(), tokens))
+        with self._lock:
+            self._spendings.append((self._clock(), tokens))
 
     @property
     def tokens_used_in_the_last_hour(self) -> int:
-        self._forget_old_spendings()
-        return sum(tokens for _, tokens in self._spendings)
+        with self._lock:
+            self._forget_old_spendings()
+            return sum(tokens for _, tokens in self._spendings)
 
     def has_room(self) -> bool:
         return self.tokens_used_in_the_last_hour < self._max_tokens_per_hour

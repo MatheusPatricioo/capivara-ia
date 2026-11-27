@@ -1,113 +1,116 @@
 [gd_scene format=3 uid="uid://bo455egcy3hnf"]
 
 [ext_resource type="PackedScene" path="res://scenes/capybara.tscn" id="1_capybara"]
+[ext_resource type="PackedScene" path="res://scenes/props/tree.tscn" id="2_tree"]
 [ext_resource type="PackedScene" path="res://scenes/props/desk.tscn" id="4_desk"]
-[ext_resource type="PackedScene" path="res://scenes/props/chalkboard.tscn" id="5_chalkboard"]
 [ext_resource type="PackedScene" path="res://scenes/boundary.tscn" id="6_boundary"]
 [ext_resource type="Script" uid="uid://cmw5ugcbe0yb1" path="res://scripts/navigation/world_navigation.gd" id="8_world_navigation"]
 [ext_resource type="PackedScene" path="res://scenes/props/dog_house.tscn" id="40_dog_house"]
 [ext_resource type="PackedScene" path="res://scenes/props/food_bowl.tscn" id="41_food_bowl"]
 [ext_resource type="PackedScene" path="res://scenes/props/pond.tscn" id="43_pond"]
 [ext_resource type="PackedScene" path="res://scenes/ui/computer_screen.tscn" id="50_computer_screen"]
-[ext_resource type="PackedScene" path="res://scenes/ui/chalkboard_viewer.tscn" id="51_chalkboard_viewer"]
-[ext_resource type="Script" path="res://scripts/props/observable.gd" id="observable"]
-[ext_resource type="PackedScene" path="res://scenes/props/tree.tscn" id="2_tree"]
-[ext_resource type="PackedScene" path="res://scenes/props/round_prop.tscn" id="round_prop"]
+[ext_resource type="Script" uid="uid://ddwx2l1m22h0l" path="res://scripts/chat/creator_chat_box.gd" id="creator_chat_box"]
 [ext_resource type="PackedScene" path="res://scenes/props/fireflies.tscn" id="fireflies"]
+[ext_resource type="Script" uid="uid://g3qbbps3p0nj" path="res://scripts/props/flower_bed.gd" id="flower_bed"]
+[ext_resource type="PackedScene" uid="uid://ckq8b6fcxsk6v" path="res://assets/nature/Models/GLTF format/flower_purpleA.glb" id="kit_flower_purpleA"]
+[ext_resource type="PackedScene" uid="uid://c5jhkksakfn43" path="res://assets/nature/Models/GLTF format/flower_purpleB.glb" id="kit_flower_purpleB"]
+[ext_resource type="PackedScene" uid="uid://c0f3o1ulotjcu" path="res://assets/nature/Models/GLTF format/flower_purpleC.glb" id="kit_flower_purpleC"]
+[ext_resource type="PackedScene" uid="uid://n8ry41m2ttpv" path="res://assets/nature/Models/GLTF format/flower_redA.glb" id="kit_flower_redA"]
+[ext_resource type="PackedScene" uid="uid://cqfut2mwdlotq" path="res://assets/nature/Models/GLTF format/flower_redB.glb" id="kit_flower_redB"]
+[ext_resource type="PackedScene" uid="uid://dp1426027eu5c" path="res://assets/nature/Models/GLTF format/flower_redC.glb" id="kit_flower_redC"]
+[ext_resource type="PackedScene" uid="uid://c75864fgxpmus" path="res://assets/nature/Models/GLTF format/flower_yellowA.glb" id="kit_flower_yellowA"]
+[ext_resource type="PackedScene" uid="uid://l2a7obtv5a4p" path="res://assets/nature/Models/GLTF format/flower_yellowB.glb" id="kit_flower_yellowB"]
+[ext_resource type="PackedScene" uid="uid://bfd32hw6ugmcc" path="res://assets/nature/Models/GLTF format/flower_yellowC.glb" id="kit_flower_yellowC"]
+[ext_resource type="PackedScene" uid="uid://cwo6nfxvoiyun" path="res://assets/nature/Models/GLTF format/grass.glb" id="kit_grass"]
+[ext_resource type="PackedScene" uid="uid://d1jclbl7ag6i8" path="res://assets/nature/Models/GLTF format/grass_large.glb" id="kit_grass_large"]
+[ext_resource type="PackedScene" uid="uid://cvnlm4le0gwah" path="res://assets/nature/Models/GLTF format/grass_leafs.glb" id="kit_grass_leafs"]
+[ext_resource type="PackedScene" uid="uid://bevlphiq5mvws" path="res://assets/nature/Models/GLTF format/grass_leafsLarge.glb" id="kit_grass_leafsLarge"]
+[ext_resource type="PackedScene" uid="uid://fueus5pe6e6j" path="res://assets/nature/Models/GLTF format/log.glb" id="kit_log"]
+[ext_resource type="PackedScene" uid="uid://dq6qpd3rosb22" path="res://assets/nature/Models/GLTF format/log_large.glb" id="kit_log_large"]
+[ext_resource type="PackedScene" uid="uid://o8pyb04r8tgd" path="res://assets/nature/Models/GLTF format/log_stack.glb" id="kit_log_stack"]
+[ext_resource type="PackedScene" uid="uid://dbqswij48v0r8" path="res://assets/nature/Models/GLTF format/mushroom_red.glb" id="kit_mushroom_red"]
+[ext_resource type="PackedScene" uid="uid://dryuv6uck16lp" path="res://assets/nature/Models/GLTF format/mushroom_redGroup.glb" id="kit_mushroom_redGroup"]
+[ext_resource type="PackedScene" uid="uid://bsaqkmeq80xm0" path="res://assets/nature/Models/GLTF format/mushroom_redTall.glb" id="kit_mushroom_redTall"]
+[ext_resource type="PackedScene" uid="uid://khesf4y184h5" path="res://assets/nature/Models/GLTF format/mushroom_tan.glb" id="kit_mushroom_tan"]
+[ext_resource type="PackedScene" uid="uid://b656eabf0dnjf" path="res://assets/nature/Models/GLTF format/mushroom_tanGroup.glb" id="kit_mushroom_tanGroup"]
+[ext_resource type="PackedScene" uid="uid://h07xwye1isfv" path="res://assets/nature/Models/GLTF format/mushroom_tanTall.glb" id="kit_mushroom_tanTall"]
+[ext_resource type="PackedScene" uid="uid://cr2kvv5a0dwce" path="res://assets/nature/Models/GLTF format/plant_bush.glb" id="kit_plant_bush"]
+[ext_resource type="PackedScene" uid="uid://c1mp8qc6ktp5b" path="res://assets/nature/Models/GLTF format/plant_bushDetailed.glb" id="kit_plant_bushDetailed"]
+[ext_resource type="PackedScene" uid="uid://c3vymp57th2t" path="res://assets/nature/Models/GLTF format/plant_bushLarge.glb" id="kit_plant_bushLarge"]
+[ext_resource type="PackedScene" uid="uid://ouyxf4d3aajr" path="res://assets/nature/Models/GLTF format/plant_bushLargeTriangle.glb" id="kit_plant_bushLargeTriangle"]
+[ext_resource type="PackedScene" uid="uid://dx7psuvg1bj8g" path="res://assets/nature/Models/GLTF format/plant_bushSmall.glb" id="kit_plant_bushSmall"]
+[ext_resource type="PackedScene" uid="uid://6nfm3xslq2hx" path="res://assets/nature/Models/GLTF format/plant_bushTriangle.glb" id="kit_plant_bushTriangle"]
+[ext_resource type="PackedScene" uid="uid://bxn6pwbrob0t3" path="res://assets/nature/Models/GLTF format/plant_flatTall.glb" id="kit_plant_flatTall"]
+[ext_resource type="PackedScene" uid="uid://rg62kf0uxeun" path="res://assets/nature/Models/GLTF format/pot_large.glb" id="kit_pot_large"]
+[ext_resource type="PackedScene" uid="uid://cton7uqnw6f1o" path="res://assets/nature/Models/GLTF format/rock_largeA.glb" id="kit_rock_largeA"]
+[ext_resource type="PackedScene" uid="uid://cfinvohiolot8" path="res://assets/nature/Models/GLTF format/rock_largeB.glb" id="kit_rock_largeB"]
+[ext_resource type="PackedScene" uid="uid://c88hhyru3376t" path="res://assets/nature/Models/GLTF format/rock_largeC.glb" id="kit_rock_largeC"]
+[ext_resource type="PackedScene" uid="uid://ip1vinimadko" path="res://assets/nature/Models/GLTF format/rock_largeE.glb" id="kit_rock_largeE"]
+[ext_resource type="PackedScene" uid="uid://deb5a6vpqdme7" path="res://assets/nature/Models/GLTF format/rock_smallA.glb" id="kit_rock_smallA"]
+[ext_resource type="PackedScene" uid="uid://btdocrdyf1wgt" path="res://assets/nature/Models/GLTF format/rock_smallFlatA.glb" id="kit_rock_smallFlatA"]
+[ext_resource type="PackedScene" uid="uid://bh7qnvdmomgcg" path="res://assets/nature/Models/GLTF format/rock_smallFlatB.glb" id="kit_rock_smallFlatB"]
+[ext_resource type="PackedScene" uid="uid://u2uoyc8ih0w0" path="res://assets/nature/Models/GLTF format/rock_tallB.glb" id="kit_rock_tallB"]
+[ext_resource type="PackedScene" uid="uid://bq1poajkcvxmw" path="res://assets/nature/Models/GLTF format/sign.glb" id="kit_sign"]
+[ext_resource type="PackedScene" uid="uid://baij5mtlf72os" path="res://assets/nature/Models/GLTF format/statue_ring.glb" id="kit_statue_ring"]
+[ext_resource type="PackedScene" uid="uid://bh4ar3oj4bp8k" path="res://assets/nature/Models/GLTF format/stone_largeA.glb" id="kit_stone_largeA"]
+[ext_resource type="PackedScene" uid="uid://cu1o5kc2c3yyt" path="res://assets/nature/Models/GLTF format/stone_largeC.glb" id="kit_stone_largeC"]
+[ext_resource type="PackedScene" uid="uid://5p1wlp26ysoy" path="res://assets/nature/Models/GLTF format/stone_smallA.glb" id="kit_stone_smallA"]
+[ext_resource type="PackedScene" uid="uid://dmral7qyva8lb" path="res://assets/nature/Models/GLTF format/stone_smallB.glb" id="kit_stone_smallB"]
+[ext_resource type="PackedScene" uid="uid://bexuqfhmxlluc" path="res://assets/nature/Models/GLTF format/stone_smallC.glb" id="kit_stone_smallC"]
+[ext_resource type="PackedScene" uid="uid://dpym20kdn3o3m" path="res://assets/nature/Models/GLTF format/stone_tallA.glb" id="kit_stone_tallA"]
+[ext_resource type="PackedScene" uid="uid://68miifmmmf4o" path="res://assets/nature/Models/GLTF format/stump_old.glb" id="kit_stump_old"]
+[ext_resource type="PackedScene" uid="uid://d3fbv7wlv2x44" path="res://assets/nature/Models/GLTF format/stump_oldTall.glb" id="kit_stump_oldTall"]
+[ext_resource type="PackedScene" uid="uid://b2lki6v65c8pc" path="res://assets/nature/Models/GLTF format/stump_round.glb" id="kit_stump_round"]
+[ext_resource type="PackedScene" uid="uid://brvtuglfy6dxf" path="res://assets/nature/Models/GLTF format/stump_roundDetailed.glb" id="kit_stump_roundDetailed"]
+[ext_resource type="PackedScene" uid="uid://cl7d5rg3bk56l" path="res://assets/nature/Models/GLTF format/tree_blocks.glb" id="kit_tree_blocks"]
+[ext_resource type="PackedScene" uid="uid://duecs3n3om02q" path="res://assets/nature/Models/GLTF format/tree_blocks_fall.glb" id="kit_tree_blocks_fall"]
+[ext_resource type="PackedScene" uid="uid://brdnwgbu46unq" path="res://assets/nature/Models/GLTF format/tree_cone.glb" id="kit_tree_cone"]
+[ext_resource type="PackedScene" uid="uid://ob7r361k6w13" path="res://assets/nature/Models/GLTF format/tree_cone_dark.glb" id="kit_tree_cone_dark"]
+[ext_resource type="PackedScene" uid="uid://b1jcshv0vuttl" path="res://assets/nature/Models/GLTF format/tree_cone_fall.glb" id="kit_tree_cone_fall"]
+[ext_resource type="PackedScene" uid="uid://csw5qg3s7185e" path="res://assets/nature/Models/GLTF format/tree_default.glb" id="kit_tree_default"]
+[ext_resource type="PackedScene" uid="uid://dn12n0hs8upgy" path="res://assets/nature/Models/GLTF format/tree_default_dark.glb" id="kit_tree_default_dark"]
+[ext_resource type="PackedScene" uid="uid://cdfpa1ga8uhth" path="res://assets/nature/Models/GLTF format/tree_default_fall.glb" id="kit_tree_default_fall"]
+[ext_resource type="PackedScene" uid="uid://h74118yku4i2" path="res://assets/nature/Models/GLTF format/tree_detailed.glb" id="kit_tree_detailed"]
+[ext_resource type="PackedScene" uid="uid://bcwikgmsg33vh" path="res://assets/nature/Models/GLTF format/tree_detailed_dark.glb" id="kit_tree_detailed_dark"]
+[ext_resource type="PackedScene" uid="uid://7xrgkmymvggt" path="res://assets/nature/Models/GLTF format/tree_detailed_fall.glb" id="kit_tree_detailed_fall"]
+[ext_resource type="PackedScene" uid="uid://dckf436iokcxg" path="res://assets/nature/Models/GLTF format/tree_fat.glb" id="kit_tree_fat"]
+[ext_resource type="PackedScene" uid="uid://cdrrep8m7yg4e" path="res://assets/nature/Models/GLTF format/tree_fat_fall.glb" id="kit_tree_fat_fall"]
+[ext_resource type="PackedScene" uid="uid://t61g1autgtyo" path="res://assets/nature/Models/GLTF format/tree_oak.glb" id="kit_tree_oak"]
+[ext_resource type="PackedScene" uid="uid://c6r18h4aenyor" path="res://assets/nature/Models/GLTF format/tree_oak_dark.glb" id="kit_tree_oak_dark"]
+[ext_resource type="PackedScene" uid="uid://ca2blvipq1qjp" path="res://assets/nature/Models/GLTF format/tree_oak_fall.glb" id="kit_tree_oak_fall"]
+[ext_resource type="PackedScene" uid="uid://du5k7aeell5xh" path="res://assets/nature/Models/GLTF format/tree_pineDefaultB.glb" id="kit_tree_pineDefaultB"]
+[ext_resource type="PackedScene" uid="uid://du6n4ng60rq4h" path="res://assets/nature/Models/GLTF format/tree_pineGroundA.glb" id="kit_tree_pineGroundA"]
+[ext_resource type="PackedScene" uid="uid://80bofm65m2fc" path="res://assets/nature/Models/GLTF format/tree_pineRoundA.glb" id="kit_tree_pineRoundA"]
+[ext_resource type="PackedScene" uid="uid://b42t4ph5t36qi" path="res://assets/nature/Models/GLTF format/tree_pineRoundC.glb" id="kit_tree_pineRoundC"]
+[ext_resource type="PackedScene" uid="uid://qowcys57jh5o" path="res://assets/nature/Models/GLTF format/tree_pineRoundD.glb" id="kit_tree_pineRoundD"]
+[ext_resource type="PackedScene" uid="uid://bkybhqlnu4byd" path="res://assets/nature/Models/GLTF format/tree_pineRoundE.glb" id="kit_tree_pineRoundE"]
+[ext_resource type="PackedScene" uid="uid://di84lrwxy7gyt" path="res://assets/nature/Models/GLTF format/tree_pineSmallB.glb" id="kit_tree_pineSmallB"]
+[ext_resource type="PackedScene" uid="uid://b472jcfytmypy" path="res://assets/nature/Models/GLTF format/tree_pineSmallC.glb" id="kit_tree_pineSmallC"]
+[ext_resource type="PackedScene" uid="uid://crpqgvqjfko4j" path="res://assets/nature/Models/GLTF format/tree_pineSmallD.glb" id="kit_tree_pineSmallD"]
+[ext_resource type="PackedScene" uid="uid://b18ed6hxsqw6o" path="res://assets/nature/Models/GLTF format/tree_pineTallA_detailed.glb" id="kit_tree_pineTallA_detailed"]
+[ext_resource type="PackedScene" uid="uid://w3q5acysrnou" path="res://assets/nature/Models/GLTF format/tree_pineTallB_detailed.glb" id="kit_tree_pineTallB_detailed"]
+[ext_resource type="PackedScene" uid="uid://djrt6q0duysi" path="res://assets/nature/Models/GLTF format/tree_pineTallC_detailed.glb" id="kit_tree_pineTallC_detailed"]
+[ext_resource type="PackedScene" uid="uid://dhmxu5gqvb3ui" path="res://assets/nature/Models/GLTF format/tree_pineTallD.glb" id="kit_tree_pineTallD"]
+[ext_resource type="PackedScene" uid="uid://bt8t0r7l68nqb" path="res://assets/nature/Models/GLTF format/tree_plateau.glb" id="kit_tree_plateau"]
+[ext_resource type="PackedScene" uid="uid://cdvcq7rvqmbdx" path="res://assets/nature/Models/GLTF format/tree_plateau_dark.glb" id="kit_tree_plateau_dark"]
+[ext_resource type="PackedScene" uid="uid://sbr4ftpq5tps" path="res://assets/nature/Models/GLTF format/tree_plateau_fall.glb" id="kit_tree_plateau_fall"]
+[ext_resource type="PackedScene" uid="uid://bjnj1112012dv" path="res://assets/nature/Models/GLTF format/tree_simple.glb" id="kit_tree_simple"]
+[ext_resource type="PackedScene" uid="uid://b5qkqj3lpkvku" path="res://assets/nature/Models/GLTF format/tree_simple_fall.glb" id="kit_tree_simple_fall"]
+[ext_resource type="PackedScene" uid="uid://h2lpjy7jqfac" path="res://assets/nature/Models/GLTF format/tree_small_fall.glb" id="kit_tree_small_fall"]
+[ext_resource type="PackedScene" uid="uid://dh6rmbe1fxv5i" path="res://assets/nature/Models/GLTF format/tree_tall.glb" id="kit_tree_tall"]
+[ext_resource type="PackedScene" uid="uid://bnb8c16x0bkct" path="res://assets/nature/Models/GLTF format/tree_thin.glb" id="kit_tree_thin"]
+[ext_resource type="PackedScene" uid="uid://cvamsv28d0m4u" path="res://assets/nature/Models/GLTF format/tree_thin_fall.glb" id="kit_tree_thin_fall"]
+[ext_resource type="PackedScene" path="res://scenes/props/lamp_post.tscn" id="lamp_post"]
+[ext_resource type="PackedScene" path="res://scenes/props/mailbox.tscn" id="mailbox"]
+[ext_resource type="Script" uid="uid://bkryivid2jl7w" path="res://scripts/props/observable.gd" id="observable"]
+[ext_resource type="Script" uid="uid://dyr6lm16r7w4d" path="res://scripts/props/path_flowers.gd" id="path_flowers"]
+[ext_resource type="PackedScene" path="res://scenes/props/round_prop.tscn" id="round_prop"]
+[ext_resource type="Script" uid="uid://gbpeuysh0a8d" path="res://scripts/props/scatter_patch.gd" id="scatter_patch"]
+[ext_resource type="Script" uid="uid://cw5lg5n8c8ph3" path="res://scripts/props/stepping_stones.gd" id="stepping_stones"]
 [ext_resource type="PackedScene" path="res://scenes/props/waterfall.tscn" id="waterfall"]
-[ext_resource type="Script" path="res://scripts/props/scatter_patch.gd" id="scatter_patch"]
-[ext_resource type="Script" path="res://scripts/props/flower_bed.gd" id="flower_bed"]
-[ext_resource type="Script" path="res://scripts/props/stepping_stones.gd" id="stepping_stones"]
-[ext_resource type="Script" path="res://scripts/props/path_flowers.gd" id="path_flowers"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/flower_purpleA.glb" id="kit_flower_purpleA"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/flower_purpleB.glb" id="kit_flower_purpleB"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/flower_purpleC.glb" id="kit_flower_purpleC"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/flower_redA.glb" id="kit_flower_redA"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/flower_redB.glb" id="kit_flower_redB"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/flower_redC.glb" id="kit_flower_redC"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/flower_yellowA.glb" id="kit_flower_yellowA"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/flower_yellowB.glb" id="kit_flower_yellowB"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/flower_yellowC.glb" id="kit_flower_yellowC"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/grass.glb" id="kit_grass"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/grass_large.glb" id="kit_grass_large"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/grass_leafs.glb" id="kit_grass_leafs"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/grass_leafsLarge.glb" id="kit_grass_leafsLarge"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/log.glb" id="kit_log"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/log_large.glb" id="kit_log_large"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/log_stack.glb" id="kit_log_stack"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/mushroom_red.glb" id="kit_mushroom_red"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/mushroom_redGroup.glb" id="kit_mushroom_redGroup"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/mushroom_redTall.glb" id="kit_mushroom_redTall"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/mushroom_tan.glb" id="kit_mushroom_tan"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/mushroom_tanGroup.glb" id="kit_mushroom_tanGroup"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/mushroom_tanTall.glb" id="kit_mushroom_tanTall"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/plant_bush.glb" id="kit_plant_bush"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/plant_bushDetailed.glb" id="kit_plant_bushDetailed"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/plant_bushLarge.glb" id="kit_plant_bushLarge"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/plant_bushLargeTriangle.glb" id="kit_plant_bushLargeTriangle"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/plant_bushSmall.glb" id="kit_plant_bushSmall"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/plant_bushTriangle.glb" id="kit_plant_bushTriangle"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/plant_flatTall.glb" id="kit_plant_flatTall"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/pot_large.glb" id="kit_pot_large"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/rock_largeA.glb" id="kit_rock_largeA"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/rock_largeB.glb" id="kit_rock_largeB"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/rock_largeC.glb" id="kit_rock_largeC"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/rock_largeE.glb" id="kit_rock_largeE"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/rock_smallA.glb" id="kit_rock_smallA"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/rock_smallC.glb" id="kit_rock_smallC"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/rock_smallFlatA.glb" id="kit_rock_smallFlatA"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/rock_smallFlatB.glb" id="kit_rock_smallFlatB"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/rock_tallB.glb" id="kit_rock_tallB"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/sign.glb" id="kit_sign"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/statue_ring.glb" id="kit_statue_ring"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/stone_largeA.glb" id="kit_stone_largeA"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/stone_largeC.glb" id="kit_stone_largeC"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/stone_smallA.glb" id="kit_stone_smallA"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/stone_smallB.glb" id="kit_stone_smallB"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/stone_smallC.glb" id="kit_stone_smallC"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/stone_tallA.glb" id="kit_stone_tallA"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/stump_old.glb" id="kit_stump_old"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/stump_oldTall.glb" id="kit_stump_oldTall"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/stump_round.glb" id="kit_stump_round"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/stump_roundDetailed.glb" id="kit_stump_roundDetailed"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_blocks.glb" id="kit_tree_blocks"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_blocks_fall.glb" id="kit_tree_blocks_fall"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_cone.glb" id="kit_tree_cone"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_cone_dark.glb" id="kit_tree_cone_dark"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_cone_fall.glb" id="kit_tree_cone_fall"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_default.glb" id="kit_tree_default"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_default_dark.glb" id="kit_tree_default_dark"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_default_fall.glb" id="kit_tree_default_fall"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_detailed.glb" id="kit_tree_detailed"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_detailed_dark.glb" id="kit_tree_detailed_dark"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_detailed_fall.glb" id="kit_tree_detailed_fall"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_fat.glb" id="kit_tree_fat"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_fat_fall.glb" id="kit_tree_fat_fall"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_oak.glb" id="kit_tree_oak"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_oak_dark.glb" id="kit_tree_oak_dark"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_oak_fall.glb" id="kit_tree_oak_fall"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_pineDefaultB.glb" id="kit_tree_pineDefaultB"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_pineGroundA.glb" id="kit_tree_pineGroundA"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_pineRoundA.glb" id="kit_tree_pineRoundA"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_pineRoundC.glb" id="kit_tree_pineRoundC"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_pineRoundD.glb" id="kit_tree_pineRoundD"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_pineRoundE.glb" id="kit_tree_pineRoundE"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_pineSmallB.glb" id="kit_tree_pineSmallB"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_pineSmallC.glb" id="kit_tree_pineSmallC"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_pineSmallD.glb" id="kit_tree_pineSmallD"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_pineTallA_detailed.glb" id="kit_tree_pineTallA_detailed"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_pineTallB_detailed.glb" id="kit_tree_pineTallB_detailed"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_pineTallC_detailed.glb" id="kit_tree_pineTallC_detailed"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_pineTallD.glb" id="kit_tree_pineTallD"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_plateau.glb" id="kit_tree_plateau"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_plateau_dark.glb" id="kit_tree_plateau_dark"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_plateau_fall.glb" id="kit_tree_plateau_fall"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_simple.glb" id="kit_tree_simple"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_simple_fall.glb" id="kit_tree_simple_fall"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_small_fall.glb" id="kit_tree_small_fall"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_tall.glb" id="kit_tree_tall"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_thin.glb" id="kit_tree_thin"]
-[ext_resource type="PackedScene" path="res://assets/nature/Models/GLTF format/tree_thin_fall.glb" id="kit_tree_thin_fall"]
+[ext_resource type="Script" uid="uid://cfp3tmwrvk1xx" path="res://scripts/world_sky.gd" id="world_sky"]
+[ext_resource type="PackedScene" path="res://scenes/props/writing_desk.tscn" id="writing_desk"]
+[ext_resource type="Script" uid="uid://np7fn8eueqpg" path="res://scripts/writing_desk/writing_desk_viewer.gd" id="writing_desk_viewer"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 
@@ -145,6 +148,11 @@ transform = Transform3D(0.8660254, 0.38302222, -0.32139382, 0, 0.64278764, 0.766
 shadow_enabled = true
 directional_shadow_mode = 1
 directional_shadow_max_distance = 30.0
+
+[node name="Sky" type="Node3D" parent="." unique_id=832911869 node_paths=PackedStringArray("sun", "world_environment")]
+script = ExtResource("world_sky")
+sun = NodePath("../Sun")
+world_environment = NodePath("../Environment")
 
 [node name="Floor" type="CSGCombiner3D" parent="." unique_id=6226552 groups=["navigation_source"]]
 
@@ -199,7 +207,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
 shape = SubResource("BoxShape3D_floor")
 
 [node name="Capybara" parent="." unique_id=951207900 instance=ExtResource("1_capybara")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.11967622, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Capybara" unique_id=1340388870]
 transform = Transform3D(1, 0, 0, 0, 0.70710677, 0.70710677, 0, -0.70710677, 0.70710677, 0, 6, 6)
@@ -209,865 +217,757 @@ transform = Transform3D(1, 0, 0, 0, 0.70710677, 0.70710677, 0, -0.70710677, 0.70
 [node name="Pond" parent="Nature" unique_id=502439295 instance=ExtResource("43_pond")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -3.6, 0, 3.4)
 
-[node name="Inside" type="Node3D" parent="Nature"]
+[node name="Inside" type="Node3D" parent="Nature" unique_id=1758854555]
 
-[node name="Trees" type="Node3D" parent="Nature/Inside"]
+[node name="Trees" type="Node3D" parent="Nature/Inside" unique_id=909943579]
 
-[node name="TallPineNorthWest" parent="Nature/Inside/Trees" instance=ExtResource("2_tree")]
-position = Vector3(-5.2, 0, -5.2)
-rotation_degrees = Vector3(0, 110, 0)
-scale = Vector3(2.2, 2.2, 2.2)
+[node name="TallPineNorthWest" parent="Nature/Inside/Trees" unique_id=1991613957 instance=ExtResource("2_tree")]
+transform = Transform3D(-0.75244427, 0, 2.0673237, 0, 2.2, 0, -2.0673237, 0, -0.75244427, -5.2, 0, -5.2)
 model = ExtResource("kit_tree_pineTallB_detailed")
 
-[node name="AutumnOakNorthEast" parent="Nature/Inside/Trees" instance=ExtResource("2_tree")]
-position = Vector3(5.2, 0, -5.3)
-rotation_degrees = Vector3(0, 134, 0)
-scale = Vector3(2.4, 2.4, 2.4)
+[node name="AutumnOakNorthEast" parent="Nature/Inside/Trees" unique_id=1770284507 instance=ExtResource("2_tree")]
+transform = Transform3D(-1.66718, 0, 1.7264159, 0, 2.4, 0, -1.7264159, 0, -1.66718, 5.2, 0, -5.3)
 model = ExtResource("kit_tree_oak_fall")
 
-[node name="PlateauWest" parent="Nature/Inside/Trees" instance=ExtResource("2_tree")]
-position = Vector3(-5.3, 0, -1.4)
-rotation_degrees = Vector3(0, 148, 0)
-scale = Vector3(2.2, 2.2, 2.2)
+[node name="PlateauWest" parent="Nature/Inside/Trees" unique_id=766443338 instance=ExtResource("2_tree")]
+transform = Transform3D(-1.8657057, 0, 1.1658225, 0, 2.2, 0, -1.1658225, 0, -1.8657057, -5.3, 0, -1.4)
 model = ExtResource("kit_tree_plateau")
 
-[node name="SmallPineWest" parent="Nature/Inside/Trees" instance=ExtResource("2_tree")]
-position = Vector3(-5.4, 0, -0.1)
-rotation_degrees = Vector3(0, 159, 0)
-scale = Vector3(2.2, 2.2, 2.2)
+[node name="SmallPineWest" parent="Nature/Inside/Trees" unique_id=1872118352 instance=ExtResource("2_tree")]
+transform = Transform3D(-2.053877, 0, 0.7884094, 0, 2.2, 0, -0.7884094, 0, -2.053877, -5.4, 0, -0.1)
 model = ExtResource("kit_tree_pineSmallC")
 
-[node name="AutumnDetailedEast" parent="Nature/Inside/Trees" instance=ExtResource("2_tree")]
-position = Vector3(5.2, 0, 0.2)
-rotation_degrees = Vector3(0, 195, 0)
-scale = Vector3(2.3, 2.3, 2.3)
+[node name="AutumnDetailedEast" parent="Nature/Inside/Trees" unique_id=2093209316 instance=ExtResource("2_tree")]
+transform = Transform3D(-2.2216294, 0, -0.59528387, 0, 2.3, 0, 0.59528387, 0, -2.2216294, 5.2, 0, 0.2)
 model = ExtResource("kit_tree_detailed_fall")
 
-[node name="ThinEast" parent="Nature/Inside/Trees" instance=ExtResource("2_tree")]
-position = Vector3(5.4, 0, 1.4)
-rotation_degrees = Vector3(0, 215, 0)
-scale = Vector3(2.2, 2.2, 2.2)
+[node name="ThinEast" parent="Nature/Inside/Trees" unique_id=492648240 instance=ExtResource("2_tree")]
+transform = Transform3D(-1.8021345, 0, -1.2618681, 0, 2.2, 0, 1.2618681, 0, -1.8021345, 5.4, 0, 1.4)
 model = ExtResource("kit_tree_thin")
 
-[node name="ConeSouthEast" parent="Nature/Inside/Trees" instance=ExtResource("2_tree")]
-position = Vector3(5.3, 0, 4.9)
-rotation_degrees = Vector3(0, 250, 0)
-scale = Vector3(2, 2, 2)
+[node name="ConeSouthEast" parent="Nature/Inside/Trees" unique_id=1838252476 instance=ExtResource("2_tree")]
+transform = Transform3D(-0.6840401, 0, -1.8793854, 0, 2, 0, 1.8793854, 0, -0.6840401, 5.3, 0, 4.9)
 model = ExtResource("kit_tree_cone")
 
-[node name="Bushes" type="Node3D" parent="Nature/Inside"]
+[node name="Bushes" type="Node3D" parent="Nature/Inside" unique_id=1903894986]
 
-[node name="LargeSouthWest" parent="Nature/Inside/Bushes" instance=ExtResource("round_prop")]
-position = Vector3(-1.6, 0, 5.4)
-rotation_degrees = Vector3(0, 313, 0)
-scale = Vector3(1.6, 1.6, 1.6)
+[node name="LargeSouthWest" parent="Nature/Inside/Bushes" unique_id=1512992393 instance=ExtResource("round_prop")]
+transform = Transform3D(1.0911974, 0, -1.1701659, 0, 1.6, 0, 1.1701659, 0, 1.0911974, -1.6, 0, 5.4)
 model = ExtResource("kit_plant_bushLarge")
 
-[node name="DetailedSouthEast" parent="Nature/Inside/Bushes" instance=ExtResource("round_prop")]
-position = Vector3(3.5, 0, 5.5)
-rotation_degrees = Vector3(0, 224, 0)
-scale = Vector3(1.5, 1.5, 1.5)
+[node name="DetailedSouthEast" parent="Nature/Inside/Bushes" unique_id=1684428186 instance=ExtResource("round_prop")]
+transform = Transform3D(-1.0790097, 0, -1.0419877, 0, 1.5, 0, 1.0419877, 0, -1.0790097, 3.5, 0, 5.5)
 model = ExtResource("kit_plant_bushDetailed")
 
-[node name="TriangleEast" parent="Nature/Inside/Bushes" instance=ExtResource("round_prop")]
-position = Vector3(5.4, 0, 3.3)
-rotation_degrees = Vector3(0, 309, 0)
-scale = Vector3(1.4, 1.4, 1.4)
+[node name="TriangleEast" parent="Nature/Inside/Bushes" unique_id=1935435767 instance=ExtResource("round_prop")]
+transform = Transform3D(0.8810485, 0, -1.0880044, 0, 1.4, 0, 1.0880044, 0, 0.8810485, 5.4, 0, 3.3)
 model = ExtResource("kit_plant_bushTriangle")
 
-[node name="BushWest" parent="Nature/Inside/Bushes" instance=ExtResource("round_prop")]
-position = Vector3(-5.5, 0, -2.7)
-rotation_degrees = Vector3(0, 50, 0)
-scale = Vector3(1.4, 1.4, 1.4)
+[node name="BushWest" parent="Nature/Inside/Bushes" unique_id=1791269678 instance=ExtResource("round_prop")]
+transform = Transform3D(0.8999027, 0, 1.0724622, 0, 1.4, 0, -1.0724622, 0, 0.8999027, -5.5, 0, -2.7)
 model = ExtResource("kit_plant_bush")
 
-[node name="SmallNorth" parent="Nature/Inside/Bushes" instance=ExtResource("round_prop")]
-position = Vector3(-0.8, 0, -5.4)
-rotation_degrees = Vector3(0, 280, 0)
-scale = Vector3(1.4, 1.4, 1.4)
+[node name="SmallNorth" parent="Nature/Inside/Bushes" unique_id=110802608 instance=ExtResource("round_prop")]
+transform = Transform3D(0.24310741, 0, -1.3787308, 0, 1.4, 0, 1.3787308, 0, 0.24310741, -0.8, 0, -5.4)
 model = ExtResource("kit_plant_bushSmall")
 
-[node name="Props" type="Node3D" parent="Nature/Inside"]
+[node name="Props" type="Node3D" parent="Nature/Inside" unique_id=296449507]
 
-[node name="StumpEast" parent="Nature/Inside/Props" instance=ExtResource("round_prop")]
-position = Vector3(4.3, 0, 1.6)
-rotation_degrees = Vector3(0, 0, 0)
-scale = Vector3(1.2, 1.2, 1.2)
+[node name="StumpEast" parent="Nature/Inside/Props" unique_id=521947558 instance=ExtResource("round_prop")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 4.3, 0, 1.6)
 model = ExtResource("kit_stump_round")
 
-[node name="OldStumpNorthWest" parent="Nature/Inside/Props" instance=ExtResource("round_prop")]
-position = Vector3(-4.6, 0, -5.4)
-rotation_degrees = Vector3(0, 30, 0)
-scale = Vector3(1.2, 1.2, 1.2)
+[node name="OldStumpNorthWest" parent="Nature/Inside/Props" unique_id=1624035302 instance=ExtResource("round_prop")]
+transform = Transform3D(1.0392305, 0, 0.6, 0, 1.2, 0, -0.6, 0, 1.0392305, -4.6, 0, -5.4)
 model = ExtResource("kit_stump_oldTall")
 
-[node name="FirewoodBesideTheHouse" parent="Nature/Inside/Props" instance=ExtResource("round_prop")]
-position = Vector3(5.4, 0, -2.9)
-rotation_degrees = Vector3(0, 80, 0)
-scale = Vector3(1, 1, 1)
+[node name="FirewoodBesideTheHouse" parent="Nature/Inside/Props" unique_id=383536647 instance=ExtResource("round_prop")]
+transform = Transform3D(0.17364822, 0, 0.9848077, 0, 1, 0, -0.9848077, 0, 0.17364822, 5.4, 0, -2.9)
 model = ExtResource("kit_log_stack")
 
-[node name="PotInTheGarden" parent="Nature/Inside/Props" instance=ExtResource("round_prop")]
-position = Vector3(1.2, 0, 4.7)
-rotation_degrees = Vector3(0, 0, 0)
-scale = Vector3(1.3, 1.3, 1.3)
+[node name="PotInTheGarden" parent="Nature/Inside/Props" unique_id=624958750 instance=ExtResource("round_prop")]
+transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, 1.2, 0, 4.7)
 model = ExtResource("kit_pot_large")
 
-[node name="PondWestRock" parent="Nature/Inside/Props" instance=ExtResource("round_prop")]
-position = Vector3(-5.6, 0, 4.6)
-rotation_degrees = Vector3(0, 198, 0)
-scale = Vector3(0.9, 0.9, 0.9)
+[node name="PondWestRock" parent="Nature/Inside/Props" unique_id=2121593482 instance=ExtResource("round_prop")]
+transform = Transform3D(-0.8559509, 0, -0.27811527, 0, 0.9, 0, 0.27811527, 0, -0.8559509, -5.6, 0, 4.6)
 model = ExtResource("kit_rock_largeB")
 
-[node name="PondEastRock" parent="Nature/Inside/Props" instance=ExtResource("round_prop")]
-position = Vector3(-1.4, 0, 2.3)
-rotation_degrees = Vector3(0, 319, 0)
-scale = Vector3(0.8, 0.8, 0.8)
+[node name="PondEastRock" parent="Nature/Inside/Props" unique_id=376126565 instance=ExtResource("round_prop")]
+transform = Transform3D(0.60376763, 0, -0.52484727, 0, 0.8, 0, 0.52484727, 0, 0.60376763, -1.4, 0, 2.3)
 model = ExtResource("kit_rock_largeC")
 
-[node name="EastRock" parent="Nature/Inside/Props" instance=ExtResource("round_prop")]
-position = Vector3(4.6, 0, -0.8)
-rotation_degrees = Vector3(0, 133, 0)
-scale = Vector3(1.2, 1.2, 1.2)
-model = ExtResource("kit_rock_smallC")
+[node name="EastRock" parent="Nature/Inside/Props" unique_id=780473670 instance=ExtResource("round_prop")]
+transform = Transform3D(-0.818398, 0, 0.87762445, 0, 1.2, 0, -0.87762445, 0, -0.818398, 4.6, 0, -0.8)
 
-[node name="Path" type="Node3D" parent="Nature/Inside"]
+[node name="Path" type="Node3D" parent="Nature/Inside" unique_id=983450205]
 
-[node name="HouseToPond" type="Node3D" parent="Nature/Inside/Path"]
-position = Vector3(0, 0.005, 0)
+[node name="HouseToPond" type="Node3D" parent="Nature/Inside/Path" unique_id=811313848]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.005, 0)
 script = ExtResource("stepping_stones")
 path_points = PackedVector3Array(2.9, 0, -3, 2.2, 0, -2.2, 1.3, 0, -1.3, 0.3, 0, -0.5, -0.8, 0, 0.2, -1.9, 0, 0.7, -3, 0, 1)
-rows = 2
 side_jitter = 0.035
+rows = 2
 random_seed = 41
 
-[node name="BorderFlowers" type="Node3D" parent="Nature/Inside/Path/HouseToPond"]
+[node name="BorderFlowers" type="Node3D" parent="Nature/Inside/Path/HouseToPond" unique_id=1150086791]
 script = ExtResource("path_flowers")
 models = Array[PackedScene]([ExtResource("kit_flower_yellowA"), ExtResource("kit_flower_yellowB"), ExtResource("kit_flower_yellowC"), ExtResource("kit_flower_purpleA"), ExtResource("kit_flower_purpleB"), ExtResource("kit_flower_purpleC")])
 spacing = 0.38
 gap_chance = 0.2
 random_seed = 43
 
-[node name="Garden" type="Node3D" parent="Nature/Inside"]
+[node name="Garden" type="Node3D" parent="Nature/Inside" unique_id=461363045]
 
-[node name="RedBed" type="Node3D" parent="Nature/Inside/Garden"]
-position = Vector3(1.9, 0, 3.5)
-rotation_degrees = Vector3(0, 0, 0)
+[node name="RedBed" type="Node3D" parent="Nature/Inside/Garden" unique_id=2140512424]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.9, 0, 3.5)
 script = ExtResource("flower_bed")
-size = Vector2(0.8, 2)
-rows = 2
-side_jitter = 0.035
-flowers_per_row = 6
 flower_models = Array[PackedScene]([ExtResource("kit_flower_redA"), ExtResource("kit_flower_redB"), ExtResource("kit_flower_redC")])
 random_seed = 31
 
-[node name="YellowBed" type="Node3D" parent="Nature/Inside/Garden"]
-position = Vector3(3.1, 0, 3.5)
-rotation_degrees = Vector3(0, 0, 0)
+[node name="YellowBed" type="Node3D" parent="Nature/Inside/Garden" unique_id=1051798943]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.1, 0, 3.5)
 script = ExtResource("flower_bed")
-size = Vector2(0.8, 2)
-rows = 2
-side_jitter = 0.035
-flowers_per_row = 6
 flower_models = Array[PackedScene]([ExtResource("kit_flower_yellowA"), ExtResource("kit_flower_yellowB"), ExtResource("kit_flower_yellowC")])
 random_seed = 32
 
-[node name="PurpleBed" type="Node3D" parent="Nature/Inside/Garden"]
-position = Vector3(4.3, 0, 3.5)
-rotation_degrees = Vector3(0, 0, 0)
+[node name="PurpleBed" type="Node3D" parent="Nature/Inside/Garden" unique_id=1639249809]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.3, 0, 3.5)
 script = ExtResource("flower_bed")
-size = Vector2(0.8, 2)
-rows = 2
-side_jitter = 0.035
-flowers_per_row = 6
 flower_models = Array[PackedScene]([ExtResource("kit_flower_purpleA"), ExtResource("kit_flower_purpleB"), ExtResource("kit_flower_purpleC")])
 random_seed = 33
 
-[node name="GardenSign" parent="Nature/Inside/Garden" instance=ExtResource("kit_sign")]
-position = Vector3(1.2, 0.01, 2.3)
-rotation_degrees = Vector3(0, -20, 0)
-scale = Vector3(1, 1, 1)
+[node name="GardenSign" parent="Nature/Inside/Garden" unique_id=630905965 instance=ExtResource("kit_sign")]
+transform = Transform3D(0.9396926, 0, -0.34202012, 0, 1, 0, 0.34202012, 0, 0.9396926, 1.2, 0.01, 2.3)
 
-[node name="GardenFireflies" parent="Nature/Inside/Garden" instance=ExtResource("fireflies")]
-position = Vector3(3.1, 0.9, 3.5)
+[node name="GardenFireflies" parent="Nature/Inside/Garden" unique_id=26202079 instance=ExtResource("fireflies")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.1, 0.9, 3.5)
 
-[node name="Patches" type="Node3D" parent="Nature/Inside"]
+[node name="Patches" type="Node3D" parent="Nature/Inside" unique_id=1996692646]
 
-[node name="EdgeGrass" type="Node3D" parent="Nature/Inside/Patches"]
-position = Vector3(0, 0, 0)
+[node name="EdgeGrass" type="Node3D" parent="Nature/Inside/Patches" unique_id=1221186446]
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_grass"), ExtResource("kit_grass_large"), ExtResource("kit_grass_leafs")])
 count = 40
 extents = Vector2(5.8, 5.8)
+inner_ratio = 0.78
 min_scale = 0.7
 max_scale = 1.1
 random_seed = 11
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-inner_ratio = 0.78
 
-[node name="HouseDoorFlowers" type="Node3D" parent="Nature/Inside/Patches"]
-position = Vector3(4.8, 0, -1.9)
+[node name="HouseDoorFlowers" type="Node3D" parent="Nature/Inside/Patches" unique_id=1086314306]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.8, 0, -1.9)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_flower_redA"), ExtResource("kit_flower_redB"), ExtResource("kit_flower_redC"), ExtResource("kit_flower_yellowA")])
 count = 7
 extents = Vector2(0.45, 0.3)
-min_scale = 0.8
-max_scale = 1.2
 random_seed = 13
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="WorkspaceBackFlowers" type="Node3D" parent="Nature/Inside/Patches"]
-position = Vector3(1.4, 0, -5.55)
+[node name="WorkspaceBackFlowers" type="Node3D" parent="Nature/Inside/Patches" unique_id=972289752]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 0, -5.55)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_flower_purpleA"), ExtResource("kit_flower_purpleB"), ExtResource("kit_flower_purpleC"), ExtResource("kit_flower_yellowA")])
 count = 9
 extents = Vector2(1, 0.3)
-min_scale = 0.8
-max_scale = 1.2
 random_seed = 14
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="CenterGrassTuft1" type="Node3D" parent="Nature/Inside/Patches"]
-position = Vector3(-2.1, 0, -1.4)
+[node name="CenterGrassTuft1" type="Node3D" parent="Nature/Inside/Patches" unique_id=725037308]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.1, 0, -1.4)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_grass"), ExtResource("kit_grass_large"), ExtResource("kit_grass_leafs")])
 count = 5
 extents = Vector2(0.3, 0.3)
-min_scale = 0.8
 max_scale = 1.1
 random_seed = 60
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="CenterGrassTuft2" type="Node3D" parent="Nature/Inside/Patches"]
-position = Vector3(2.6, 0, 0.2)
+[node name="CenterGrassTuft2" type="Node3D" parent="Nature/Inside/Patches" unique_id=1699679966]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0, 0.2)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_grass"), ExtResource("kit_grass_large"), ExtResource("kit_grass_leafs")])
 count = 5
 extents = Vector2(0.3, 0.3)
-min_scale = 0.8
 max_scale = 1.1
 random_seed = 61
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="CenterGrassTuft3" type="Node3D" parent="Nature/Inside/Patches"]
-position = Vector3(0.2, 0, 2.4)
+[node name="CenterGrassTuft3" type="Node3D" parent="Nature/Inside/Patches" unique_id=379107604]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0, 2.4)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_grass"), ExtResource("kit_grass_large"), ExtResource("kit_grass_leafs")])
 count = 5
 extents = Vector2(0.3, 0.3)
-min_scale = 0.8
 max_scale = 1.1
 random_seed = 62
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="CenterGrassTuft4" type="Node3D" parent="Nature/Inside/Patches"]
-position = Vector3(-0.6, 0, 4.4)
+[node name="CenterGrassTuft4" type="Node3D" parent="Nature/Inside/Patches" unique_id=551750289]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 0, 4.4)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_grass"), ExtResource("kit_grass_large"), ExtResource("kit_grass_leafs")])
 count = 5
 extents = Vector2(0.3, 0.3)
-min_scale = 0.8
 max_scale = 1.1
 random_seed = 63
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="CenterGrassTuft5" type="Node3D" parent="Nature/Inside/Patches"]
-position = Vector3(-0.2, 0, -3.2)
+[node name="CenterGrassTuft5" type="Node3D" parent="Nature/Inside/Patches" unique_id=1319167130]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 0, -3.2)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_grass"), ExtResource("kit_grass_large"), ExtResource("kit_grass_leafs")])
 count = 5
 extents = Vector2(0.3, 0.3)
-min_scale = 0.8
 max_scale = 1.1
 random_seed = 64
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="WorkspaceFlowers" type="Node3D" parent="Nature/Inside/Patches"]
-position = Vector3(-3.2, 0, -5.3)
+[node name="WorkspaceFlowers" type="Node3D" parent="Nature/Inside/Patches" unique_id=1817372493]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.2, 0, -5.3)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_flower_redA"), ExtResource("kit_flower_redB"), ExtResource("kit_flower_redC"), ExtResource("kit_flower_yellowA"), ExtResource("kit_flower_yellowB"), ExtResource("kit_flower_yellowC"), ExtResource("kit_flower_purpleA"), ExtResource("kit_flower_purpleB"), ExtResource("kit_flower_purpleC")])
-count = 10
 extents = Vector2(1.6, 0.35)
-min_scale = 0.8
-max_scale = 1.2
 random_seed = 18
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="PondFlowerRing" type="Node3D" parent="Nature/Inside/Patches"]
-position = Vector3(-3.6, 0, 3.4)
+[node name="PondFlowerRing" type="Node3D" parent="Nature/Inside/Patches" unique_id=1783107691]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6, 0, 3.4)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_flower_purpleA"), ExtResource("kit_flower_purpleB"), ExtResource("kit_flower_purpleC")])
 count = 18
 extents = Vector2(2.5, 2.5)
-min_scale = 0.8
-max_scale = 1.2
+inner_ratio = 0.82
 random_seed = 19
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-inner_ratio = 0.82
 
-[node name="PondGrassRing" type="Node3D" parent="Nature/Inside/Patches"]
-position = Vector3(-3.6, 0, 3.4)
+[node name="PondGrassRing" type="Node3D" parent="Nature/Inside/Patches" unique_id=78816972]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6, 0, 3.4)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_grass_leafs"), ExtResource("kit_grass_leafsLarge"), ExtResource("kit_plant_flatTall")])
 count = 14
 extents = Vector2(2.5, 2.5)
-min_scale = 0.8
-max_scale = 1.2
+inner_ratio = 0.78
 random_seed = 20
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-inner_ratio = 0.78
 
-[node name="PondPebbles" type="Node3D" parent="Nature/Inside/Patches"]
-position = Vector3(-3.6, 0, 3.4)
+[node name="PondPebbles" type="Node3D" parent="Nature/Inside/Patches" unique_id=568428348]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6, 0, 3.4)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_stone_smallA"), ExtResource("kit_stone_smallB"), ExtResource("kit_stone_smallC"), ExtResource("kit_rock_smallFlatA"), ExtResource("kit_rock_smallFlatB"), ExtResource("kit_rock_smallA")])
-count = 10
 extents = Vector2(2.4, 2.4)
-min_scale = 0.8
+inner_ratio = 0.8
 max_scale = 1.3
 random_seed = 21
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-inner_ratio = 0.8
 
-[node name="MushroomsWest" type="Node3D" parent="Nature/Inside/Patches"]
-position = Vector3(-4.8, 0, -0.8)
+[node name="MushroomsWest" type="Node3D" parent="Nature/Inside/Patches" unique_id=1104048389]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.8, 0, -0.8)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_mushroom_red"), ExtResource("kit_mushroom_redGroup"), ExtResource("kit_mushroom_redTall"), ExtResource("kit_mushroom_tan"), ExtResource("kit_mushroom_tanGroup"), ExtResource("kit_mushroom_tanTall")])
 count = 5
 extents = Vector2(0.5, 0.6)
-min_scale = 0.8
-max_scale = 1.2
 random_seed = 25
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="MushroomsEast" type="Node3D" parent="Nature/Inside/Patches"]
-position = Vector3(4.6, 0, 0.9)
+[node name="MushroomsEast" type="Node3D" parent="Nature/Inside/Patches" unique_id=303123669]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.6, 0, 0.9)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_mushroom_red"), ExtResource("kit_mushroom_redGroup"), ExtResource("kit_mushroom_redTall"), ExtResource("kit_mushroom_tan"), ExtResource("kit_mushroom_tanGroup"), ExtResource("kit_mushroom_tanTall")])
 count = 4
 extents = Vector2(0.5, 0.5)
-min_scale = 0.8
-max_scale = 1.2
 random_seed = 26
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="MushroomsNorthWest" type="Node3D" parent="Nature/Inside/Patches"]
-position = Vector3(-4.6, 0, -5.1)
+[node name="MushroomsNorthWest" type="Node3D" parent="Nature/Inside/Patches" unique_id=1880920040]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.6, 0, -5.1)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_mushroom_red"), ExtResource("kit_mushroom_redGroup"), ExtResource("kit_mushroom_redTall"), ExtResource("kit_mushroom_tan"), ExtResource("kit_mushroom_tanGroup"), ExtResource("kit_mushroom_tanTall")])
 count = 4
 extents = Vector2(0.5, 0.3)
-min_scale = 0.8
-max_scale = 1.2
 random_seed = 27
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="PondFireflies" parent="Nature/Inside/Patches" instance=ExtResource("fireflies")]
-position = Vector3(-3.6, 0.9, 3.4)
+[node name="PondFireflies" parent="Nature/Inside/Patches" unique_id=1955708387 instance=ExtResource("fireflies")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6, 0.9, 3.4)
 
-[node name="Outside" type="Node3D" parent="Nature"]
+[node name="Outside" type="Node3D" parent="Nature" unique_id=2077206291]
 
-[node name="Forest" type="Node3D" parent="Nature/Outside"]
+[node name="Forest" type="Node3D" parent="Nature/Outside" unique_id=426145052]
 
-[node name="NorthWestPines" type="Node3D" parent="Nature/Outside/Forest"]
-position = Vector3(-7.5, 0, -10)
+[node name="NorthWestPines" type="Node3D" parent="Nature/Outside/Forest" unique_id=2051824852]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0, -10)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_tree_pineTallA_detailed"), ExtResource("kit_tree_pineTallC_detailed"), ExtResource("kit_tree_pineRoundE"), ExtResource("kit_tree_pineRoundC"), ExtResource("kit_tree_pineDefaultB"), ExtResource("kit_tree_pineGroundA")])
 count = 15
 extents = Vector2(5.8, 3.2)
 min_scale = 2.4
-max_scale = 4
+max_scale = 4.0
+min_distance = 1.9
 random_seed = 101
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
-min_distance = 1.9
 
-[node name="NorthEastAutumn" type="Node3D" parent="Nature/Outside/Forest"]
-position = Vector3(9.6, 0, -10)
+[node name="NorthEastAutumn" type="Node3D" parent="Nature/Outside/Forest" unique_id=2053305894]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.6, 0, -10)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_tree_oak_fall"), ExtResource("kit_tree_default_fall"), ExtResource("kit_tree_fat_fall"), ExtResource("kit_tree_detailed_fall"), ExtResource("kit_tree_plateau_fall")])
 count = 8
 extents = Vector2(3.8, 3.2)
 min_scale = 2.4
 max_scale = 3.6
+min_distance = 1.9
 random_seed = 102
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
-min_distance = 1.9
 
-[node name="BehindTheClearing" type="Node3D" parent="Nature/Outside/Forest"]
-position = Vector3(2.5, 0, -14.4)
+[node name="BehindTheClearing" type="Node3D" parent="Nature/Outside/Forest" unique_id=968382598]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0, -14.4)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_tree_tall"), ExtResource("kit_tree_detailed_dark"), ExtResource("kit_tree_oak_dark"), ExtResource("kit_tree_cone_dark")])
 count = 6
 extents = Vector2(3.6, 1.3)
-min_scale = 3
-max_scale = 4
+min_scale = 3.0
+max_scale = 4.0
+min_distance = 1.9
 random_seed = 103
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
-min_distance = 1.9
 
-[node name="WestOaks" type="Node3D" parent="Nature/Outside/Forest"]
-position = Vector3(-10, 0, -4)
+[node name="WestOaks" type="Node3D" parent="Nature/Outside/Forest" unique_id=728739883]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -4)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_tree_oak"), ExtResource("kit_tree_oak_dark"), ExtResource("kit_tree_default"), ExtResource("kit_tree_default_dark"), ExtResource("kit_tree_fat"), ExtResource("kit_tree_blocks")])
 count = 9
 extents = Vector2(3.2, 5)
 min_scale = 2.4
 max_scale = 3.6
+min_distance = 1.9
 random_seed = 104
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
-min_distance = 1.9
 
-[node name="WestPines" type="Node3D" parent="Nature/Outside/Forest"]
-position = Vector3(-10, 0, 6)
+[node name="WestPines" type="Node3D" parent="Nature/Outside/Forest" unique_id=221397131]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, 6)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_tree_pineRoundA"), ExtResource("kit_tree_pineRoundD"), ExtResource("kit_tree_pineTallD"), ExtResource("kit_tree_pineSmallD"), ExtResource("kit_tree_cone_dark")])
 count = 8
 extents = Vector2(3.2, 5)
 min_scale = 2.4
 max_scale = 3.8
+min_distance = 1.9
 random_seed = 105
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
-min_distance = 1.9
 
-[node name="EastMixed" type="Node3D" parent="Nature/Outside/Forest"]
-position = Vector3(10, 0, -3.5)
+[node name="EastMixed" type="Node3D" parent="Nature/Outside/Forest" unique_id=1108073438]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -3.5)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_tree_detailed"), ExtResource("kit_tree_plateau"), ExtResource("kit_tree_plateau_dark"), ExtResource("kit_tree_simple"), ExtResource("kit_tree_tall")])
 count = 9
 extents = Vector2(3.2, 5)
 min_scale = 2.4
 max_scale = 3.6
+min_distance = 1.9
 random_seed = 106
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
-min_distance = 1.9
 
-[node name="EastAutumn" type="Node3D" parent="Nature/Outside/Forest"]
-position = Vector3(10, 0, 6)
+[node name="EastAutumn" type="Node3D" parent="Nature/Outside/Forest" unique_id=1513095717]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 6)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_tree_oak_fall"), ExtResource("kit_tree_thin_fall"), ExtResource("kit_tree_simple_fall"), ExtResource("kit_tree_cone_fall"), ExtResource("kit_tree_blocks_fall")])
 count = 8
 extents = Vector2(3.2, 5)
 min_scale = 2.2
 max_scale = 3.4
+min_distance = 1.9
 random_seed = 107
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
-min_distance = 1.9
 
-[node name="Undergrowth" type="Node3D" parent="Nature/Outside"]
+[node name="Undergrowth" type="Node3D" parent="Nature/Outside" unique_id=1085132002]
 
-[node name="NorthBushes" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(0, 0, -7.6)
+[node name="NorthBushes" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=1789189506]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -7.6)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_plant_bush"), ExtResource("kit_plant_bushDetailed"), ExtResource("kit_plant_bushLarge"), ExtResource("kit_plant_bushLargeTriangle"), ExtResource("kit_plant_bushSmall"), ExtResource("kit_plant_bushTriangle")])
 count = 9
 extents = Vector2(13, 1.3)
 min_scale = 1.6
 max_scale = 2.4
+min_distance = 1.2
 random_seed = 201
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-min_distance = 1.2
 
-[node name="NorthRocks" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(0, 0, -7.6)
+[node name="NorthRocks" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=1507475630]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -7.6)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_rock_largeA"), ExtResource("kit_rock_largeB"), ExtResource("kit_rock_largeC"), ExtResource("kit_rock_largeE"), ExtResource("kit_rock_tallB"), ExtResource("kit_stone_largeA"), ExtResource("kit_stone_largeC"), ExtResource("kit_stone_tallA")])
 count = 4
 extents = Vector2(13, 1.3)
 min_scale = 0.9
 max_scale = 1.5
+min_distance = 2.0
 random_seed = 202
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-min_distance = 2
 
-[node name="NorthLogs" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(0, 0, -7.6)
+[node name="NorthLogs" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=1369414351]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -7.6)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_log"), ExtResource("kit_log_large"), ExtResource("kit_stump_old"), ExtResource("kit_stump_oldTall"), ExtResource("kit_stump_round"), ExtResource("kit_stump_roundDetailed")])
 count = 2
 extents = Vector2(13, 1.3)
-min_scale = 1
+min_scale = 1.0
 max_scale = 1.4
+min_distance = 3.0
 random_seed = 203
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-min_distance = 3
 
-[node name="NorthFlowers" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(0, 0, -7.6)
+[node name="NorthFlowers" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=160734808]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -7.6)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_flower_redA"), ExtResource("kit_flower_redB"), ExtResource("kit_flower_redC"), ExtResource("kit_flower_yellowA"), ExtResource("kit_flower_yellowB"), ExtResource("kit_flower_yellowC"), ExtResource("kit_flower_purpleA"), ExtResource("kit_flower_purpleB"), ExtResource("kit_flower_purpleC")])
-count = 10
 extents = Vector2(13, 1.3)
-min_scale = 0.8
-max_scale = 1.2
 random_seed = 204
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="NorthGrass" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(0, 0, -7.6)
+[node name="NorthGrass" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=804607848]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -7.6)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_grass"), ExtResource("kit_grass_large"), ExtResource("kit_grass_leafs")])
 count = 18
 extents = Vector2(13, 1.3)
-min_scale = 0.8
 max_scale = 1.3
 random_seed = 205
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="NorthMushrooms" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(0, 0, -7.6)
+[node name="NorthMushrooms" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=741795792]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -7.6)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_mushroom_red"), ExtResource("kit_mushroom_redGroup"), ExtResource("kit_mushroom_redTall"), ExtResource("kit_mushroom_tan"), ExtResource("kit_mushroom_tanGroup"), ExtResource("kit_mushroom_tanTall")])
 count = 4
 extents = Vector2(13, 1.3)
-min_scale = 0.8
-max_scale = 1.2
 random_seed = 206
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="WestBushes" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(-8.3, 0, 0)
+[node name="WestBushes" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=687557759]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.3, 0, 0)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_plant_bush"), ExtResource("kit_plant_bushDetailed"), ExtResource("kit_plant_bushLarge"), ExtResource("kit_plant_bushLargeTriangle"), ExtResource("kit_plant_bushSmall"), ExtResource("kit_plant_bushTriangle")])
 count = 9
 extents = Vector2(2, 11)
 min_scale = 1.6
 max_scale = 2.4
+min_distance = 1.2
 random_seed = 211
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-min_distance = 1.2
 
-[node name="WestRocks" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(-8.3, 0, 0)
+[node name="WestRocks" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=1095665274]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.3, 0, 0)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_rock_largeA"), ExtResource("kit_rock_largeB"), ExtResource("kit_rock_largeC"), ExtResource("kit_rock_largeE"), ExtResource("kit_rock_tallB"), ExtResource("kit_stone_largeA"), ExtResource("kit_stone_largeC"), ExtResource("kit_stone_tallA")])
 count = 4
 extents = Vector2(2, 11)
 min_scale = 0.9
 max_scale = 1.5
+min_distance = 2.0
 random_seed = 212
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-min_distance = 2
 
-[node name="WestLogs" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(-8.3, 0, 0)
+[node name="WestLogs" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=1926594016]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.3, 0, 0)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_log"), ExtResource("kit_log_large"), ExtResource("kit_stump_old"), ExtResource("kit_stump_oldTall"), ExtResource("kit_stump_round"), ExtResource("kit_stump_roundDetailed")])
 count = 2
 extents = Vector2(2, 11)
-min_scale = 1
+min_scale = 1.0
 max_scale = 1.4
+min_distance = 3.0
 random_seed = 213
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-min_distance = 3
 
-[node name="WestFlowers" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(-8.3, 0, 0)
+[node name="WestFlowers" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=1856841092]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.3, 0, 0)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_flower_redA"), ExtResource("kit_flower_redB"), ExtResource("kit_flower_redC"), ExtResource("kit_flower_yellowA"), ExtResource("kit_flower_yellowB"), ExtResource("kit_flower_yellowC"), ExtResource("kit_flower_purpleA"), ExtResource("kit_flower_purpleB"), ExtResource("kit_flower_purpleC")])
-count = 10
 extents = Vector2(2, 11)
-min_scale = 0.8
-max_scale = 1.2
 random_seed = 214
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="WestGrass" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(-8.3, 0, 0)
+[node name="WestGrass" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=374724521]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.3, 0, 0)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_grass"), ExtResource("kit_grass_large"), ExtResource("kit_grass_leafs")])
 count = 18
 extents = Vector2(2, 11)
-min_scale = 0.8
 max_scale = 1.3
 random_seed = 215
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="WestMushrooms" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(-8.3, 0, 0)
+[node name="WestMushrooms" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=1971442014]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.3, 0, 0)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_mushroom_red"), ExtResource("kit_mushroom_redGroup"), ExtResource("kit_mushroom_redTall"), ExtResource("kit_mushroom_tan"), ExtResource("kit_mushroom_tanGroup"), ExtResource("kit_mushroom_tanTall")])
 count = 4
 extents = Vector2(2, 11)
-min_scale = 0.8
-max_scale = 1.2
 random_seed = 216
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="EastBushes" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(8.3, 0, 0)
+[node name="EastBushes" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=1547475701]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.3, 0, 0)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_plant_bush"), ExtResource("kit_plant_bushDetailed"), ExtResource("kit_plant_bushLarge"), ExtResource("kit_plant_bushLargeTriangle"), ExtResource("kit_plant_bushSmall"), ExtResource("kit_plant_bushTriangle")])
 count = 9
 extents = Vector2(2, 11)
 min_scale = 1.6
 max_scale = 2.4
+min_distance = 1.2
 random_seed = 221
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-min_distance = 1.2
 
-[node name="EastRocks" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(8.3, 0, 0)
+[node name="EastRocks" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=1157793535]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.3, 0, 0)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_rock_largeA"), ExtResource("kit_rock_largeB"), ExtResource("kit_rock_largeC"), ExtResource("kit_rock_largeE"), ExtResource("kit_rock_tallB"), ExtResource("kit_stone_largeA"), ExtResource("kit_stone_largeC"), ExtResource("kit_stone_tallA")])
 count = 4
 extents = Vector2(2, 11)
 min_scale = 0.9
 max_scale = 1.5
+min_distance = 2.0
 random_seed = 222
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-min_distance = 2
 
-[node name="EastLogs" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(8.3, 0, 0)
+[node name="EastLogs" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=1401747014]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.3, 0, 0)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_log"), ExtResource("kit_log_large"), ExtResource("kit_stump_old"), ExtResource("kit_stump_oldTall"), ExtResource("kit_stump_round"), ExtResource("kit_stump_roundDetailed")])
 count = 2
 extents = Vector2(2, 11)
-min_scale = 1
+min_scale = 1.0
 max_scale = 1.4
+min_distance = 3.0
 random_seed = 223
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-min_distance = 3
 
-[node name="EastFlowers" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(8.3, 0, 0)
+[node name="EastFlowers" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=373579913]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.3, 0, 0)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_flower_redA"), ExtResource("kit_flower_redB"), ExtResource("kit_flower_redC"), ExtResource("kit_flower_yellowA"), ExtResource("kit_flower_yellowB"), ExtResource("kit_flower_yellowC"), ExtResource("kit_flower_purpleA"), ExtResource("kit_flower_purpleB"), ExtResource("kit_flower_purpleC")])
-count = 10
 extents = Vector2(2, 11)
-min_scale = 0.8
-max_scale = 1.2
 random_seed = 224
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="EastGrass" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(8.3, 0, 0)
+[node name="EastGrass" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=1553798875]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.3, 0, 0)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_grass"), ExtResource("kit_grass_large"), ExtResource("kit_grass_leafs")])
 count = 18
 extents = Vector2(2, 11)
-min_scale = 0.8
 max_scale = 1.3
 random_seed = 225
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="EastMushrooms" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(8.3, 0, 0)
+[node name="EastMushrooms" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=601181795]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.3, 0, 0)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_mushroom_red"), ExtResource("kit_mushroom_redGroup"), ExtResource("kit_mushroom_redTall"), ExtResource("kit_mushroom_tan"), ExtResource("kit_mushroom_tanGroup"), ExtResource("kit_mushroom_tanTall")])
 count = 4
 extents = Vector2(2, 11)
-min_scale = 0.8
-max_scale = 1.2
 random_seed = 226
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="SouthBushes" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(0, 0, 8.6)
+[node name="SouthBushes" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=303268195]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 8.6)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_plant_bush"), ExtResource("kit_plant_bushDetailed"), ExtResource("kit_plant_bushLarge"), ExtResource("kit_plant_bushLargeTriangle"), ExtResource("kit_plant_bushSmall"), ExtResource("kit_plant_bushTriangle")])
 count = 9
 extents = Vector2(13, 2.4)
 min_scale = 1.6
 max_scale = 2.4
+min_distance = 1.2
 random_seed = 231
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-min_distance = 1.2
 
-[node name="SouthRocks" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(0, 0, 8.6)
+[node name="SouthRocks" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=1656242892]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 8.6)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_rock_largeA"), ExtResource("kit_rock_largeB"), ExtResource("kit_rock_largeC"), ExtResource("kit_rock_largeE"), ExtResource("kit_rock_tallB"), ExtResource("kit_stone_largeA"), ExtResource("kit_stone_largeC"), ExtResource("kit_stone_tallA")])
 count = 4
 extents = Vector2(13, 2.4)
 min_scale = 0.9
 max_scale = 1.5
+min_distance = 2.0
 random_seed = 232
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-min_distance = 2
 
-[node name="SouthLogs" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(0, 0, 8.6)
+[node name="SouthLogs" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=2045555095]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 8.6)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_log"), ExtResource("kit_log_large"), ExtResource("kit_stump_old"), ExtResource("kit_stump_oldTall"), ExtResource("kit_stump_round"), ExtResource("kit_stump_roundDetailed")])
 count = 2
 extents = Vector2(13, 2.4)
-min_scale = 1
+min_scale = 1.0
 max_scale = 1.4
+min_distance = 3.0
 random_seed = 233
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-min_distance = 3
 
-[node name="SouthFlowers" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(0, 0, 8.6)
+[node name="SouthFlowers" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=368573942]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 8.6)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_flower_redA"), ExtResource("kit_flower_redB"), ExtResource("kit_flower_redC"), ExtResource("kit_flower_yellowA"), ExtResource("kit_flower_yellowB"), ExtResource("kit_flower_yellowC"), ExtResource("kit_flower_purpleA"), ExtResource("kit_flower_purpleB"), ExtResource("kit_flower_purpleC")])
-count = 10
 extents = Vector2(13, 2.4)
-min_scale = 0.8
-max_scale = 1.2
 random_seed = 234
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="SouthGrass" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(0, 0, 8.6)
+[node name="SouthGrass" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=1882334209]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 8.6)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_grass"), ExtResource("kit_grass_large"), ExtResource("kit_grass_leafs")])
 count = 18
 extents = Vector2(13, 2.4)
-min_scale = 0.8
 max_scale = 1.3
 random_seed = 235
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="SouthMushrooms" type="Node3D" parent="Nature/Outside/Undergrowth"]
-position = Vector3(0, 0, 8.6)
+[node name="SouthMushrooms" type="Node3D" parent="Nature/Outside/Undergrowth" unique_id=1005845723]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 8.6)
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_mushroom_red"), ExtResource("kit_mushroom_redGroup"), ExtResource("kit_mushroom_redTall"), ExtResource("kit_mushroom_tan"), ExtResource("kit_mushroom_tanGroup"), ExtResource("kit_mushroom_tanTall")])
 count = 4
 extents = Vector2(13, 2.4)
-min_scale = 0.8
-max_scale = 1.2
 random_seed = 236
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
 
-[node name="MagicClearing" type="Node3D" parent="Nature/Outside"]
-position = Vector3(2.5, 0, -10.5)
+[node name="MagicClearing" type="Node3D" parent="Nature/Outside" unique_id=94585131]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0, -10.5)
 
-[node name="AncientStoneRing" parent="Nature/Outside/MagicClearing" instance=ExtResource("kit_statue_ring")]
-position = Vector3(0, 0.01, 0)
-rotation_degrees = Vector3(0, 0, 0)
-scale = Vector3(1.5, 1.5, 1.5)
+[node name="AncientStoneRing" parent="Nature/Outside/MagicClearing" unique_id=1830692378 instance=ExtResource("kit_statue_ring")]
+transform = Transform3D(1.5, 0, 0, 0, 1.5, 0, 0, 0, 1.5, 0, 0.01, 0)
 
-[node name="FairyRing" type="Node3D" parent="Nature/Outside/MagicClearing"]
-position = Vector3(0, 0, 0)
+[node name="FairyRing" type="Node3D" parent="Nature/Outside/MagicClearing" unique_id=458162334]
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_mushroom_red"), ExtResource("kit_mushroom_redTall"), ExtResource("kit_mushroom_redGroup"), ExtResource("kit_mushroom_tan")])
 count = 16
 extents = Vector2(1.5, 1.5)
+inner_ratio = 0.88
 min_scale = 0.9
 max_scale = 1.3
 random_seed = 301
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-inner_ratio = 0.88
 
-[node name="ClearingFlowers" type="Node3D" parent="Nature/Outside/MagicClearing"]
-position = Vector3(0, 0, 0)
+[node name="ClearingFlowers" type="Node3D" parent="Nature/Outside/MagicClearing" unique_id=110226072]
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_flower_purpleA"), ExtResource("kit_flower_purpleB"), ExtResource("kit_flower_purpleC")])
 count = 14
 extents = Vector2(2.3, 2.3)
-min_scale = 0.8
-max_scale = 1.2
+inner_ratio = 0.65
 random_seed = 302
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-inner_ratio = 0.65
 
-[node name="ClearingGrass" type="Node3D" parent="Nature/Outside/MagicClearing"]
-position = Vector3(0, 0, 0)
+[node name="ClearingGrass" type="Node3D" parent="Nature/Outside/MagicClearing" unique_id=1127674589]
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_grass_leafs"), ExtResource("kit_grass_leafsLarge")])
-count = 10
 extents = Vector2(2.5, 2.5)
-min_scale = 0.8
-max_scale = 1.2
+inner_ratio = 0.6
 random_seed = 303
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-inner_ratio = 0.6
 
-[node name="ClearingEdgeTrees" type="Node3D" parent="Nature/Outside/MagicClearing"]
-position = Vector3(0, 0, 0)
+[node name="ClearingEdgeTrees" type="Node3D" parent="Nature/Outside/MagicClearing" unique_id=158117157]
 script = ExtResource("scatter_patch")
 models = Array[PackedScene]([ExtResource("kit_tree_thin"), ExtResource("kit_tree_small_fall"), ExtResource("kit_tree_cone"), ExtResource("kit_tree_pineSmallB")])
 count = 7
 extents = Vector2(3.4, 3.4)
+inner_ratio = 0.85
 min_scale = 1.8
 max_scale = 2.4
+min_distance = 1.6
 random_seed = 304
 keep_out_areas = Array[Rect2]([Rect2(-8, 2.5, 2.8, 1.8), Rect2(-11.6, 0.2, 5.3, 6.6)])
 casts_shadows = false
-inner_ratio = 0.85
-min_distance = 1.6
 
-[node name="MagicGlow" type="OmniLight3D" parent="Nature/Outside/MagicClearing"]
-position = Vector3(0, 1.2, 0)
+[node name="MagicGlow" type="OmniLight3D" parent="Nature/Outside/MagicClearing" unique_id=1837895184]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
 light_color = Color(0.55, 0.75, 1, 1)
 light_energy = 2.5
-omni_range = 5.0
 
-[node name="ClearingFireflies" parent="Nature/Outside/MagicClearing" instance=ExtResource("fireflies")]
-position = Vector3(0, 0.9, 0)
+[node name="ClearingFireflies" parent="Nature/Outside/MagicClearing" unique_id=240047614 instance=ExtResource("fireflies")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 
-[node name="Waterfall" parent="Nature" instance=ExtResource("waterfall")]
-position = Vector3(-5.4, 0, 3.4)
+[node name="Waterfall" parent="Nature" unique_id=904760409 instance=ExtResource("waterfall")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.4, 0, 3.4)
 
 [node name="Boundary" parent="." unique_id=173528842 groups=["navigation_source"] instance=ExtResource("6_boundary")]
 
 [node name="Workspace" type="Node3D" parent="." unique_id=1589149773 groups=["navigation_source"]]
 
 [node name="Desk" parent="Workspace" unique_id=1418082160 instance=ExtResource("4_desk")]
-position = Vector3(2, 0, -4.7)
-rotation_degrees = Vector3(0, -23.1, 0)
-scale = Vector3(1.6, 1.6, 1.6)
+transform = Transform3D(1.4717144, 0, -0.62773937, 0, 1.6, 0, 0.62773937, 0, 1.4717144, 2, 0, -4.7)
 
-[node name="Chalkboard" parent="Workspace" unique_id=2146862181 instance=ExtResource("5_chalkboard")]
-position = Vector3(0.6, 0, -4.6)
-rotation_degrees = Vector3(0, -7.4, 0)
-scale = Vector3(0.65, 0.65, 0.65)
+[node name="WritingDesk" parent="Workspace" unique_id=248875606 instance=ExtResource("writing_desk")]
+transform = Transform3D(1.4717144, 0, -0.62773937, 0, 1.6, 0, 0.62773937, 0, 1.4717144, 0.7, 0, -4.65)
 
 [node name="Home" type="Node3D" parent="." unique_id=533113209 groups=["navigation_source"]]
 
 [node name="DogHouse" parent="Home" unique_id=1348174518 instance=ExtResource("40_dog_house")]
-position = Vector3(3.9, 0, -4)
-rotation_degrees = Vector3(0, -44.3, 0)
-scale = Vector3(1.8, 1.8, 1.8)
+transform = Transform3D(1.288247, 0, -1.2571474, 0, 1.8, 0, 1.2571474, 0, 1.288247, 3.9, 0, -4)
 
 [node name="FoodBowl" parent="Home" unique_id=956629825 instance=ExtResource("41_food_bowl")]
-position = Vector3(3.9, 0, -2.1)
-rotation_degrees = Vector3(0, -61.7, 0)
-scale = Vector3(1, 1, 1)
+transform = Transform3D(0.4740882, 0, -0.88047737, 0, 1, 0, 0.88047737, 0, 0.4740882, 3.5898576, 0.22595668, -2.695372)
+
+[node name="Mailbox" parent="Home" unique_id=519050397 instance=ExtResource("mailbox")]
+transform = Transform3D(0.559, 0, -0.829, 0, 1, 0, 0.829, 0, 0.559, 4.3750887, 0.007526338, -2.5905187)
+
+[node name="GardenLights" type="Node3D" parent="." unique_id=28672662 groups=["navigation_source"]]
+
+[node name="LampPostByTheDoor" parent="GardenLights" unique_id=224767944 instance=ExtResource("lamp_post")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.83308, 0.4347062, -0.9167235)
+
+[node name="LampPostMidPath" parent="GardenLights" unique_id=1645671003 instance=ExtResource("lamp_post")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.0602224, 0.013953209, -0.22103184)
+
+[node name="LampPostByThePond" parent="GardenLights" unique_id=1259791360 instance=ExtResource("lamp_post")]
+transform = Transform3D(0.99994296, -0.01068246, 0, 0.01068246, 0.99994296, 0, 0, 0, 1, 4.981222, 0.06842816, 2.0121255)
+
+[node name="LampPostByTheGarden" parent="GardenLights" unique_id=1057305082 instance=ExtResource("lamp_post")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 0, 2.2)
 
 [node name="NavigationRegion" type="NavigationRegion3D" parent="." unique_id=1730609506]
 navigation_mesh = SubResource("NavigationMesh_walkable_area")
@@ -1075,66 +975,68 @@ script = ExtResource("8_world_navigation")
 
 [node name="ComputerScreen" parent="." unique_id=719916942 instance=ExtResource("50_computer_screen")]
 
-[node name="ChalkboardViewer" parent="." instance=ExtResource("51_chalkboard_viewer")]
+[node name="WritingDeskViewer" type="CanvasLayer" parent="." unique_id=976436633]
+script = ExtResource("writing_desk_viewer")
 
-[node name="Observables" type="Node3D" parent="."]
+[node name="CreatorChatBox" type="CanvasLayer" parent="." unique_id=281783728]
+script = ExtResource("creator_chat_box")
 
-[node name="WaterLilies" type="Area3D" parent="Observables"]
-position = Vector3(-3.6, 0.5, 3.4)
+[node name="Observables" type="Node3D" parent="." unique_id=188773998]
+
+[node name="WaterLilies" type="Area3D" parent="Observables" unique_id=1749608282]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6, 0.5, 3.4)
 script = ExtResource("observable")
 thing_id = &"water_lilies"
 description = "vitórias-régias boiando no laguinho, com uma florzinha rosa no meio"
 notice_radius = 2.6
 
-[node name="Waterfall" type="Area3D" parent="Observables"]
-position = Vector3(-4.9, 0.5, 1.6)
+[node name="Waterfall" type="Area3D" parent="Observables" unique_id=1295199647]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.9, 0.5, 1.6)
 script = ExtResource("observable")
 thing_id = &"waterfall"
 description = "uma cachoeira do outro lado da cerca, caindo de um morrinho de pedra e enchendo o laguinho"
 notice_radius = 1.4
 
-[node name="FlowerGarden" type="Area3D" parent="Observables"]
-position = Vector3(2.5, 0.5, 3.5)
+[node name="FlowerGarden" type="Area3D" parent="Observables" unique_id=1972930466]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0.5, 3.5)
 script = ExtResource("observable")
 thing_id = &"flower_garden"
 description = "um jardim com canteiros de flores vermelhas, amarelas e roxas, com vaga-lumes por perto"
 notice_radius = 2.2
 
-[node name="MushroomsWest" type="Area3D" parent="Observables"]
-position = Vector3(-4.8, 0.5, -0.8)
+[node name="MushroomsWest" type="Area3D" parent="Observables" unique_id=288235644]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.8, 0.5, -0.8)
 script = ExtResource("observable")
 thing_id = &"mushrooms_west"
 description = "cogumelos de chapéu vermelho crescendo na sombra perto do laguinho"
 notice_radius = 1.3
 
-[node name="MushroomsEast" type="Area3D" parent="Observables"]
-position = Vector3(4.6, 0.5, 0.9)
+[node name="MushroomsEast" type="Area3D" parent="Observables" unique_id=778089310]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.6, 0.5, 0.9)
 script = ExtResource("observable")
 thing_id = &"mushrooms_east"
 description = "um grupinho de cogumelos ao lado de uma pedra grande"
 notice_radius = 1.3
 
-[node name="BigOak" type="Area3D" parent="Observables"]
-position = Vector3(4.6, 0.5, -1.9)
+[node name="BigOak" type="Area3D" parent="Observables" unique_id=1432942385]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.6, 0.5, -1.9)
 script = ExtResource("observable")
 thing_id = &"big_oak"
 description = "um carvalho enorme de folhas alaranjadas no canto da cerca"
 notice_radius = 1.6
 
-[node name="OldStump" type="Area3D" parent="Observables"]
-position = Vector3(-4.6, 0.5, -5)
+[node name="OldStump" type="Area3D" parent="Observables" unique_id=1980476411]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.6, 0.5, -5)
 script = ExtResource("observable")
 thing_id = &"old_stump"
 description = "um toco de árvore bem velho, com anéis que contam a idade da árvore"
 notice_radius = 1.3
 
-[node name="MagicClearing" type="Area3D" parent="Observables"]
-position = Vector3(2.5, 0.5, -5.3)
+[node name="MagicClearing" type="Area3D" parent="Observables" unique_id=1754008914]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0.5, -5.3)
 script = ExtResource("observable")
 thing_id = &"magic_clearing"
 description = "uma clareira lá fora, depois da cerca, com pedras em roda e luzinhas brilhando"
-notice_radius = 1.5
 
-[connection signal="clicked" from="Workspace/Desk/ClickArea" to="ComputerScreen" method="open"]
-
-[connection signal="clicked" from="Workspace/Chalkboard/ClickArea" to="ChalkboardViewer" method="open"]
+[connection signal="clicked" from="Workspace/Desk" to="ComputerScreen" method="open"]
+[connection signal="clicked" from="Workspace/WritingDesk" to="WritingDeskViewer" method="open"]

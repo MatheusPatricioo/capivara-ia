@@ -5,8 +5,6 @@ import pytest
 
 from src.capybara_tools import build_capybara_tools
 from src.domain.body import Place
-from src.domain.chalkboard import Chalkboard
-from src.domain.drawing import Drawing
 from src.domain.language_model import ChatMessage, StructuredReply
 from src.domain.tool import ToolError
 from src.infrastructure.settings import Settings
@@ -34,9 +32,6 @@ class RecordingBody:
     def go_to(self, place: Place) -> None:
         self.visited_places.append(place)
 
-    def show_chalkboard(self, drawings: tuple[Drawing, ...]) -> None:
-        pass
-
 
 @pytest.fixture
 def http_client() -> httpx.Client:
@@ -52,7 +47,7 @@ def test_offers_search_save_and_suggest_but_no_draw_tool_because_drawing_is_auto
     settings: Settings, http_client: httpx.Client
 ) -> None:
     tools = build_capybara_tools(
-        settings, Chalkboard(3), NeverAskedStructuredLanguageModel(), http_client
+        settings, NeverAskedStructuredLanguageModel(), http_client
     )
 
     assert [tool.definition.name for tool in tools] == [
@@ -67,7 +62,7 @@ def test_with_a_memory_but_the_recall_tool_off_she_gets_no_recall_tool(
 ) -> None:
     memory = InMemoryDiscoveryMemory(WordCountEmbedder(["lua"]))
     tools = build_capybara_tools(
-        settings, Chalkboard(3), NeverAskedStructuredLanguageModel(), http_client, memory=memory
+        settings, NeverAskedStructuredLanguageModel(), http_client, memory=memory
     )
 
     assert "recall_memory" not in [tool.definition.name for tool in tools]
@@ -79,7 +74,7 @@ def test_with_a_memory_and_the_recall_tool_on_she_can_also_search_her_treasure(
     settings = settings.model_copy(update={"memory_recall_tool": True})
     memory = InMemoryDiscoveryMemory(WordCountEmbedder(["lua"]))
     tools = build_capybara_tools(
-        settings, Chalkboard(3), NeverAskedStructuredLanguageModel(), http_client, memory=memory
+        settings, NeverAskedStructuredLanguageModel(), http_client, memory=memory
     )
 
     assert tools[-1].definition.name == "recall_memory"
@@ -90,7 +85,7 @@ def test_goes_to_the_computer_to_save_a_discovery(
 ) -> None:
     body = RecordingBody()
     tools = build_capybara_tools(
-        settings, Chalkboard(3), NeverAskedStructuredLanguageModel(), http_client, body=body
+        settings, NeverAskedStructuredLanguageModel(), http_client, body=body
     )
     save_discovery = next(tool for tool in tools if tool.definition.name == "save_discovery")
 
@@ -105,7 +100,7 @@ def test_goes_to_the_computer_to_suggest_an_improvement(
 ) -> None:
     body = RecordingBody()
     tools = build_capybara_tools(
-        settings, Chalkboard(3), NeverAskedStructuredLanguageModel(), http_client, body=body
+        settings, NeverAskedStructuredLanguageModel(), http_client, body=body
     )
     suggest = next(tool for tool in tools if tool.definition.name == "suggest_improvement")
 
@@ -120,7 +115,6 @@ def test_with_a_heart_she_keeps_the_same_tools(
 ) -> None:
     tools = build_capybara_tools(
         settings,
-        Chalkboard(3),
         NeverAskedStructuredLanguageModel(),
         http_client,
         heart=RecordingFeeler(),

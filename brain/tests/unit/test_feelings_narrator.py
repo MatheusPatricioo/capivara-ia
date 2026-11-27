@@ -31,7 +31,7 @@ def test_tells_how_long_matheus_has_been_away() -> None:
 
     described = describe_feelings(life, NOW)
 
-    assert "Faz 2 dias que o Matheus não conversa com você, e você se sente sozinha." in described
+    assert "Faz 2 dias que o criador não conversa com você, e você se sente sozinha." in described
 
 
 def test_an_absence_shorter_than_a_day_is_told_in_hours() -> None:
@@ -49,7 +49,7 @@ def test_right_after_he_is_back_the_absence_still_weighs() -> None:
 def test_a_need_on_its_first_rung_has_no_cause_to_tell() -> None:
     life = a_life({Emotion.JOY: 0.5}, hours_since_talked=2)
 
-    assert "Matheus" not in describe_feelings(life, NOW)
+    assert "criador" not in describe_feelings(life, NOW)
 
 
 def test_tells_why_she_is_bored() -> None:
@@ -73,7 +73,7 @@ def test_tells_when_she_is_in_a_good_tide() -> None:
 def test_tells_what_she_feels_like_doing() -> None:
     life = a_life({Emotion.RESIGNATION: 0.6}, rungs={Need.AUTONOMY: RESIGNED_RUNG})
 
-    assert "Você não está com vontade de pedir nada pro Matheus." in describe_feelings(life, NOW)
+    assert "Você não está com vontade de pedir nada pro criador." in describe_feelings(life, NOW)
 
 
 def test_every_line_is_a_list_item() -> None:

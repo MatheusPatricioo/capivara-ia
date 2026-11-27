@@ -362,7 +362,7 @@ def test_tells_which_earlier_suggestions_were_built() -> None:
         [a_suggestion(LILIES_REQUEST).built("water_lilies")]
     ).compose()
 
-    assert "- Um laguinho com vitórias-régias (o Matheus construiu!)" in composed
+    assert "- Um laguinho com vitórias-régias (o criador construiu!)" in composed
 
 
 def test_lists_at_most_the_ten_newest_suggestions() -> None:
@@ -407,7 +407,7 @@ def test_tells_her_a_noticed_thing_is_the_wish_that_was_built(
     composed = inner_voice.compose()
 
     assert (
-        '- vitórias-régias no laguinho (é o que você pediu pro Matheus: '
+        "- vitórias-régias no laguinho (é o que você pediu pro criador: "
         '"Um laguinho com vitórias-régias". Ele construiu pra você!)'
     ) in composed
 
@@ -433,3 +433,52 @@ def test_leaves_other_noticed_things_as_they_are(attention: AttentionInbox) -> N
     composed = inner_voice.compose()
 
     assert "- cogumelos vermelhos\n" in composed
+
+
+REPLIES = "(O criador respondeu sua cartinha!)"
+
+
+def test_tells_his_replies_before_how_she_feels() -> None:
+    inner_voice = InnerVoice(
+        INVITATION,
+        FakeCatalog([]),
+        MEMORY_TEMPLATE,
+        MAX_REMEMBERED_DISCOVERIES,
+        feelings=lambda: FEELINGS,
+        replies=lambda: REPLIES,
+    )
+
+    assert inner_voice.compose() == f"{REPLIES}\n\n{FEELINGS}\n\n{INVITATION}"
+
+
+def test_says_nothing_about_replies_when_there_are_none() -> None:
+    inner_voice = InnerVoice(
+        INVITATION, FakeCatalog([]), MEMORY_TEMPLATE, MAX_REMEMBERED_DISCOVERIES, replies=str
+    )
+
+    assert inner_voice.compose() == INVITATION
+
+
+WORLD_NOW = "(Agora no seu mundinho: 21:30, de noite, céu limpo, 18 °C.)"
+
+
+def test_tells_the_time_and_weather_after_how_she_feels_and_before_what_she_noticed(
+    attention: AttentionInbox,
+) -> None:
+    inner_voice = InnerVoice(
+        INVITATION,
+        FakeCatalog([]),
+        MEMORY_TEMPLATE,
+        MAX_REMEMBERED_DISCOVERIES,
+        attention=attention,
+        noticed_template=NOTICED_TEMPLATE,
+        feelings=lambda: FEELINGS,
+        world_now=lambda: WORLD_NOW,
+    )
+    attention.notice("night_sky", "estrelas no céu")
+
+    assert inner_voice.compose() == (
+        f"{FEELINGS}\n\n{WORLD_NOW}\n\n"
+        "(Você reparou em:\n- estrelas no céu\nPesquise se quiser.)\n\n"
+        f"{INVITATION}"
+    )

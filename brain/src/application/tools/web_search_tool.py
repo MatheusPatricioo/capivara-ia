@@ -19,17 +19,27 @@ from src.domain.web_search import SearchResult, WebSearcher, WebSearchError
 
 DEFAULT_MAX_RESULTS = 5
 DEFAULT_MAX_SNIPPET_LENGTH = 300
+# The two messages below are written as what she sees or remembers, in Portuguese, never
+# as someone giving orders: worded as an order, the model answered "tá bom, tá bom" as if
+# her creator had told her what to research. Each one also says what she can do right now,
+# because a search she only announces never happens (the cycle ends with her answer).
+
 # Says right away that an empty search leaves nothing to save, so the model does not
 # try save_discovery without sources and burn the remaining steps on refusals.
 NO_RESULTS_MESSAGE = (
-    "No results found, so there is nothing from this search to save. Try other words, or move on."
+    "(A busca voltou vazia: nada apareceu na tela, então dessa vez não há o que guardar. "
+    "Ninguém falou com você, foi só a busca. Se quiser, tente agora com outras palavras; "
+    "se não, conte do seu jeito como foi.)"
 )
 ELLIPSIS = "..."
-ALREADY_SEARCHED_PREFIX = "You already searched"
+ALREADY_SEARCHED_PREFIX = "(Na tela do computador: essa busca já está no seu histórico"
 ALREADY_SEARCHED_MESSAGE = (
-    ALREADY_SEARCHED_PREFIX + " '{query}' on {searched_on}, so you know this already. "
-    "Search for something different or a neighbouring subject, or move on."
+    ALREADY_SEARCHED_PREFIX + ", feita em {searched_on}: '{query}'. Isso você já sabe. "
+    "Se quiser aprender algo novo, chame web_search agora com outro detalhe ou um assunto "
+    "vizinho: dizer que vai pesquisar não pesquisa nada. Se não quiser, conte do seu jeito "
+    "o que você já sabe.)"
 )
+SEARCHED_ON_FORMAT = "%d/%m/%Y"
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +63,10 @@ class WebSearchTool:
         today: Callable[[], date] = date.today,
         search_log: SearchLog | None = None,
         now: Callable[[], datetime] = _local_now,
+        follow_up: str = "",
     ) -> None:
+        """follow_up goes after real results only, like the reminder to save and tell what
+        she learned: after an empty or repeated search there is nothing to tell."""
         self._web_searcher = web_searcher
         self._max_results = max_results
         self._max_snippet_length = max_snippet_length
@@ -62,6 +75,7 @@ class WebSearchTool:
         self._today = today
         self._search_log = search_log
         self._now = now
+        self._follow_up = follow_up
 
     @property
     def definition(self) -> ToolDefinition:
@@ -76,7 +90,9 @@ class WebSearchTool:
         searched_on = self._previous_search_day(query)
         if searched_on is not None:
             logger.info("web_search skipped: '%s' was already searched on %s", query, searched_on)
-            return ALREADY_SEARCHED_MESSAGE.format(query=query, searched_on=searched_on.isoformat())
+            return ALREADY_SEARCHED_MESSAGE.format(
+                query=query, searched_on=searched_on.strftime(SEARCHED_ON_FORMAT)
+            )
         try:
             results = self._web_searcher.search(query, self._max_results)
         except WebSearchError as error:
@@ -88,10 +104,13 @@ class WebSearchTool:
         if not limited_results:
             return NO_RESULTS_MESSAGE
         self._remember_search(query)
-        return "\n\n".join(
+        formatted_results = "\n\n".join(
             self._format_result(position, result)
             for position, result in enumerate(limited_results, start=1)
         )
+        if not self._follow_up:
+            return formatted_results
+        return f"{formatted_results}\n\n{self._follow_up}"
 
     def _previous_search_day(self, query: str) -> date | None:
         """A broken history file must not stop the capybara from searching."""

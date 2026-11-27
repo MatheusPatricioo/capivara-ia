@@ -137,6 +137,19 @@ def test_posts_model_and_messages_to_the_chat_endpoint(
     }
 
 
+def test_asks_ollama_to_keep_the_model_loaded(received_requests: list[httpx.Request]) -> None:
+    def reply_successfully(request: httpx.Request) -> httpx.Response:
+        received_requests.append(request)
+        return httpx.Response(200, json={"message": {"role": "assistant", "content": "Hi"}})
+
+    client = httpx.Client(base_url=OLLAMA_URL, transport=httpx.MockTransport(reply_successfully))
+    language_model = OllamaLanguageModel(client=client, model=MODEL_NAME, keep_alive="30m")
+
+    language_model.chat(MESSAGES)
+
+    assert json.loads(received_requests[0].content)["keep_alive"] == "30m"
+
+
 def test_sends_the_generation_options(received_requests: list[httpx.Request]) -> None:
     def reply_successfully(request: httpx.Request) -> httpx.Response:
         received_requests.append(request)
@@ -153,6 +166,7 @@ def test_sends_the_generation_options(received_requests: list[httpx.Request]) ->
         "num_predict": 300,
         "temperature": 0.8,
         "repeat_penalty": 1.1,
+        "num_ctx": 4096,
     }
 
 
@@ -368,6 +382,7 @@ def test_structured_replies_always_take_the_most_likely_answer(
         "num_predict": 300,
         "temperature": 0.0,
         "repeat_penalty": 1.1,
+        "num_ctx": 4096,
     }
 
 

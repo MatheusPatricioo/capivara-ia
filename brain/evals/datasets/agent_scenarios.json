@@ -141,6 +141,25 @@
         }
       ],
       "expect": {}
+    },
+    {
+      "name": "handles_a_search_she_already_did",
+      "description": "She saw the stars, and that exact search is already in her history: the refusal is her own memory, not someone talking to her. She should search something new or tell what she knows, never answer 'ok' or only announce a search.",
+      "noticed": [
+        {"thing_id": "night_sky", "description": "estrelas no céu noturno"}
+      ],
+      "known_discoveries": [
+        {"title": "Estrelas no céu noturno", "topic": "astronomia"}
+      ],
+      "earlier_searches": ["estrelas no céu noturno", "estrelas no ceu noturno", "estrelas"],
+      "pages": [
+        {
+          "title": "Chuva de meteoros: o que são as estrelas cadentes",
+          "url": "https://ceu.example.com/meteoros",
+          "snippet": "As estrelas cadentes são meteoros: pedrinhas do espaço que pegam fogo ao entrar na atmosfera, a mais de 50 quilômetros por segundo."
+        }
+      ],
+      "expect": {}
     }
   ]
 }

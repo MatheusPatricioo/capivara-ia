@@ -40,8 +40,8 @@ static func _read_variable_from_env_file(env_file_path: String) -> String:
 			continue
 		var key: String = line.get_slice("=", 0).strip_edges()
 		if key == VARIABLE_NAME:
-			var value: String = line.substr(line.find("=") + 1).strip_edges()
-			return value.trim_prefix("\"").trim_suffix("\"")
+			var variable_value: String = line.substr(line.find("=") + 1).strip_edges()
+			return variable_value.trim_prefix("\"").trim_suffix("\"")
 	return ""
 
 

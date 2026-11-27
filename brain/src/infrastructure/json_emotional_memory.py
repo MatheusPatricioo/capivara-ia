@@ -56,8 +56,10 @@ class JsonEmotionalMemory:
         if not self._path.exists():
             return None
         try:
-            data = _SnapshotData.model_validate_json(self._path.read_text(encoding="utf-8"))
-            return _snapshot_from(data)
+            snapshot_data = _SnapshotData.model_validate_json(
+                self._path.read_text(encoding="utf-8")
+            )
+            return _snapshot_from(snapshot_data)
         except (OSError, ValidationError, ValueError) as error:
             raise EmotionalMemoryError(f"could not read {self._path.name}: {error}") from error
 

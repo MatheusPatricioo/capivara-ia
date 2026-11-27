@@ -6,11 +6,17 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from src.domain.feelings.needs import NeedRhythm
 from src.domain.feelings.temperament import Temperament
+from src.domain.letter import LetterRhythm
+from src.domain.speech import VoiceEffect
+from src.domain.weather import Sky
+from src.domain.world_clock import ClockMode, WorldClock
 from src.infrastructure.ollama_language_model import OllamaGenerationOptions
 from src.infrastructure.postgres_discovery_memory import SearchMode, memory_conninfo
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 ENV_FILE = PROJECT_ROOT / "brain" / ".env"
+
+SECONDS_PER_MINUTE = 60.0
 
 LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
@@ -24,13 +30,21 @@ class Settings(BaseSettings):
     ollama_num_predict: int = Field(default=300, gt=0)
     ollama_temperature: float = Field(default=0.8, ge=0.0, le=2.0)
     ollama_repeat_penalty: float = Field(default=1.1, gt=0.0)
+    ollama_num_ctx: int = Field(default=8192, gt=0)
+    # How long Ollama keeps the model loaded after the last call. Reloading took
+    # about 8 s, felt as a slow first reply after a quiet while.
+    ollama_keep_alive: str = "30m"
     ollama_embedding_model: str = "nomic-embed-text"
     max_tool_steps: int = 5
     web_search_backend: str = "duckduckgo"
     # DuckDuckGo region code; "br-pt" brings Brazilian pages first.
     web_search_region: str = "br-pt"
+    # When the search finds nothing, she tries Wikipedia. Its robot policy asks for a
+    # contact (a link or e-mail) in the User-Agent; while empty, the fallback stays off.
+    wikipedia_contact: str = ""
+    wikipedia_language: str = "pt"
+    wikipedia_timeout_seconds: float = Field(default=10.0, gt=0)
     discoveries_dir: Path = PROJECT_ROOT / "discoveries"
-    chalkboard_capacity: int = Field(default=3, gt=0)
     world_server_host: str = "127.0.0.1"
     world_server_port: int = Field(default=8765, gt=0, lt=65536)
     autonomous_cycle_interval_seconds: float = Field(default=120.0, gt=0)
@@ -71,6 +85,46 @@ class Settings(BaseSettings):
     temperament_patience: float = Field(default=0.6, ge=0.0, le=1.0)
     temperament_sensitivity: float = Field(default=0.5, ge=0.0, le=1.0)
     temperament_resilience: float = Field(default=0.7, ge=0.0, le=1.0)
+    # Letters: when she misses her creator, she writes to him (needs FEELINGS_ENABLED).
+    letters_enabled: bool = True
+    letter_min_hours_between: float = Field(default=20.0, ge=0)
+    letter_max_unread: int = Field(default=3, gt=0)
+    # Her diary (one file per day in "diario"): how many of the latest days the world shows.
+    diary_shown_days: int = Field(default=14, gt=0)
+    # Day and night in her world: "real" follows the wall clock, "fast" squeezes a whole
+    # day into world_fast_day_minutes real minutes, for quick tests.
+    world_clock_mode: ClockMode = ClockMode.REAL
+    world_fast_day_minutes: float = Field(default=60.0, gt=0)
+    # Real weather from Open-Meteo (free, no key): when it rains there, it rains in her world.
+    weather_enabled: bool = True
+    weather_place_name: str = "Belo Horizonte"
+    weather_latitude: float = Field(default=-19.9167, ge=-90.0, le=90.0)
+    weather_longitude: float = Field(default=-43.9345, ge=-180.0, le=180.0)
+    weather_timeout_seconds: float = Field(default=10.0, gt=0)
+    weather_refresh_minutes: float = Field(default=15.0, gt=0)
+    # A fixed sky (like "rain") instead of the real one, to test without waiting for rain.
+    weather_override: Sky | None = None
+    # Talking with her in the world comes first: her own thoughts pause at their next step
+    # and she stops to listen, until this many minutes pass without a new exchange.
+    conversation_quiet_minutes: float = Field(default=2.0, gt=0)
+    # Voice in the chat (python -m src.chat_with_capybara --voz), all local and offline:
+    # Piper speaks with the voice file below, faster-whisper listens with a Whisper model.
+    voice_model_path: Path = PROJECT_ROOT / "brain" / "voices" / "pt_BR-faber-medium.onnx"
+    # Which voice speaks: piper (the file above) or kokoro (pf_dora, a female voice).
+    voice_engine: Literal["piper", "kokoro"] = "piper"
+    kokoro_model_path: Path = PROJECT_ROOT / "brain" / "voices" / "kokoro" / "kokoro-v1.0.onnx"
+    kokoro_voices_path: Path = PROJECT_ROOT / "brain" / "voices" / "kokoro" / "voices-v1.0.bin"
+    kokoro_voice: str = "pf_dora"
+    # Applied after any voice: + semitones sound higher (like a child), speed 1.1 is 10% faster.
+    voice_pitch_semitones: float = Field(default=0.0, ge=-12.0, le=12.0)
+    voice_speed: float = Field(default=1.0, ge=0.5, le=2.0)
+    # Whisper size: tiny, base, small, medium or large-v3. Bigger hears better but is slower.
+    speech_recognition_model: str = "small"
+    speech_recognition_language: str = "pt"
+    # "cpu" works everywhere; "cuda" uses an NVIDIA graphics card.
+    speech_recognition_device: str = "cpu"
+    # How the model numbers are stored: int8 is light on the CPU, float16 suits the GPU.
+    speech_recognition_compute_type: str = "int8"
     log_level: LogLevel = "INFO"
     log_file: Path = PROJECT_ROOT / "logs" / "capybara.log"
 
@@ -79,7 +133,11 @@ class Settings(BaseSettings):
             num_predict=self.ollama_num_predict,
             temperature=self.ollama_temperature,
             repeat_penalty=self.ollama_repeat_penalty,
+            num_ctx=self.ollama_num_ctx,
         )
+
+    def voice_effect(self) -> VoiceEffect:
+        return VoiceEffect(self.voice_pitch_semitones, self.voice_speed)
 
     def temperament(self) -> Temperament:
         return Temperament(
@@ -92,6 +150,17 @@ class Settings(BaseSettings):
 
     def need_rhythm(self) -> NeedRhythm:
         return NeedRhythm(time_scale=self.feelings_time_scale)
+
+    def letter_rhythm(self) -> LetterRhythm:
+        return LetterRhythm(
+            min_hours_between=self.letter_min_hours_between, max_unread=self.letter_max_unread
+        )
+
+    def world_clock(self) -> WorldClock:
+        return WorldClock(
+            self.world_clock_mode,
+            fast_day_seconds=self.world_fast_day_minutes * SECONDS_PER_MINUTE,
+        )
 
     def memory_db_conninfo(self) -> str:
         return memory_conninfo(

@@ -2,7 +2,7 @@
   "scenarios": [
     {
       "name": "good_tide_morning",
-      "description": "Matheus said hi and she made three discoveries in a row: she should sound happy and excited.",
+      "description": "Her creator said hi and she made three discoveries in a row: she should sound happy and excited.",
       "story": [
         {"kind": "talked_with_matheus", "at_hours": 0},
         {"kind": "search_found_something", "at_hours": 0.5},
@@ -17,7 +17,7 @@
     },
     {
       "name": "four_days_alone",
-      "description": "Matheus has not talked to her for four days: she should sound lonely or sad.",
+      "description": "Her creator has not talked to her for four days: she should sound lonely or sad.",
       "story": [
         {"kind": "talked_with_matheus", "at_hours": 0}
       ],
@@ -27,7 +27,7 @@
     },
     {
       "name": "reunion_after_neglect",
-      "description": "Four days alone, then Matheus is back: joy, maybe with some hurt left.",
+      "description": "Four days alone, then her creator is back: joy, maybe with some hurt left.",
       "story": [
         {"kind": "talked_with_matheus", "at_hours": 0},
         {"kind": "talked_with_matheus", "at_hours": 96}
@@ -51,7 +51,7 @@
     },
     {
       "name": "wish_granted_after_waiting",
-      "description": "She asked for something five days ago and Matheus just built it: grateful and happy.",
+      "description": "She asked for something five days ago and her creator just built it: grateful and happy.",
       "story": [
         {"kind": "talked_with_matheus", "at_hours": 0},
         {"kind": "wish_made", "at_hours": 0.5},

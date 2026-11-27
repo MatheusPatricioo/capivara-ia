@@ -3,7 +3,7 @@ from datetime import date
 
 import pytest
 
-from src.application.chalkboard_artist import PinnedDrawing
+from src.application.drawing_artist import SavedDrawing
 from src.application.tools.conversation_discoveries import ConversationDiscoveries
 from src.application.tools.save_discovery_tool import SaveDiscoveryTool
 from src.application.tools.seen_sources import SeenSources
@@ -221,19 +221,18 @@ SWIMMING_DRAWING = Drawing(
         Stroke(points=(Point(180, 150), Point(220, 150))),
     ),
 )
-OLD_DRAWING = Drawing(title="O Sol", strokes=(Stroke(points=(Point(100, 100), Point(130, 130))),))
 
 
 class RecordingIllustrator:
-    """Answers every discovery with the same pinned drawing (or None) and records them."""
+    """Answers every discovery with the same saved drawing (or None) and records them."""
 
-    def __init__(self, pinned_drawing: PinnedDrawing | None) -> None:
-        self._pinned_drawing = pinned_drawing
+    def __init__(self, saved_drawing: SavedDrawing | None) -> None:
+        self._saved_drawing = saved_drawing
         self.offered_discoveries: list[Discovery] = []
 
-    def illustrate(self, discovery: Discovery) -> PinnedDrawing | None:
+    def illustrate(self, discovery: Discovery) -> SavedDrawing | None:
         self.offered_discoveries.append(discovery)
-        return self._pinned_drawing
+        return self._saved_drawing
 
 
 def tool_illustrated_by(
@@ -248,9 +247,7 @@ def tool_illustrated_by(
 
 @pytest.fixture
 def illustrator_that_draws() -> RecordingIllustrator:
-    return RecordingIllustrator(
-        PinnedDrawing(drawing=SWIMMING_DRAWING, file_name=DRAWING_FILE_NAME, erased=None)
-    )
+    return RecordingIllustrator(SavedDrawing(drawing=SWIMMING_DRAWING, file_name=DRAWING_FILE_NAME))
 
 
 def test_offers_the_saved_discovery_for_a_drawing(
@@ -271,21 +268,9 @@ def test_tells_her_what_she_already_drew(
     tool = tool_illustrated_by(illustrator_that_draws, repository, seen_sources)
 
     assert tool.run(VALID_ARGUMENTS) == (
-        f"Saved as {SAVED_FILE_NAME}. Then you walked to your chalkboard and drew it with "
-        f"2 chalk stroke(s), saved as {DRAWING_FILE_NAME}."
+        f"Saved as {SAVED_FILE_NAME}. Then you sketched it on your computer with "
+        f"2 stroke(s), saved as {DRAWING_FILE_NAME}."
     )
-
-
-def test_tells_her_which_old_drawing_was_erased(
-    repository: InMemoryDiscoveryRepository, seen_sources: SeenSources
-) -> None:
-    illustrator = RecordingIllustrator(
-        PinnedDrawing(drawing=SWIMMING_DRAWING, file_name=DRAWING_FILE_NAME, erased=OLD_DRAWING)
-    )
-
-    result = tool_illustrated_by(illustrator, repository, seen_sources).run(VALID_ARGUMENTS)
-
-    assert result.endswith("To make room, you erased the old drawing 'O Sol'.")
 
 
 def test_tells_her_when_the_discovery_did_not_become_a_drawing(
@@ -294,7 +279,7 @@ def test_tells_her_when_the_discovery_did_not_become_a_drawing(
     tool = tool_illustrated_by(RecordingIllustrator(None), repository, seen_sources)
 
     assert tool.run(VALID_ARGUMENTS) == (
-        f"Saved as {SAVED_FILE_NAME}. At your chalkboard, this one did not become a drawing."
+        f"Saved as {SAVED_FILE_NAME}. This one did not become a drawing."
     )
 
 

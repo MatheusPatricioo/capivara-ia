@@ -1,1 +1,1 @@
-If this discovery made you wish for something new in your world, call suggest_improvement now, without announcing it first: saying you will ask Matheus does not ask anything. If it did not, just tell what you learned.
+If this discovery made you wish for something new in your world, call suggest_improvement now, without announcing it first: saying you will ask your creator does not ask anything. If it did not, just tell what you learned.

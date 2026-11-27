@@ -7,7 +7,7 @@ class Need(StrEnum):
     """What she needs to stay her curious, happy self (self-determination theory + novelty)."""
 
     BOND = "bond"
-    """Talking with Matheus."""
+    """Talking with her creator."""
     NOVELTY = "novelty"
     """Learning new things."""
     COMPETENCE = "competence"

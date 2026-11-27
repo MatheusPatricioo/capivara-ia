@@ -2,7 +2,6 @@ import pytest
 
 from src.application.self_care import SelfCare
 from src.domain.body import Place
-from src.domain.drawing import Drawing
 from src.domain.feelings.appraisal import EmotionalEvent, EventKind
 from src.domain.feelings.emotion import Emotion
 from src.domain.feelings.emotional_life import EmotionalLife
@@ -18,9 +17,6 @@ class RecordingBody:
 
     def go_to(self, place: Place) -> None:
         self.visited_places.append(place)
-
-    def show_chalkboard(self, drawings: tuple[Drawing, ...]) -> None:
-        pass
 
 
 class FixedHeart:

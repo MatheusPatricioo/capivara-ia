@@ -7,6 +7,9 @@
 [ext_resource type="Script" path="res://scripts/capybara_brain_driver.gd" id="5_capybara_brain_driver"]
 [ext_resource type="Script" path="res://scripts/capybara_feelings.gd" id="6_capybara_feelings"]
 [ext_resource type="Script" path="res://scripts/capybara_emote.gd" id="7_capybara_emote"]
+[ext_resource type="Script" path="res://scripts/capybara_listening.gd" id="8_capybara_listening"]
+[ext_resource type="Script" path="res://scripts/capybara_speech_balloon.gd" id="9_capybara_speech_balloon"]
+[ext_resource type="Script" path="res://scripts/capybara_voice.gd" id="10_capybara_voice"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_capybara"]
 radius = 0.4
@@ -35,6 +38,9 @@ script = ExtResource("5_capybara_brain_driver")
 [node name="Feelings" type="Node" parent="."]
 script = ExtResource("6_capybara_feelings")
 
+[node name="Listening" type="Node" parent="."]
+script = ExtResource("8_capybara_listening")
+
 [node name="Emote" type="Label3D" parent="."]
 position = Vector3(0, 1.35, 0)
 visible = false
@@ -45,6 +51,15 @@ outline_modulate = Color(0.15, 0.1, 0.05, 1)
 font_size = 72
 outline_size = 18
 script = ExtResource("7_capybara_emote")
+
+[node name="SpeechBalloon" type="Node3D" parent="."]
+position = Vector3(0, 1.05, 0)
+script = ExtResource("9_capybara_speech_balloon")
+
+[node name="Voice" type="AudioStreamPlayer3D" parent="."]
+position = Vector3(0, 0.6, 0)
+unit_size = 12.0
+script = ExtResource("10_capybara_voice")
 
 [node name="Body" type="Node3D" parent="."]
 script = ExtResource("3_capybara_body_animation")

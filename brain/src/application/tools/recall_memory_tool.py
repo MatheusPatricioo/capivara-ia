@@ -62,16 +62,21 @@ class RecallMemoryTool:
             remembered = self._memory.recall(query, limit=self._result_count)
         except DiscoveryMemoryError as error:
             raise ToolError(f"your memory is not available right now: {error}") from error
-        related = [item for item in remembered if item.similarity >= self._min_similarity]
+        related = [
+            remembered_discovery
+            for remembered_discovery in remembered
+            if remembered_discovery.similarity >= self._min_similarity
+        ]
         logger.info("recall_memory '%s' brought back %d discovery(ies)", query, len(related))
         if not related:
             return NOTHING_REMEMBERED_MESSAGE
         return "\n\n".join(
-            _format(position, item) for position, item in enumerate(related, start=1)
+            _format(position, remembered_discovery)
+            for position, remembered_discovery in enumerate(related, start=1)
         )
 
 
-def _format(position: int, item: RememberedDiscovery) -> str:
-    discovery = item.discovery
+def _format(position: int, remembered_discovery: RememberedDiscovery) -> str:
+    discovery = remembered_discovery.discovery
     summary = " ".join(discovery.summary.split())
     return f"{position}. {discovery.title} (tema: {discovery.topic})\n{summary}"

@@ -34,7 +34,7 @@ class Doodle:
     """A quick hand-drawn sketch of one thing (a cat, a star...), made only of strokes.
 
     The strokes are kept as strokes, never turned into an image, so the world can draw
-    them one by one on the chalkboard.
+    them one by one in her drawing.
     """
 
     category: str

@@ -10,7 +10,7 @@ MAX_POINTS_PER_STROKE = 40
 
 
 class InvalidDrawingError(Exception):
-    """Raised when a drawing breaks a chalkboard rule (out of the board, empty stroke...)."""
+    """Raised when a drawing breaks a drawing rule (out of the canvas, empty stroke...)."""
 
 
 @dataclass(frozen=True)

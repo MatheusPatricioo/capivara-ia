@@ -51,7 +51,9 @@ class ToneJudge:
         ]
         reply = self._language_model.complete_json(messages, TONE_SCHEMA)
         try:
-            data = _ToneData.model_validate(reply.data)
+            tone_data = _ToneData.model_validate(reply.data)
         except ValidationError as error:
             raise JudgeError(f"the judge did not answer with a tone: {error}") from error
-        return ToneVerdict(data.tone, data.quote, quote_is_in(data.quote, diary_line))
+        return ToneVerdict(
+            tone_data.tone, tone_data.quote, quote_is_in(tone_data.quote, diary_line)
+        )

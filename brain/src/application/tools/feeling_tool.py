@@ -53,12 +53,12 @@ class FeelingTool:
 
     def run(self, arguments: dict[str, object]) -> str:
         try:
-            result = self._tool.run(arguments)
+            tool_result = self._tool.run(arguments)
         except ToolError:
             if self._on_failure is not None:
                 self._heart.feel(EmotionalEvent(self._on_failure))
             raise
-        kind = self._on_success(result)
+        kind = self._on_success(tool_result)
         if kind is not None:
             self._heart.feel(EmotionalEvent(kind))
-        return result
+        return tool_result
