@@ -1,16 +1,19 @@
 <#
 .SYNOPSIS
-    Records a clip of the capybara with Godot's Movie Maker and turns it into two MP4s:
-    a horizontal one and a vertical 1080x1920 one for Instagram Reels.
+    Records a clip of the capybara with Godot's Movie Maker, filmed by the clip camera
+    (close to her, the protagonist), and turns it into MP4s for Instagram Reels.
 
 .DESCRIPTION
     1. Makes sure the brain is running; when it is not, runs .\start.ps1 -SkipWorld
        (Ollama, memory and brain) and waits for it.
-    2. Runs the world with the Movie Maker (--write-movie) at a fixed frame rate for the
-       given number of seconds and saves an .avi (MJPEG video + PCM audio) in -OutputDir.
-    3. Converts the .avi with ffmpeg (H.264, -preset veryfast, -crf 20, yuv420p, AAC audio):
-       <name>-horizontal.mp4 at the recorded resolution and <name>-reels.mp4 at 1080x1920.
-       The .avi is deleted after a good conversion, unless -KeepAvi.
+    2. Runs the world in clip mode ("-- --clip"): the clip camera films her, the interface
+       is hidden, and -Shot picks the framing (Auto cuts between shots like a series). The
+       Movie Maker (--write-movie) records at a fixed frame rate for the given number of
+       seconds and saves an .avi (MJPEG video + PCM audio) in -OutputDir.
+    3. Converts the .avi with ffmpeg (H.264, -preset veryfast, -crf 20, yuv420p, AAC audio).
+       Vertical (the default) is rendered standing up at 1080x1920: <name>-reels.mp4.
+       Horizontal is rendered at 1920x1080: <name>-horizontal.mp4, plus <name>-reels.mp4
+       made from it (-VerticalMode). The .avi is deleted after a good conversion, unless -KeepAvi.
     4. Compares the game time with the real time the recording took. The Movie Maker
        advances the game exactly 1/FPS per frame, however long the frame takes to render,
        while the brain lives in real time: when the two differ, her lines and orders land
@@ -22,8 +25,8 @@
 
 .EXAMPLE
     .\record_clip.ps1
-    .\record_clip.ps1 -Seconds 45
-    .\record_clip.ps1 -Seconds 30 -VerticalMode Crop -KeepAvi
+    .\record_clip.ps1 -Seconds 45 -Shot Close
+    .\record_clip.ps1 -Seconds 30 -Orientation Horizontal -VerticalMode Crop -KeepAvi
 #>
 param(
     # Length of the clip in game seconds.
@@ -31,14 +34,26 @@ param(
     [int]$Seconds = 20,
     [ValidateRange(1, 120)]
     [int]$Fps = 30,
+    # The clip starts only once the brain is ready (the world connected and her real sky
+    # arrived). If that takes longer than this, the recording stops with an error.
+    [ValidateRange(5, 600)]
+    [int]$BrainReadySeconds = 60,
     [string]$OutputDir = "D:\clipes",
     [string]$GodotPath = $env:GODOT_PATH,
     # ffmpeg.exe, or a folder that holds it (searched inside). Without it: the PATH, then
     # D:\tools\ffmpeg (where winget install Gyan.FFmpeg --location put it), then winget's folder.
     [string]$FfmpegPath = $env:FFMPEG_PATH,
-    # Window size the world is rendered at, which is also the size of the horizontal MP4.
-    [ValidatePattern('^\d+x\d+$')]
-    [string]$Resolution = "1920x1080",
+    # Vertical renders the world standing up, for Reels; Horizontal renders it lying down.
+    [ValidateSet("Vertical", "Horizontal")]
+    [string]$Orientation = "Vertical",
+    # Auto cuts like a series: opens wide, then medium and close, and close when she speaks
+    # or her feeling changes. Close, Medium and Wide keep one shot for the whole clip.
+    [ValidateSet("Auto", "Close", "Medium", "Wide")]
+    [string]$Shot = "Auto",
+    # Window size the world is rendered at. Empty: 1080x1920 vertical, 1920x1080 horizontal.
+    [ValidatePattern('^(\d+x\d+)?$')]
+    [string]$Resolution = "",
+    # Only for -Orientation Horizontal, to make the Reels copy from the horizontal clip.
     # Blur: the whole scene in the middle, over a blurred copy of itself filling the frame.
     # Crop: the center of the scene filling the whole frame (the sides are cut).
     [ValidateSet("Blur", "Crop")]
@@ -205,36 +220,51 @@ if (-not $ffmpegPath) {
     throw "ffmpeg not found. Install it with: winget install Gyan.FFmpeg --location D:\tools\ffmpeg (or pass -FfmpegPath)."
 }
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
+$isVertical = $Orientation -eq "Vertical"
+if (-not $Resolution) {
+    $Resolution = if ($isVertical) { "1080x1920" } else { "1920x1080" }
+}
 
 # 2. The brain, so the capybara is alive in the clip.
 Start-BrainIfNeeded
 
-# 3. The recording. --quit-after counts frames, and with the Movie Maker each frame is
-#    exactly 1/FPS of game time.
+# 3. The recording. The game decides when the clip starts and ends (ClipRecorder in
+#    world/scripts/clip): it waits for the brain, plays -Seconds from then, writes that
+#    moment to a marker file and closes. --quit-after (in frames, each exactly 1/FPS of game
+#    time) is only a safety net, in case the game never closes by itself.
 $clipName = "capivara-" + (Get-Date -Format "yyyyMMdd-HHmmss")
 $aviPath = Join-Path $OutputDir "$clipName.avi"
-$frameCount = $Seconds * $Fps
-Write-Host "Recording $Seconds s ($frameCount frames at $Fps FPS, $Resolution) with $resolvedGodotPath..."
+$markerPath = Join-Path $OutputDir "$clipName.json"
+$safetyFrameCount = ($BrainReadySeconds + $Seconds + 10) * $Fps
+Write-Host "Recording $Seconds s from the moment the brain is ready ($Fps FPS, $Resolution, shot $Shot) with $resolvedGodotPath..."
+# What comes after "--" goes to the game itself (ClipMode in world/scripts/clip).
 $godotArguments = @(
     "--path", $worldDirectory,
     "--fixed-fps", $Fps,
     "--write-movie", $aviPath,
-    "--quit-after", $frameCount
+    "--quit-after", $safetyFrameCount,
+    "--", "--clip", "--clip-shot=$($Shot.ToLower())", "--clip-seconds=$Seconds",
+    "--clip-brain-wait=$BrainReadySeconds", "--clip-marker=$($markerPath -replace '\\', '/')"
 )
-# The Movie Maker records at the window size from the project settings and ignores
-# --resolution. An override.cfg next to project.godot overrides settings for one run: the
-# window override makes the window bigger while the game keeps its base size, so the
-# interface looks the same, only sharper. It is removed right after.
+# The Movie Maker ignores --resolution. An override.cfg next to project.godot overrides
+# settings for one run, and is removed right after:
+# - the "viewport" stretch mode renders the game at exactly $Resolution, whatever the window;
+# - the window is half that size, so it fits the screen. A window bigger than the screen
+#   (1080x1920 on a 1080p monitor) made every frame ~60 ms slower.
+# The interface keeps its size: its base size scales the same way in both stretch modes.
 $overrideConfigPath = Join-Path $worldDirectory "override.cfg"
 if (Test-Path $overrideConfigPath) {
     throw "$overrideConfigPath already exists; move it away before recording."
 }
-$width, $height = $Resolution -split "x"
+$width, $height = [int[]]($Resolution -split "x")
 Set-Content -Path $overrideConfigPath -Encoding ascii -Value @(
     "[display]",
     "",
-    "window/size/window_width_override=$width",
-    "window/size/window_height_override=$height"
+    "window/size/viewport_width=$width",
+    "window/size/viewport_height=$height",
+    "window/size/window_width_override=$([int]($width / 2))",
+    "window/size/window_height_override=$([int]($height / 2))",
+    'window/stretch/mode="viewport"'
 )
 $previousPreference = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
@@ -248,21 +278,45 @@ finally {
 if (-not (Test-Path $aviPath)) {
     throw "Godot finished without writing $aviPath."
 }
+if (-not (Test-Path $markerPath)) {
+    Remove-Item -Path $aviPath -Confirm:$false
+    throw "Godot closed before the clip ended (no $markerPath). Was the window closed?"
+}
+$marker = Get-Content -Path $markerPath -Raw | ConvertFrom-Json
+Remove-Item -Path $markerPath -Confirm:$false
+if ($null -ne $marker.error) {
+    Remove-Item -Path $aviPath -Confirm:$false
+    throw "No clip: $($marker.error). Is the brain running at ws://${BrainHost}:$BrainPort?"
+}
+# Everything before this moment (loading, connecting, the default sky) is cut off.
+$storyStartSeconds = [double]$marker.story_start_seconds
+$storyStart = $storyStartSeconds.ToString([cultureinfo]::InvariantCulture)
+Write-Host ("The brain was ready at {0:N1} s of game time; the clip starts there." -f $storyStartSeconds)
 # Real time from the first frame written (the file is created) to the last one: Godot's
 # start (loading the scene) and exit are left out.
 $aviFile = Get-Item $aviPath
 $recordingSeconds = ($aviFile.LastWriteTime - $aviFile.CreationTime).TotalSeconds
 
-# 4. The two MP4s.
+# 4. The MP4s.
 $horizontalPath = Join-Path $OutputDir "$clipName-horizontal.mp4"
 $reelsPath = Join-Path $OutputDir "$clipName-reels.mp4"
-Invoke-Ffmpeg -Description "Converting to the horizontal MP4..." -Arguments (
-    @("-i", $aviPath, "-vf", $toTvRange) + $h264Arguments + $audioArguments + @("-movflags", "+faststart", $horizontalPath)
-)
-Invoke-Ffmpeg -Description "Converting to the vertical 1080x1920 MP4 ($VerticalMode)..." -Arguments (
-    @("-i", $aviPath, "-filter_complex", (Get-VerticalFilter), "-map", "[reels]", "-map", "0:a?") +
-    $h264Arguments + $audioArguments + @("-movflags", "+faststart", $reelsPath)
-)
+$clipPaths = @()
+if ($isVertical) {
+    Invoke-Ffmpeg -Description "Converting to the vertical MP4..." -Arguments (
+        @("-ss", $storyStart, "-t", $Seconds, "-i", $aviPath, "-vf", $toTvRange) + $h264Arguments + $audioArguments + @("-movflags", "+faststart", $reelsPath)
+    )
+    $clipPaths += $reelsPath
+}
+else {
+    Invoke-Ffmpeg -Description "Converting to the horizontal MP4..." -Arguments (
+        @("-ss", $storyStart, "-t", $Seconds, "-i", $aviPath, "-vf", $toTvRange) + $h264Arguments + $audioArguments + @("-movflags", "+faststart", $horizontalPath)
+    )
+    Invoke-Ffmpeg -Description "Converting to the vertical 1080x1920 MP4 ($VerticalMode)..." -Arguments (
+        @("-ss", $storyStart, "-t", $Seconds, "-i", $aviPath, "-filter_complex", (Get-VerticalFilter), "-map", "[reels]", "-map", "0:a?") +
+        $h264Arguments + $audioArguments + @("-movflags", "+faststart", $reelsPath)
+    )
+    $clipPaths += $horizontalPath, $reelsPath
+}
 
 # 5. Report: where the files are, how big, and whether the game kept the brain's pace.
 Write-Host ""
@@ -270,15 +324,18 @@ Write-Host "Clips in ${OutputDir}:"
 if ($KeepAvi) {
     Write-Host "  $aviPath  ($(Format-Size $aviPath))"
 }
-Write-Host "  $horizontalPath  ($(Format-Size $horizontalPath))"
-Write-Host "  $reelsPath  ($(Format-Size $reelsPath))"
+foreach ($clipPath in $clipPaths) {
+    Write-Host "  $clipPath  ($(Format-Size $clipPath))"
+}
 if (-not $KeepAvi) {
     Remove-Item -Path $aviPath -Confirm:$false
 }
 
 $realSeconds = $recordingSeconds
-$gameSpeed = $Seconds / $realSeconds
-Write-Host ("Game time {0} s in {1:N1} s of real time: the game ran at {2:N2}x real time." -f $Seconds, $realSeconds, $gameSpeed)
+# The whole recording, wait included, ran under the Movie Maker.
+$gameSeconds = [math]::Round($storyStartSeconds + $Seconds + 0.5, 1)
+$gameSpeed = $gameSeconds / $realSeconds
+Write-Host ("Game time {0} s in {1:N1} s of real time: the game ran at {2:N2}x real time." -f $gameSeconds, $realSeconds, $gameSpeed)
 if ([math]::Abs($gameSpeed - 1) -gt $syncTolerance) {
     Write-Warning (
         "Out of sync with the brain: the brain lives in real time, so in this clip her lines and " +

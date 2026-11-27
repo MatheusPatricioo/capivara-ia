@@ -215,6 +215,13 @@ func _turn_body_towards_movement(delta: float) -> void:
 	_turn_body_towards(velocity, delta)
 
 
+## Where her face points, flat on the ground (the body's front is -Z). Used by the clip
+## camera to film her from the front.
+func facing_direction() -> Vector3:
+	var front: Vector3 = -_body.global_basis.z
+	return Vector3(front.x, 0.0, front.z).normalized()
+
+
 ## Turns the body smoothly so its front (-Z) points along the given direction.
 func _turn_body_towards(direction: Vector3, delta: float) -> void:
 	if Vector2(direction.x, direction.z).length() < 0.01:
