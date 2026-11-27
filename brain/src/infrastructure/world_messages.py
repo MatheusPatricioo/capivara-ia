@@ -55,6 +55,8 @@ class SkyMessage(BaseModel):
     """Real seconds in a world day: the world moves the sun on its own between messages."""
     weather: str
     """A sky like "clear" or "rain", or "unknown"."""
+    moon_phase: float = Field(ge=0.0, lt=1.0)
+    """From 0 (new moon) through 0.25 (first quarter), 0.5 (full) and 0.75 (last quarter)."""
 
 
 class LetterMessage(BaseModel):
@@ -318,4 +320,6 @@ def sky_message(view: SkyView) -> SkyMessage:
         day_fraction=round(view.world_time.day_fraction, 5) % 1.0,
         day_length_seconds=view.day_length_seconds,
         weather=str(view.weather.sky) if view.weather is not None else UNKNOWN_WEATHER,
+        # Rounding up to 1.0 would be the next new moon, 0.0.
+        moon_phase=round(view.moon_phase, 4) % 1.0,
     )

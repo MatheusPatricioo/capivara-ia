@@ -76,3 +76,9 @@ def test_a_real_day_lasts_a_whole_day(quarter_past_ten: datetime) -> None:
 
 def test_a_fast_day_lasts_the_configured_time(quarter_past_ten: datetime) -> None:
     assert clock_at(quarter_past_ten, ClockMode.FAST).day_length_seconds == ONE_HOUR
+
+
+def test_fast_mode_keeps_the_real_date_for_the_moon(quarter_past_ten: datetime) -> None:
+    clock = clock_at(quarter_past_ten, ClockMode.FAST)
+
+    assert clock.real_moment() == quarter_past_ten

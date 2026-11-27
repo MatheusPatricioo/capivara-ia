@@ -13,6 +13,8 @@ signal feelings_changed(emotion: StringName, intensity: float, valence: float, a
 ## seconds a world day lasts (to move the sun between messages) and the sky ("clear",
 ## "cloudy", "fog", "rain", "storm" or "unknown").
 signal sky_changed(day_fraction: float, day_length_seconds: float, weather: StringName)
+## The moon phase, sent with the sky: 0 new moon, 0.25 first quarter, 0.5 full, 0.75 last quarter.
+signal moon_changed(phase: float)
 ## Every letter in the mailbox, the newest first. Each one is a Dictionary with file_name,
 ## written_at ("2026-11-25T14:30"), text, unread, and reply and replied_at (null while
 ## her creator has not answered).
@@ -220,6 +222,7 @@ func _handle_message(text: String) -> void:
 				float(message.get("day_length_seconds", 86400.0)),
 				StringName(str(message.get("weather", "unknown"))),
 			)
+			moon_changed.emit(float(message.get("moon_phase", 0.5)))
 		"listening":
 			listening_requested.emit(float(message.get("seconds", 0.0)))
 		"speech":

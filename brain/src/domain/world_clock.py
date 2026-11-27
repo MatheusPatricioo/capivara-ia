@@ -68,6 +68,10 @@ class WorldClock:
             return SECONDS_PER_DAY
         return self._fast_day_seconds
 
+    def real_moment(self) -> datetime:
+        """The real date and time, in both modes: the moon follows the real calendar."""
+        return self._now()
+
     def now(self) -> WorldTime:
         real_time = self._now().time()
         if self._mode is ClockMode.REAL:
