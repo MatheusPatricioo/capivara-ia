@@ -47,6 +47,7 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	if _balloon.visible:
+		_balloon.reset_size()
 		_follow_her_head()
 
 
@@ -64,11 +65,7 @@ func _on_speech_received(speech_id: int, caption: String) -> void:
 
 func _show_for(balloon_text: String, seconds: float) -> void:
 	_label.text = balloon_text
-	_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	var natural_width: float = _label.get_minimum_size().x
-	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_label.custom_minimum_size.x = minf(natural_width, MAX_WIDTH)
-	_balloon.reset_size()
+	_fit_label_width()
 	if not _balloon.visible:
 		_balloon.modulate.a = 0.0
 		create_tween().tween_property(_balloon, "modulate:a", 1.0, FADE_SECONDS)
@@ -76,6 +73,20 @@ func _show_for(balloon_text: String, seconds: float) -> void:
 	_tip.show()
 	_follow_her_head()
 	_hide_timer.start(seconds)
+
+
+## A wrapping label measures its height with the width it has right now, so the width is
+## given first: the text's own width, up to MAX_WIDTH. Without it the label was 0 wide,
+## wrapped one letter per line and the balloon became a dark column across the screen.
+func _fit_label_width() -> void:
+	var font: Font = _label.get_theme_font("font")
+	var text_width: float = font.get_string_size(
+		_label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE
+	).x
+	var width: float = minf(ceilf(text_width) + 2.0, MAX_WIDTH)
+	_label.custom_minimum_size = Vector2(width, 0.0)
+	_label.size = Vector2(width, 0.0)
+	_balloon.reset_size()
 
 
 func _hide_balloon() -> void:
@@ -125,6 +136,7 @@ func _build() -> void:
 	_label = Label.new()
 	_label.add_theme_font_size_override("font_size", FONT_SIZE)
 	_label.add_theme_color_override("font_color", TEXT_COLOR)
+	_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_balloon.add_child(_label)
 
 	_tip = Polygon2D.new()
