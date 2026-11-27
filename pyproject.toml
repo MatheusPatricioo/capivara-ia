@@ -44,6 +44,8 @@ dev = [
     "pytest",
     "ruff",
     "mypy",
+    # Checks real messages against the protocol's JSON Schema in docs/protocol.
+    "jsonschema",
 ]
 
 [tool.pytest.ini_options]

@@ -33,4 +33,4 @@ cd brain
 python -m src.export_protocol_schema
 ```
 
-Um teste (`test_protocol_schema.py`) falha enquanto os arquivos commitados estiverem desatualizados.
+Um teste (`test_protocol_schema.py`) falha enquanto os arquivos commitados estiverem desatualizados, e outro (`test_protocol_contract.py`) valida com a biblioteca `jsonschema` uma mensagem real de cada tipo contra estes arquivos, nos dois sentidos.
