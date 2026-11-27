@@ -320,6 +320,7 @@ def main() -> None:
             SerialWorker("creator-chat") as chat_worker,
         ):
             world_events.when_creator_said(listen_to_creator(creator_chat, chat_worker))
+            world_events.when_conversation_ended(creator_chat.end_conversation)
             if ears is not None:
                 world_events.when_creator_talking(
                     listen_to_creator_voice(

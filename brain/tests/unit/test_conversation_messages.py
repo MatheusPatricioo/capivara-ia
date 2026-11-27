@@ -6,6 +6,7 @@ from pydantic import ValidationError
 from src.domain.speech import VoiceMode
 from src.infrastructure.world_messages import (
     MAX_CREATOR_MESSAGE_LENGTH,
+    ConversationEndedMessage,
     CreatorSaidMessage,
     CreatorTalkingMessage,
     HeardMessage,
@@ -79,6 +80,12 @@ def test_parses_her_creator_pressing_the_talk_button() -> None:
     event = parse_world_event('{"type": "creator_talking", "talking": true}')
 
     assert event == CreatorTalkingMessage(talking=True)
+
+
+def test_parses_her_creator_ending_the_conversation() -> None:
+    event = parse_world_event('{"type": "conversation_ended"}')
+
+    assert event == ConversationEndedMessage()
 
 
 def test_heard_message_carries_what_she_understood() -> None:

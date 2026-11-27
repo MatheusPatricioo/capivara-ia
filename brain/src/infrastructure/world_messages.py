@@ -228,6 +228,13 @@ class CreatorTalkingMessage(BaseModel):
     talking: bool
 
 
+class ConversationEndedMessage(BaseModel):
+    """Sent by the world when her creator closes the chat with an empty Enter: he does not
+    want to talk anymore, so she goes back to her own life without waiting."""
+
+    type: Literal["conversation_ended"] = "conversation_ended"
+
+
 WorldEvent = (
     NoticedMessage
     | LetterOpenedMessage
@@ -235,6 +242,7 @@ WorldEvent = (
     | CreatorSaidMessage
     | VoiceModeMessage
     | CreatorTalkingMessage
+    | ConversationEndedMessage
 )
 _WORLD_EVENT_ADAPTER: TypeAdapter[WorldEvent] = TypeAdapter(
     Annotated[WorldEvent, Field(discriminator="type")]
