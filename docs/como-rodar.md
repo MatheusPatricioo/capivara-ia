@@ -129,14 +129,29 @@ Aperte `Ctrl+C` para encerrar. O intervalo entre os ciclos e o limite de tokens 
 
 ## Gravar um clipe
 
-O `record_clip.ps1` grava o mundo com o Movie Maker do Godot e gera dois MP4s em `D:\clipes` (fora do Git): um horizontal e um vertical 1080×1920 para Reels. Ele sobe o cérebro antes, se precisar, e usa o ffmpeg (`winget install Gyan.FFmpeg --location D:\tools\ffmpeg`).
+O `record_clip.ps1` grava a capivara com o Movie Maker do Godot e gera os MP4s em `D:\clipes` (fora do Git). Ele sobe o cérebro antes, se precisar, e usa o ffmpeg (`winget install Gyan.FFmpeg --location D:\tools\ffmpeg`).
 
 ```powershell
-.\record_clip.ps1                                   # 20 segundos
-.\record_clip.ps1 -Seconds 45 -VerticalMode Crop    # Crop corta as laterais; Blur (padrão) põe o mundo inteiro sobre um fundo borrado
+.\record_clip.ps1                                   # 20 s em pé, 1080×1920, para Reels, com cortes automáticos
+.\record_clip.ps1 -Seconds 45 -Shot Close           # um plano só, fechado nela
+.\record_clip.ps1 -Orientation Horizontal           # 1920×1080, mais uma cópia para Reels (-VerticalMode Blur ou Crop)
 ```
 
-O Movie Maker avança o jogo 1/30 s por quadro, demore o quanto demorar para gravar, e o cérebro vive no tempo real. Quando o computador não dá conta de gravar no ritmo, as falas e ordens dela aparecem adiantadas no clipe. O script mede isso no fim de cada gravação e avisa quando a diferença passa de 5%.
+**A câmera de clipe.** Na gravação, o mundo roda em modo clipe (`-- --clip`, em `world/scripts/clip/`). Uma câmera própria filma a capivara de frente, seguindo ela com suavidade, e a interface some. Só ficam o balão de fala e o símbolo de emoção, porque fazem parte da história. O jogo normal não muda.
+
+| `-Shot` | O que mostra |
+|---|---|
+| `Auto` (padrão) | Edita como uma série: abre com o plano aberto, corta entre médio e fechado a cada 4 a 6 s, e vai para o fechado quando ela fala ou muda de sentimento |
+| `Close` | O rosto e o corpo, a 2,6 m |
+| `Medium` | Ela inteira e o que está em volta, a 3,3 m |
+| `Wide` | Ela no mundo, a 6,5 m, para abrir um episódio |
+
+Os valores de cada plano ficam em `world/scripts/clip/clip_shot.gd`, para a série toda ter a mesma cara. Quando uma árvore, uma casa ou um móvel fica entre a câmera e ela, a câmera dá a volta para um lado livre. Ela enxerga os objetos com colisão por um raio e os que são só decoração pelo mapa de navegação, onde eles são buracos.
+
+**Detalhes da gravação:**
+- Os 3 primeiros segundos (`-WarmupSeconds`) são gravados e cortados fora: é quando o cérebro conecta, o céu de verdade chega e passam as primeiras engasgadas.
+- O jogo é renderizado na resolução exata do vídeo numa janela com metade do tamanho. Uma janela maior que o monitor, como 1080×1920 numa tela 1080p, deixava cada quadro uns 60 ms mais lento.
+- **Sincronia com o cérebro:** o Movie Maker avança o jogo 1/30 s por quadro e ignora o tempo real, então pode correr mais rápido ou mais devagar que o cérebro. No modo clipe, um marca-passo (`clip_pacer.gd`) segura o jogo para nunca passar do relógio. Se o computador não der conta, o script avisa no fim quando a diferença passa de 5%. Nos testes, ficou entre 0,95× e 1,00×.
 
 ## Ver os traces no Langfuse
 

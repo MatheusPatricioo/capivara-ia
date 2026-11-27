@@ -111,6 +111,9 @@
 [ext_resource type="Script" uid="uid://cfp3tmwrvk1xx" path="res://scripts/world_sky.gd" id="world_sky"]
 [ext_resource type="PackedScene" path="res://scenes/props/writing_desk.tscn" id="writing_desk"]
 [ext_resource type="Script" uid="uid://np7fn8eueqpg" path="res://scripts/writing_desk/writing_desk_viewer.gd" id="writing_desk_viewer"]
+[ext_resource type="Script" path="res://scripts/clip/clip_camera.gd" id="clip_camera"]
+[ext_resource type="Script" path="res://scripts/clip/clip_director.gd" id="clip_director"]
+[ext_resource type="Script" path="res://scripts/clip/clip_pacer.gd" id="clip_pacer"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 
@@ -978,7 +981,7 @@ script = ExtResource("8_world_navigation")
 [node name="WritingDeskViewer" type="CanvasLayer" parent="." unique_id=976436633]
 script = ExtResource("writing_desk_viewer")
 
-[node name="CreatorChatBox" type="CanvasLayer" parent="." unique_id=281783728]
+[node name="CreatorChatBox" type="CanvasLayer" parent="." unique_id=281783728 groups=["hidden_in_clips"]]
 script = ExtResource("creator_chat_box")
 
 [node name="Observables" type="Node3D" parent="." unique_id=188773998]
@@ -1037,6 +1040,17 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0.5, -5.3)
 script = ExtResource("observable")
 thing_id = &"magic_clearing"
 description = "uma clareira lá fora, depois da cerca, com pedras em roda e luzinhas brilhando"
+
+[node name="ClipCamera" type="Camera3D" parent="."]
+script = ExtResource("clip_camera")
+
+[node name="ClipDirector" type="Node" parent="." node_paths=PackedStringArray("capybara", "clip_camera")]
+script = ExtResource("clip_director")
+capybara = NodePath("../Capybara")
+clip_camera = NodePath("../ClipCamera")
+
+[node name="ClipPacer" type="Node" parent="."]
+script = ExtResource("clip_pacer")
 
 [connection signal="clicked" from="Workspace/Desk" to="ComputerScreen" method="open"]
 [connection signal="clicked" from="Workspace/WritingDesk" to="WritingDeskViewer" method="open"]
