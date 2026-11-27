@@ -126,6 +126,8 @@ sky_material = SubResource("ProceduralSkyMaterial_sky")
 background_mode = 2
 sky = SubResource("Sky_main")
 tonemap_mode = 2
+ssao_enabled = true
+ssao_radius = 0.5
 glow_enabled = true
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_grass"]
@@ -1049,11 +1051,12 @@ script = ExtResource("clip_camera")
 [node name="ClipRecorder" type="Node" parent="." unique_id=1335176847]
 script = ExtResource("clip_recorder")
 
-[node name="ClipDirector" type="Node" parent="." unique_id=1605134263 node_paths=PackedStringArray("capybara", "clip_camera", "recorder")]
+[node name="ClipDirector" type="Node" parent="." unique_id=1605134263 node_paths=PackedStringArray("capybara", "clip_camera", "recorder", "sun")]
 script = ExtResource("clip_director")
 capybara = NodePath("../Capybara")
 clip_camera = NodePath("../ClipCamera")
 recorder = NodePath("../ClipRecorder")
+sun = NodePath("../Sun")
 
 [node name="ClipPacer" type="Node" parent="." unique_id=501201111]
 script = ExtResource("clip_pacer")

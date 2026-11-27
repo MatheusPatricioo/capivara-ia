@@ -42,10 +42,18 @@ const BACK_TURNED_SECONDS: float = 0.5
 ## CanvasLayers in this group disappear in clips; the brain status banner is an autoload
 ## and is hidden by name.
 const HIDDEN_IN_CLIPS_GROUP: StringName = &"hidden_in_clips"
+## The sun's shadow while filming. The game's shadow reaches 30 m in two cascades, and the
+## sharp first one covers only its first 3 m: the clip camera, 2.6 to 6.5 m from her, often
+## saw her through the coarse second one, and the shadow of her head on her body came out
+## jagged. Filming, the shadow reaches 14 m and the sharp cascade covers its first 40%
+## (5.6 m). Same cost: still two cascades.
+const FILMING_SHADOW_DISTANCE: float = 14.0
+const FILMING_SHADOW_SPLIT: float = 0.4
 
 @export var capybara: Capybara
 @export var clip_camera: ClipCamera
 @export var recorder: ClipRecorder
+@export var sun: DirectionalLight3D
 
 var _is_auto: bool = false
 var _seconds: float = 0.0
@@ -56,6 +64,9 @@ var _last_emotion: StringName = &""
 ## The interaction point she is using, or null.
 var _activity_point: InteractionPoint = null
 var _back_turned_seconds: float = 0.0
+## The game's own shadow settings, put back when filming stops.
+var _game_shadow_distance: float = 0.0
+var _game_shadow_split: float = 0.0
 
 
 func _ready() -> void:
@@ -63,6 +74,7 @@ func _ready() -> void:
 		_set_filming(false)
 		return
 	_hide_interface()
+	_use_filming_shadows()
 	clip_camera.current = true
 	clip_camera.follow(capybara)
 	# A vertical clip is a Reels video; a horizontal one keeps her centered.
@@ -92,15 +104,25 @@ func start_live() -> void:
 	_is_auto = true
 	clip_camera.follow(capybara)
 	clip_camera.frame_for_reels(true)
+	_use_filming_shadows()
 	_set_filming(true)
 	_begin_story()
 
 
-## Reels mode turned off: no more cuts, and the clip camera rests.
+## Reels mode turned off: no more cuts, the clip camera rests and the game's shadows return.
 func stop() -> void:
 	_set_filming(false)
 	_disconnect_story_events()
 	clip_camera.clear_focus()
+	sun.directional_shadow_max_distance = _game_shadow_distance
+	sun.directional_shadow_split_1 = _game_shadow_split
+
+
+func _use_filming_shadows() -> void:
+	_game_shadow_distance = sun.directional_shadow_max_distance
+	_game_shadow_split = sun.directional_shadow_split_1
+	sun.directional_shadow_max_distance = FILMING_SHADOW_DISTANCE
+	sun.directional_shadow_split_1 = FILMING_SHADOW_SPLIT
 
 
 func _set_filming(is_filming: bool) -> void:

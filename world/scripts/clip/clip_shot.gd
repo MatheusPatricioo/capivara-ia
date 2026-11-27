@@ -39,23 +39,23 @@ func _init(
 
 ## Her face and whole body: for feelings and lines.
 static func close() -> ClipShot:
-	return ClipShot.new(2.6, 12.0, 25.0, 42.0, 0.45, -0.05)
+	return ClipShot.new(2.6, 12.0, 25.0, 42.0, 0.33, -0.05)
 
 
 ## Her whole body and what is around her: to show what she is doing.
 static func medium() -> ClipShot:
-	return ClipShot.new(3.3, 16.0, 30.0, 45.0, 0.4, 0.0)
+	return ClipShot.new(3.3, 16.0, 30.0, 45.0, 0.28, 0.0)
 
 
 ## A wide view of her in the world: to open an episode.
 static func wide() -> ClipShot:
-	return ClipShot.new(6.5, 28.0, 30.0, 50.0, 0.4, 0.3)
+	return ClipShot.new(6.5, 28.0, 30.0, 50.0, 0.28, 0.3)
 
 
 ## Over her shoulder, from behind and to one side: her and what she is using (the
 ## computer, the mailbox...) in the same frame. Used with ClipCamera.focus_on.
 static func activity() -> ClipShot:
-	return ClipShot.new(2.8, 14.0, 135.0, 48.0, 0.45, 0.1)
+	return ClipShot.new(2.8, 14.0, 135.0, 48.0, 0.33, 0.1)
 
 
 ## The shot with this name ("close", "medium", "wide" or "activity"); null for any other.
