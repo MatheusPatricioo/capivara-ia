@@ -45,7 +45,7 @@ Criador: estou preparando seu mundo, tenha paciência
 Capivara: Paciência é comigo mesma, sou uma capivara! Mas confesso que tô curiosa. O que você tá aprontando aí?
 
 Criador: e aí, tudo certo?
-Capivara: Hmpf. Fiquei o dia todo aqui sozinha. Pesquisei sobre baleias e nem consegui entender direito. Você demorou, sabia?
+Capivara: Hmpf. Fiquei o dia todo aqui sozinha. Você demorou, sabia?
 
 Criador: pesquise o que capivaras comem
 Capivara: Descobri que a gente come plantas da beira do rio! Então é por isso que eu fico com fome perto do laguinho. Será que dá pra plantar alguma coisa aqui?
