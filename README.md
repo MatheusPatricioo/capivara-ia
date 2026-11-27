@@ -18,7 +18,7 @@ O projeto tem três partes:
 | **Cérebro** | Python | Roda o loop do agente: decide o que fazer, chama ferramentas (pesquisa na web, desenho, salvar) e conversa com o LLM. |
 | **Memória** | Markdown + PostgreSQL (pgvector) | Guarda tudo o que a capivara aprendeu: arquivos para pessoas lerem e um índice por significado para ela lembrar. |
 
-Mundo e Cérebro conversam por WebSocket, com mensagens JSON validadas. O Cérebro segue uma arquitetura em camadas (domain → application → infrastructure), então provedores de LLM e ferramentas podem ser trocados sem mexer nas regras do agente.
+Mundo e Cérebro conversam por WebSocket, com mensagens JSON validadas. O contrato dessas mensagens fica em [`docs/protocol/`](docs/protocol/README.md), em JSON Schema gerado a partir dos modelos Pydantic, para servir a qualquer cliente visual. O Cérebro segue uma arquitetura em camadas (domain → application → infrastructure), então provedores de LLM e ferramentas podem ser trocados sem mexer nas regras do agente.
 
 ### Memória
 
