@@ -123,7 +123,9 @@ def window_colors(pixels: np.ndarray, uvs: np.ndarray) -> np.ndarray:
     return colors
 
 
-def paint_blended_triangle(pixels: np.ndarray, corner_pixels: np.ndarray, corner_colors: np.ndarray) -> None:
+def paint_blended_triangle(
+    pixels: np.ndarray, corner_pixels: np.ndarray, corner_colors: np.ndarray
+) -> None:
     """Paints one triangle of the texture, blending its corners' colors (barycentric
     weights), grown by PAINT_MARGIN_PIXELS so its edges are covered too."""
     centroid = corner_pixels.mean(axis=0)
@@ -154,7 +156,9 @@ def paint_blended_triangle(pixels: np.ndarray, corner_pixels: np.ndarray, corner
     pixels[rows.ravel()[inside], columns.ravel()[inside]] = blended
 
 
-def replace_image(data: bytearray, gltf: dict, binary_chunk_start: int, image_bytes: bytes) -> bytes:
+def replace_image(
+    data: bytearray, gltf: dict, binary_chunk_start: int, image_bytes: bytes
+) -> bytes:
     """The binary chunk with the texture swapped for these bytes. The views after it move
     by the change in size; every view stays aligned to 4 bytes."""
     binary_start = binary_chunk_start + 8
@@ -204,14 +208,19 @@ above_stain_bottom = positions[:, 1] > STAIN_BOTTOM_Y
 fruit_vertex = in_fruit | (peel & (distance_from_fruit_axis < STAIN_RADIUS) & above_stain_bottom)
 fruit_triangles = triangles[fruit_vertex[triangles].any(axis=1)]
 fruit_corners = np.unique(fruit_triangles)
-might_be_fur = ~fruit_vertex & ~peel & (distance_from_fruit_axis < FUR_SEARCH_RADIUS) & above_stain_bottom
+might_be_fur = (
+    ~fruit_vertex & ~peel & (distance_from_fruit_axis < FUR_SEARCH_RADIUS) & above_stain_bottom
+)
 candidate_indices = np.flatnonzero(might_be_fur)
 candidate_colors = window_colors(pixels, uvs[candidate_indices])
 typical_fur = np.median(candidate_colors, axis=0)
 looks_like_fur = np.linalg.norm(candidate_colors - typical_fur, axis=1) < FUR_COLOR_TOLERANCE
 fur_indices = candidate_indices[looks_like_fur]
 fur_colors = candidate_colors[looks_like_fur]
-print(f"typical fur {typical_fur.round()}, {looks_like_fur.sum()} of {len(candidate_indices)} candidates")
+print(
+    f"typical fur {typical_fur.round()}, "
+    f"{looks_like_fur.sum()} of {len(candidate_indices)} candidates"
+)
 
 # Shape. Copies of a vertex made by texture seams share a spot: weld them, so the surface
 # stays closed, then copy the result back to every copy.
