@@ -41,6 +41,9 @@ signal creator_talking_changed(talking: bool)
 ## Her creator closed the chat: she stops listening and goes back to her own life.
 signal conversation_ended
 signal connection_changed(is_connected: bool)
+## The answer to a request sent with send_request(): it carries the same request_id.
+## Use BrainQuestion.ask() to send a request and wait for its own reply.
+signal reply_received(reply: Dictionary)
 
 const DEFAULT_URL: String = "ws://127.0.0.1:8765"
 ## Set this environment variable to use another address, like ws://127.0.0.1:8799.
@@ -64,6 +67,7 @@ var _socket: WebSocketPeer = WebSocketPeer.new()
 var _url: String = DEFAULT_URL
 var _is_connected: bool = false
 var _seconds_until_reconnect: float = 0.0
+var _sent_request_count: int = 0
 
 
 func _ready() -> void:
@@ -160,6 +164,19 @@ func set_voice_mode(mode: StringName) -> void:
 	_send_voice_mode()
 
 
+## Sends a request (like {"type": "list_drawings"}) with a new request_id and returns that
+## id, so the caller can recognize its reply. Returns "" while the brain is offline.
+func send_request(request: Dictionary) -> String:
+	if not _is_connected:
+		return ""
+	_sent_request_count += 1
+	var request_id: String = "world-%d" % _sent_request_count
+	var message: Dictionary = request.duplicate()
+	message["request_id"] = request_id
+	_socket.send_text(JSON.stringify(message))
+	return request_id
+
+
 func _send_voice_mode() -> void:
 	if not _is_connected:
 		return
@@ -177,6 +194,10 @@ func _handle_message(text: String) -> void:
 		push_warning("The brain sent a message that is not a JSON object: %s" % text)
 		return
 	var message: Dictionary = parsed
+	# Only replies carry a request_id: orders from the brain never do.
+	if message.has("request_id"):
+		reply_received.emit(message)
+		return
 	match message.get("type"):
 		"go_to":
 			go_to_requested.emit(StringName(str(message.get("point", ""))))
