@@ -16,6 +16,7 @@
 - **RAG com pgvector:** busca híbrida (vetor + full-text) com RRF e rerank com LLM; decisões certas de 57% para 97% ([memória e RAG](docs/memoria-e-rag.md)).
 - **Evals com LLM-as-judge:** recall@k e MRR no RAG, regras do agente e fidelidade com citação conferida no código ([evals](docs/evals.md)).
 - **Guardrails no código:** limite de passos por ciclo e de tokens por hora, ferramentas presas à pasta de descobertas, busca repetida e fonte inventada recusadas ([decisão](docs/decisoes.md#guardrails-no-código-não-só-no-prompt)).
+- **Observabilidade com OpenTelemetry:** cada ciclo, chamada ao modelo (prompt, resposta, tokens, tempo) e ferramenta vira um trace, visto num Langfuse local, com a versão dos prompts em cada trace ([observabilidade](docs/observabilidade.md)).
 - **Sistema emocional:** emoções por appraisal que esfriam com o tempo, necessidades com histerese, saudade, diário e cartas para o criador ([vida emocional](docs/vida-emocional.md)).
 - **Voz local:** Piper ou Kokoro para falar e faster-whisper para ouvir, offline ([conversar por voz](docs/como-rodar.md#conversar-por-voz)).
 
@@ -39,6 +40,7 @@ flowchart LR
     E["nomic-embed-text<br/>embeddings"]
   end
   DB[("PostgreSQL + pgvector<br/>memória de longo prazo")]
+  LF["Langfuse · Docker<br/>traces OpenTelemetry (opcional)"]
   F[/"Pasta de descobertas<br/>Markdown e PNG"/]
   WEB(("Internet<br/>DuckDuckGo · Wikipedia · Open-Meteo"))
   W <-- "WebSocket · JSON<br/>contrato em docs/protocol" --> L
@@ -46,6 +48,7 @@ flowchart LR
   L <--> DB
   L --> F
   L --> WEB
+  L -. "OTLP" .-> LF
 ```
 
 O projeto tem três partes:
@@ -65,6 +68,7 @@ Mundo e Cérebro conversam por WebSocket, com mensagens JSON validadas. O contra
 - **LLM:** Ollama (local), atrás da interface `LanguageModel` do domínio, então trocar de provedor é escrever um novo adapter sem mexer nas regras do agente
 - **Memória:** Markdown, PostgreSQL + pgvector (Docker Compose), psycopg 3
 - **Voz (opcional):** Piper ou Kokoro (texto para fala) e faster-whisper (fala para texto), os dois locais e offline, com sounddevice para tocar e gravar
+- **Observabilidade (opcional):** OpenTelemetry, exportado por OTLP para o Langfuse no Docker
 - **Qualidade:** pytest, ruff, mypy (strict)
 
 ## Resultados em números
@@ -106,6 +110,7 @@ O guia completo, com Linux/macOS, o `libpq` no Windows, a voz e os testes, está
 | [Desenhos](docs/desenhos.md) | Retrieve and rerank sobre o Quick, Draw! e a mão dela |
 | [Ela sugere, eu construo](docs/sugestoes.md) | As sugestões dela para o próprio mundo |
 | [Evals](docs/evals.md) | O que é medido, os relatórios e como rodar |
+| [Observabilidade](docs/observabilidade.md) | Traces do OpenTelemetry no Langfuse: o que aparece, a versão dos prompts e como ligar |
 | [Decisões técnicas](docs/decisoes.md) | Contexto, alternativas, escolha e motivo de cada decisão |
 | [Protocolo](docs/protocol/README.md) | As mensagens do WebSocket em JSON Schema |
 | [Roadmap e status](docs/roadmap.md) | O que já funciona, os próximos passos e as pendências |

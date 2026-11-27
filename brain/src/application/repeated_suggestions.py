@@ -38,14 +38,10 @@ class RepeatedSuggestions:
 
         Raises EmbeddingError when the embedding model cannot be reached.
         """
-        earlier_requests = [
-            saved.suggestion.request for saved in self._archive.saved_suggestions()
-        ]
+        earlier_requests = [saved.suggestion.request for saved in self._archive.saved_suggestions()]
         if not earlier_requests:
             return None
-        request_embedding, *earlier_embeddings = self._embedder.embed(
-            [request, *earlier_requests]
-        )
+        request_embedding, *earlier_embeddings = self._embedder.embed([request, *earlier_requests])
         closest = max(
             (
                 EarlierSuggestion(earlier, cosine_similarity(request_embedding, embedding))

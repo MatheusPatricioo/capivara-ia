@@ -17,9 +17,7 @@ NON_SLUG_CHARACTERS = re.compile(r"[^a-z0-9]+")
 
 def slugify(text: str) -> str:
     """Turns any text into lowercase ASCII words joined by hyphens, safe for a file name."""
-    without_accents = (
-        unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
-    )
+    without_accents = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
     slug = NON_SLUG_CHARACTERS.sub("-", without_accents.lower()).strip("-")
     shortened_slug = slug[:MAX_SLUG_LENGTH].rstrip("-")
     return shortened_slug or FALLBACK_SLUG

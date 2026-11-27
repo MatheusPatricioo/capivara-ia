@@ -46,9 +46,7 @@ def settings(tmp_path: Path) -> Settings:
 def test_offers_search_save_and_suggest_but_no_draw_tool_because_drawing_is_automatic(
     settings: Settings, http_client: httpx.Client
 ) -> None:
-    tools = build_capybara_tools(
-        settings, NeverAskedStructuredLanguageModel(), http_client
-    )
+    tools = build_capybara_tools(settings, NeverAskedStructuredLanguageModel(), http_client)
 
     assert [tool.definition.name for tool in tools] == [
         "web_search",

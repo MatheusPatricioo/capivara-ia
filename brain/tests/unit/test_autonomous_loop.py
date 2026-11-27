@@ -2,11 +2,13 @@ import logging
 from collections.abc import Sequence
 
 import pytest
+from opentelemetry.trace import StatusCode
 
 from src.application.autonomous_loop import AutonomousLoop
 from src.application.conversation import Conversation
 from src.application.token_budget import HourlyTokenBudget
 from src.domain.language_model import ChatMessage, LanguageModelError, Role, ToolDefinition
+from tests.fakes.recorded_spans import RecordedSpans
 
 INNER_VOICE = "(Você está sozinha. O que quer fazer?)"
 THOUGHT = "Acho que vou olhar as nuvens no laguinho."
@@ -262,3 +264,74 @@ def test_a_failed_cycle_is_not_a_finished_cycle(budget: HourlyTokenBudget) -> No
     loop.run_cycle()
 
     assert finished_cycles == []
+
+
+@pytest.fixture
+def recorded_spans() -> RecordedSpans:
+    return RecordedSpans()
+
+
+def traced_loop(
+    language_model: ThinkingLanguageModel | OfflineLanguageModel,
+    budget: HourlyTokenBudget,
+    recorded_spans: RecordedSpans,
+) -> AutonomousLoop:
+    def start_conversation() -> Conversation:
+        return Conversation(language_model, "You are a capybara.", tracer=recorded_spans.tracer)
+
+    return AutonomousLoop(
+        start_conversation,
+        budget,
+        lambda: INNER_VOICE,
+        INTERVAL_SECONDS,
+        sleep=lambda seconds: None,
+        tracer=recorded_spans.tracer,
+    )
+
+
+def test_a_cycle_is_one_trace_with_the_inner_voice_and_the_thought(
+    language_model: ThinkingLanguageModel,
+    budget: HourlyTokenBudget,
+    recorded_spans: RecordedSpans,
+) -> None:
+    traced_loop(language_model, budget, recorded_spans).run_cycle()
+
+    cycle_span = recorded_spans.named("autonomous_cycle")
+    attributes = dict(cycle_span.attributes or {})
+    assert cycle_span.parent is None
+    assert attributes["langfuse.observation.input"] == INNER_VOICE
+    assert attributes["langfuse.observation.output"] == THOUGHT
+
+
+def test_the_conversation_of_a_cycle_is_traced_inside_it(
+    language_model: ThinkingLanguageModel,
+    budget: HourlyTokenBudget,
+    recorded_spans: RecordedSpans,
+) -> None:
+    traced_loop(language_model, budget, recorded_spans).run_cycle()
+
+    turn_span = recorded_spans.named("conversation_turn")
+    assert turn_span.parent is not None
+    assert turn_span.parent.span_id == recorded_spans.named("autonomous_cycle").context.span_id
+
+
+def test_a_failed_cycle_ends_its_span_as_an_error(
+    budget: HourlyTokenBudget, recorded_spans: RecordedSpans
+) -> None:
+    traced_loop(OfflineLanguageModel(), budget, recorded_spans).run_cycle()
+
+    cycle_span = recorded_spans.named("autonomous_cycle")
+    assert cycle_span.status.status_code == StatusCode.ERROR
+    assert cycle_span.status.description == "Ollama is not running"
+
+
+def test_a_skipped_cycle_leaves_no_trace(
+    language_model: ThinkingLanguageModel,
+    budget: HourlyTokenBudget,
+    recorded_spans: RecordedSpans,
+) -> None:
+    budget.record(MAX_TOKENS_PER_HOUR)
+
+    traced_loop(language_model, budget, recorded_spans).run_cycle()
+
+    assert recorded_spans.finished == ()

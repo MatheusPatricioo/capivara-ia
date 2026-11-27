@@ -38,9 +38,7 @@ class OfflineMemory:
 
 @pytest.fixture
 def tool() -> RecallMemoryTool:
-    return RecallMemoryTool(
-        ScriptedMemory([RememberedDiscovery(FIREFLIES, 0.8)]), MIN_SIMILARITY
-    )
+    return RecallMemoryTool(ScriptedMemory([RememberedDiscovery(FIREFLIES, 0.8)]), MIN_SIMILARITY)
 
 
 def test_returns_the_remembered_discovery_with_its_summary_in_one_line(

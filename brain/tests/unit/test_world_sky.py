@@ -95,9 +95,7 @@ def test_reads_the_new_weather_after_the_refresh_period(
     assert sky.look().weather == SUN
 
 
-def test_keeps_the_last_weather_when_a_reading_fails(
-    clock: WorldClock, timer: ManualTimer
-) -> None:
+def test_keeps_the_last_weather_when_a_reading_fails(clock: WorldClock, timer: ManualTimer) -> None:
     sky = sky_with(clock, timer, ScriptedForecast(RAIN, None))
 
     sky.look()
@@ -105,9 +103,7 @@ def test_keeps_the_last_weather_when_a_reading_fails(
     assert sky.look().weather == RAIN
 
 
-def test_has_no_weather_when_the_first_reading_fails(
-    clock: WorldClock, timer: ManualTimer
-) -> None:
+def test_has_no_weather_when_the_first_reading_fails(clock: WorldClock, timer: ManualTimer) -> None:
     sky = sky_with(clock, timer, ScriptedForecast(None))
 
     assert sky.look().weather is None

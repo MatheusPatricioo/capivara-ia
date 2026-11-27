@@ -9,6 +9,7 @@ from src.domain.language_model import (
     LanguageModelError,
     Role,
     StructuredReply,
+    TokenUsage,
     ToolCall,
     ToolDefinition,
 )
@@ -284,12 +285,16 @@ def test_reports_the_tokens_read_and_written() -> None:
     reply = build_language_model(reply_with_token_counts).chat(MESSAGES)
 
     assert reply.token_count == 1280
+    assert reply.usage == TokenUsage(input_tokens=1200, output_tokens=80)
 
 
 def test_reports_zero_tokens_when_ollama_omits_the_counts(
     healthy_ollama: OllamaLanguageModel,
 ) -> None:
-    assert healthy_ollama.chat(MESSAGES).token_count == 0
+    reply = healthy_ollama.chat(MESSAGES)
+
+    assert reply.token_count == 0
+    assert reply.usage is None
 
 
 def test_recovers_a_tool_call_written_as_text(
@@ -374,6 +379,7 @@ def test_reports_the_tokens_of_the_structured_reply() -> None:
     reply = language_model.complete_json(MESSAGES, CHOICE_SCHEMA)
 
     assert reply.token_count == 320
+    assert reply.usage == TokenUsage(input_tokens=300, output_tokens=20)
 
 
 def test_raises_language_model_error_when_the_json_is_invalid() -> None:

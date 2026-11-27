@@ -127,6 +127,21 @@ No mundo, ela vai até o computador antes de pesquisar e antes de salvar, e o de
 
 Aperte `Ctrl+C` para encerrar. O intervalo entre os ciclos e o limite de tokens por hora ficam no `brain/.env` (`AUTONOMOUS_CYCLE_INTERVAL_SECONDS`, `MAX_TOKENS_PER_HOUR`).
 
+## Gravar um clipe
+
+O `record_clip.ps1` grava o mundo com o Movie Maker do Godot e gera dois MP4s em `D:\clipes` (fora do Git): um horizontal e um vertical 1080×1920 para Reels. Ele sobe o cérebro antes, se precisar, e usa o ffmpeg (`winget install Gyan.FFmpeg --location D:\tools\ffmpeg`).
+
+```powershell
+.\record_clip.ps1                                   # 20 segundos
+.\record_clip.ps1 -Seconds 45 -VerticalMode Crop    # Crop corta as laterais; Blur (padrão) põe o mundo inteiro sobre um fundo borrado
+```
+
+O Movie Maker avança o jogo 1/30 s por quadro, demore o quanto demorar para gravar, e o cérebro vive no tempo real. Quando o computador não dá conta de gravar no ritmo, as falas e ordens dela aparecem adiantadas no clipe. O script mede isso no fim de cada gravação e avisa quando a diferença passa de 5%.
+
+## Ver os traces no Langfuse
+
+Com `TRACING_ENABLED=true` no `brain/.env`, o `start.ps1` também sobe um Langfuse local, e cada ciclo dela vira um trace em http://localhost:3000. O passo a passo está em [Observabilidade](observabilidade.md).
+
 ## Rodar os testes
 
 Na raiz do projeto:
@@ -134,6 +149,7 @@ Na raiz do projeto:
 ```bash
 pytest
 ruff check .
+ruff format --check .   # sem --check, formata os arquivos
 mypy brain/src
 ```
 

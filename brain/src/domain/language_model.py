@@ -25,6 +25,14 @@ class ToolDefinition:
 
 
 @dataclass(frozen=True)
+class TokenUsage:
+    """Tokens one model call read (the prompt) and wrote (the reply)."""
+
+    input_tokens: int = 0
+    output_tokens: int = 0
+
+
+@dataclass(frozen=True)
 class ChatMessage:
     role: Role
     content: str
@@ -32,6 +40,8 @@ class ChatMessage:
     tool_name: str | None = None
     token_count: int = 0
     """Tokens the model read and wrote to produce this reply (0 when unknown)."""
+    usage: TokenUsage | None = None
+    """The same tokens split into read and written, when the model reports them."""
 
 
 class LanguageModelError(Exception):
@@ -53,6 +63,8 @@ class StructuredReply:
     data: dict[str, object]
     token_count: int = 0
     """Tokens the model read and wrote to produce this reply (0 when unknown)."""
+    usage: TokenUsage | None = None
+    """The same tokens split into read and written, when the model reports them."""
 
 
 class StructuredLanguageModel(Protocol):

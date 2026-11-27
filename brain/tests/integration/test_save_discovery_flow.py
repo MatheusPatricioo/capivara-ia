@@ -74,9 +74,7 @@ def conversation(language_model: ScriptedLanguageModel, tmp_path: Path) -> Conve
     save_discovery_tool = SaveDiscoveryTool(
         MarkdownDiscoveryRepository(tmp_path), seen_sources, today=lambda: TODAY
     )
-    return Conversation(
-        language_model, SYSTEM_PROMPT, tools=[web_search_tool, save_discovery_tool]
-    )
+    return Conversation(language_model, SYSTEM_PROMPT, tools=[web_search_tool, save_discovery_tool])
 
 
 def test_writes_the_discovery_file_after_searching(
