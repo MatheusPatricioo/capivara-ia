@@ -6,7 +6,7 @@ from src.application.reply_reader import ReplyReader
 from src.domain.body import Place
 from src.domain.feelings.appraisal import EmotionalEvent, EventKind
 from src.domain.feelings.emotional_life import EmotionalLife
-from src.domain.letter import Letter, Reply
+from src.domain.letter import Letter, LetterStorageError, Reply, SavedLetter
 from tests.fakes.in_memory_mailbox import BrokenMailbox, InMemoryMailbox
 
 TEMPLATE = "Ele respondeu!\n{replies}"
@@ -121,6 +121,35 @@ def test_after_a_failed_cycle_the_reply_is_offered_again(reader: ReplyReader) ->
 def test_a_reply_offered_again_moves_her_only_once(
     reader: ReplyReader, heart: RecordingHeart
 ) -> None:
+    reader.read_new_replies()
+
+    reader.read_new_replies()
+
+    assert heart.felt == [LETTER_ANSWERED]
+
+
+def test_a_reply_that_moved_her_before_a_restart_does_not_move_her_again(
+    reader: ReplyReader, mailbox: InMemoryMailbox, heart: RecordingHeart
+) -> None:
+    reader.read_new_replies()
+    reader_after_restart = ReplyReader(mailbox, heart, TEMPLATE)
+
+    reader_after_restart.read_new_replies()
+
+    assert heart.felt == [LETTER_ANSWERED]
+
+
+class FeelingForgetfulMailbox(InMemoryMailbox):
+    """Keeps the letters, but cannot write that a reply already moved her."""
+
+    def mark_reply_felt(self, file_name: str) -> SavedLetter:
+        raise LetterStorageError("disk is full")
+
+
+def test_when_the_mailbox_cannot_keep_it_she_still_feels_the_reply_only_once(
+    heart: RecordingHeart,
+) -> None:
+    reader = ReplyReader(FeelingForgetfulMailbox([ANSWERED]), heart, TEMPLATE)
     reader.read_new_replies()
 
     reader.read_new_replies()

@@ -29,7 +29,8 @@ class ReplyReader:
     that finished, release remembers she read them, so they never come back.
 
     If the cycle fails, the replies are offered again next time, but each one moves her
-    only once.
+    only once: the letter keeps that it already moved her, so a restart does not make her
+    feel it again. If that cannot be written, she still remembers it until the brain stops.
     """
 
     def __init__(
@@ -44,7 +45,8 @@ class ReplyReader:
         self._replies_template = replies_template
         self._body = body
         self._offered: list[SavedLetter] = []
-        self._already_felt: set[str] = set()
+        self._felt_but_not_saved: set[str] = set()
+        """Fallback for a mailbox that could not keep that a reply already moved her."""
 
     def read_new_replies(self) -> None:
         self._offered = self._letters_with_a_new_reply()
@@ -53,9 +55,9 @@ class ReplyReader:
         if self._body is not None:
             self._body.go_to(Place.MAILBOX)
         for saved in self._offered:
-            if saved.file_name not in self._already_felt:
+            if not self._already_felt(saved):
                 self._heart.feel(EmotionalEvent(EventKind.LETTER_ANSWERED))
-                self._already_felt.add(saved.file_name)
+                self._remember_felt(saved.file_name)
                 logger.info("She read her creator's reply to %s", saved.file_name)
 
     def compose(self) -> str:
@@ -72,8 +74,20 @@ class ReplyReader:
             except (LetterStorageError, InvalidLetterError) as error:
                 logger.warning("Could not remember she read the reply: %s", error)
                 continue
-            self._already_felt.discard(saved.file_name)
+            self._felt_but_not_saved.discard(saved.file_name)
         self._offered = []
+
+    def _already_felt(self, saved: SavedLetter) -> bool:
+        reply = saved.letter.reply
+        felt_and_saved = reply is not None and reply.felt_by_her
+        return felt_and_saved or saved.file_name in self._felt_but_not_saved
+
+    def _remember_felt(self, file_name: str) -> None:
+        try:
+            self._mailbox.mark_reply_felt(file_name)
+        except (LetterStorageError, InvalidLetterError) as error:
+            logger.warning("Could not keep that the reply moved her: %s", error)
+            self._felt_but_not_saved.add(file_name)
 
     def _letters_with_a_new_reply(self) -> list[SavedLetter]:
         try:

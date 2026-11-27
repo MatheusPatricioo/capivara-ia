@@ -67,6 +67,11 @@ class ShownMailbox:
         with self._lock:
             return self._mailbox.mark_reply_seen(file_name)
 
+    def mark_reply_felt(self, file_name: str) -> SavedLetter:
+        """The reply moved her: nothing changes in the world, so nothing is shown."""
+        with self._lock:
+            return self._mailbox.mark_reply_felt(file_name)
+
     def reply_to_letter(self, file_name: str, text: str) -> None:
         """Her creator answered a letter in the world. A bad reply is only logged: the world
         keeps showing the letter without it, so he can try again."""

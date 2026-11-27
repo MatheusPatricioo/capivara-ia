@@ -127,3 +127,22 @@ def test_remembers_she_read_the_reply(mailbox: MarkdownMailbox) -> None:
     mailbox.mark_reply_seen(file_name)
 
     assert not mailbox.saved_letters()[0].letter.has_a_new_reply
+
+
+def test_a_new_reply_is_saved_as_not_felt_by_her(mailbox: MarkdownMailbox) -> None:
+    mailbox.answer(mailbox.post(LETTER), Reply(datetime(2026, 11, 26, 10, 0), "Volto amanhã."))
+
+    reply = mailbox.saved_letters()[0].letter.reply
+
+    assert reply is not None and not reply.felt_by_her
+
+
+def test_remembers_the_reply_moved_her_after_a_restart(tmp_path: Path) -> None:
+    mailbox = MarkdownMailbox(tmp_path)
+    file_name = mailbox.post(LETTER)
+    mailbox.answer(file_name, Reply(datetime(2026, 11, 26, 10, 0), "Volto amanhã."))
+    mailbox.mark_reply_felt(file_name)
+
+    reply = MarkdownMailbox(tmp_path).saved_letters()[0].letter.reply
+
+    assert reply is not None and reply.felt_by_her
