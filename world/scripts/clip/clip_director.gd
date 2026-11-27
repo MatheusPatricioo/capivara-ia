@@ -13,7 +13,8 @@ extends Node
 ## shoulder to show her and the object, alternating with close shots, until she walks away.
 ## When she turns her back on the camera for a moment, it cuts to her front again, the way
 ## an editor would, instead of letting the camera swing slowly around her.
-## Without clip mode it does nothing, and the game keeps its normal camera.
+## Without clip mode it does nothing, and the game keeps its normal camera, until Reels
+## mode asks it to film live (start_live) for the vertical preview.
 
 ## Seconds the opening wide shot lasts.
 const OPENING_SECONDS: float = 3.0
@@ -59,12 +60,14 @@ var _back_turned_seconds: float = 0.0
 
 func _ready() -> void:
 	if not ClipMode.is_on():
-		clip_camera.set_process(false)
-		set_process(false)
+		_set_filming(false)
 		return
 	_hide_interface()
 	clip_camera.current = true
 	clip_camera.follow(capybara)
+	# A vertical clip is a Reels video; a horizontal one keeps her centered.
+	var window_size: Vector2 = get_viewport().get_visible_rect().size
+	clip_camera.frame_for_reels(window_size.y > window_size.x)
 	var requested_shot: String = ClipMode.requested_shot()
 	_is_auto = requested_shot == "auto"
 	if _is_auto:
@@ -78,14 +81,58 @@ func _ready() -> void:
 	_cut_to(requested_shot, INF)
 
 
+## Reels mode in the live game: the auto edit starts at once, since the brain is already
+## running. The clip camera films only for the Reels picture: the main window keeps its
+## own camera.
+func start_live() -> void:
+	_seconds = 0.0
+	_activity_point = null
+	_last_emotion = &""
+	_back_turned_seconds = 0.0
+	_is_auto = true
+	clip_camera.follow(capybara)
+	clip_camera.frame_for_reels(true)
+	_set_filming(true)
+	_begin_story()
+
+
+## Reels mode turned off: no more cuts, and the clip camera rests.
+func stop() -> void:
+	_set_filming(false)
+	_disconnect_story_events()
+	clip_camera.clear_focus()
+
+
+func _set_filming(is_filming: bool) -> void:
+	clip_camera.set_process(is_filming)
+	set_process(is_filming)
+
+
 ## The opening counts from here, and only from here can her lines and feelings cut.
 func _begin_story() -> void:
 	Brain.speech_received.connect(_on_speech_received)
 	Brain.feelings_changed.connect(_on_feelings_changed)
-	for point: Node in get_tree().get_nodes_in_group(InteractionPoint.GROUP):
-		var interaction_point: InteractionPoint = point as InteractionPoint
+	for interaction_point: InteractionPoint in _interaction_points():
 		interaction_point.capybara_arrived.connect(_on_arrived_at.bind(interaction_point))
 	_cut_to("wide", OPENING_SECONDS)
+
+
+func _disconnect_story_events() -> void:
+	if Brain.speech_received.is_connected(_on_speech_received):
+		Brain.speech_received.disconnect(_on_speech_received)
+	if Brain.feelings_changed.is_connected(_on_feelings_changed):
+		Brain.feelings_changed.disconnect(_on_feelings_changed)
+	for interaction_point: InteractionPoint in _interaction_points():
+		var on_arrived: Callable = _on_arrived_at.bind(interaction_point)
+		if interaction_point.capybara_arrived.is_connected(on_arrived):
+			interaction_point.capybara_arrived.disconnect(on_arrived)
+
+
+func _interaction_points() -> Array[InteractionPoint]:
+	var points: Array[InteractionPoint] = []
+	for point: Node in get_tree().get_nodes_in_group(InteractionPoint.GROUP):
+		points.append(point as InteractionPoint)
+	return points
 
 
 func _process(delta: float) -> void:

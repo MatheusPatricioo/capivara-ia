@@ -9,6 +9,10 @@
 [ext_resource type="PackedScene" path="res://scenes/props/food_bowl.tscn" id="41_food_bowl"]
 [ext_resource type="PackedScene" path="res://scenes/props/pond.tscn" id="43_pond"]
 [ext_resource type="PackedScene" path="res://scenes/ui/computer_screen.tscn" id="50_computer_screen"]
+[ext_resource type="Script" uid="uid://cky48qsdwo403" path="res://scripts/clip/clip_camera.gd" id="clip_camera"]
+[ext_resource type="Script" uid="uid://dckshtm3brnfk" path="res://scripts/clip/clip_director.gd" id="clip_director"]
+[ext_resource type="Script" uid="uid://bjdx254te6fxf" path="res://scripts/clip/clip_pacer.gd" id="clip_pacer"]
+[ext_resource type="Script" uid="uid://c8wjri7icg8un" path="res://scripts/clip/clip_recorder.gd" id="clip_recorder"]
 [ext_resource type="Script" uid="uid://ddwx2l1m22h0l" path="res://scripts/chat/creator_chat_box.gd" id="creator_chat_box"]
 [ext_resource type="PackedScene" path="res://scenes/props/fireflies.tscn" id="fireflies"]
 [ext_resource type="Script" uid="uid://g3qbbps3p0nj" path="res://scripts/props/flower_bed.gd" id="flower_bed"]
@@ -104,6 +108,7 @@
 [ext_resource type="PackedScene" path="res://scenes/props/mailbox.tscn" id="mailbox"]
 [ext_resource type="Script" uid="uid://bkryivid2jl7w" path="res://scripts/props/observable.gd" id="observable"]
 [ext_resource type="Script" uid="uid://dyr6lm16r7w4d" path="res://scripts/props/path_flowers.gd" id="path_flowers"]
+[ext_resource type="Script" uid="uid://br3pui4u7ah5q" path="res://scripts/clip/reels_mode.gd" id="reels_mode"]
 [ext_resource type="PackedScene" path="res://scenes/props/round_prop.tscn" id="round_prop"]
 [ext_resource type="Script" uid="uid://gbpeuysh0a8d" path="res://scripts/props/scatter_patch.gd" id="scatter_patch"]
 [ext_resource type="Script" uid="uid://cw5lg5n8c8ph3" path="res://scripts/props/stepping_stones.gd" id="stepping_stones"]
@@ -111,10 +116,6 @@
 [ext_resource type="Script" uid="uid://cfp3tmwrvk1xx" path="res://scripts/world_sky.gd" id="world_sky"]
 [ext_resource type="PackedScene" path="res://scenes/props/writing_desk.tscn" id="writing_desk"]
 [ext_resource type="Script" uid="uid://np7fn8eueqpg" path="res://scripts/writing_desk/writing_desk_viewer.gd" id="writing_desk_viewer"]
-[ext_resource type="Script" path="res://scripts/clip/clip_camera.gd" id="clip_camera"]
-[ext_resource type="Script" path="res://scripts/clip/clip_director.gd" id="clip_director"]
-[ext_resource type="Script" path="res://scripts/clip/clip_pacer.gd" id="clip_pacer"]
-[ext_resource type="Script" path="res://scripts/clip/clip_recorder.gd" id="clip_recorder"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
 
@@ -1042,20 +1043,26 @@ script = ExtResource("observable")
 thing_id = &"magic_clearing"
 description = "uma clareira lá fora, depois da cerca, com pedras em roda e luzinhas brilhando"
 
-[node name="ClipCamera" type="Camera3D" parent="."]
+[node name="ClipCamera" type="Camera3D" parent="." unique_id=603519383]
 script = ExtResource("clip_camera")
 
-[node name="ClipRecorder" type="Node" parent="."]
+[node name="ClipRecorder" type="Node" parent="." unique_id=1335176847]
 script = ExtResource("clip_recorder")
 
-[node name="ClipDirector" type="Node" parent="." node_paths=PackedStringArray("capybara", "clip_camera", "recorder")]
+[node name="ClipDirector" type="Node" parent="." unique_id=1605134263 node_paths=PackedStringArray("capybara", "clip_camera", "recorder")]
 script = ExtResource("clip_director")
 capybara = NodePath("../Capybara")
 clip_camera = NodePath("../ClipCamera")
 recorder = NodePath("../ClipRecorder")
 
-[node name="ClipPacer" type="Node" parent="."]
+[node name="ClipPacer" type="Node" parent="." unique_id=501201111]
 script = ExtResource("clip_pacer")
+
+[node name="ReelsMode" type="CanvasLayer" parent="." unique_id=698585682 node_paths=PackedStringArray("clip_director", "clip_camera", "speech_balloon")]
+script = ExtResource("reels_mode")
+clip_director = NodePath("../ClipDirector")
+clip_camera = NodePath("../ClipCamera")
+speech_balloon = NodePath("../Capybara/SpeechBalloon")
 
 [connection signal="clicked" from="Workspace/Desk" to="ComputerScreen" method="open"]
 [connection signal="clicked" from="Workspace/WritingDesk" to="WritingDeskViewer" method="open"]

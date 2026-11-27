@@ -21,6 +21,10 @@ const MAP_TOLERANCE: float = 0.45
 ## Degrees between where the camera is around her and where it should be, past which it
 ## counts as lagging: she turned faster than the camera follows.
 const LAG_DEGREES: float = 45.0
+## Walking speed, in m/s, at which the look room is complete; slower, it is smaller.
+const LOOK_ROOM_FULL_SPEED: float = 2.0
+## Below this speed, in m/s, she counts as standing still.
+const STANDING_SPEED: float = 0.05
 
 ## How quickly the camera catches up with her position. Higher follows tighter.
 @export var follow_sharpness: float = 6.0
@@ -41,6 +45,13 @@ const LAG_DEGREES: float = 45.0
 ## Which side of her face the camera stands on: 1 is her left, -1 her right. Staying on one
 ## side across cuts keeps her looking the same way, so the cuts do not confuse.
 @export var side: float = 1.0
+## Meters of empty space kept in front of her while she walks, so she walks into the
+## picture instead of out of it (look room). Full at LOOK_ROOM_FULL_SPEED and above.
+@export var look_room_meters: float = 0.2
+## In a vertical clip, how far up the picture moves, as a fraction of its height: the
+## Reels app covers the bottom 35% and the top 14%, so the middle of what is left sits at
+## about 40% of the height, not 50%.
+@export var reels_frame_shift: float = 0.11
 
 var _target: Capybara = null
 var _shot: ClipShot = ClipShot.medium()
@@ -52,10 +63,17 @@ var _detour: float = 0.0
 ## The object she is using, framed together with her; only while _has_focus.
 var _focus_point: Vector3 = Vector3.ZERO
 var _has_focus: bool = false
+var _is_framing_for_reels: bool = false
 
 
 func follow(target: Capybara) -> void:
 	_target = target
+
+
+## On, the picture moves up into the part of a Reels video the app leaves clear. Only for
+## vertical pictures: a horizontal clip keeps her centered.
+func frame_for_reels(is_on: bool) -> void:
+	_is_framing_for_reels = is_on
 
 
 ## Frames her together with this object (the computer, the mailbox...): the shot's angle
@@ -75,7 +93,8 @@ func cut_to(shot: ClipShot) -> void:
 	fov = shot.field_of_view
 	if _target == null:
 		return
-	_pivot = _aim_point()
+	# A cut has no smoothing to catch up with: only the look room.
+	_pivot = _framed_point()
 	_detour = _choose_detour(_desired_yaw())
 	_yaw = _desired_yaw() + _detour
 	_distance = _clear_distance(_yaw, _shot.distance)
@@ -109,6 +128,16 @@ func is_lagging_behind() -> bool:
 func _place() -> void:
 	global_position = _pivot + _direction_to_camera(_yaw) * _distance
 	look_at(_look_point() + Vector3.UP * _shot.headroom, Vector3.UP)
+	v_offset = -_reels_shift_meters()
+
+
+## v_offset slides the picture like a shifted lens, without turning the camera. Lowering
+## the camera moves her up in the picture. The fraction is turned into meters at her
+## distance, where the picture is 2 * distance * tan(fov / 2) tall.
+func _reels_shift_meters() -> float:
+	if not _is_framing_for_reels:
+		return 0.0
+	return reels_frame_shift * 2.0 * _distance * tan(deg_to_rad(fov) / 2.0)
 
 
 ## Her head, or a point between her head and the object she uses, at her head's height.
@@ -119,8 +148,30 @@ func _look_point() -> Vector3:
 	return _pivot.lerp(focus_at_head_height, focus_weight)
 
 
+## Where the camera's pivot heads for. The pivot follows with smoothing, so while she
+## walks it stays velocity / follow_sharpness behind: aiming that far ahead of her cancels
+## the lag, and the pivot settles on _framed_point.
 func _aim_point() -> Vector3:
-	return _target.global_position + Vector3.UP * _shot.aim_height
+	return _framed_point() + _ground_velocity() / follow_sharpness
+
+
+## The point the picture centers on: her body, shifted ahead of her by the look room, so
+## she sits behind the center with space in front of her.
+func _framed_point() -> Vector3:
+	return _target.global_position + _look_room() + Vector3.UP * _shot.aim_height
+
+
+func _look_room() -> Vector3:
+	var ground_velocity: Vector3 = _ground_velocity()
+	var speed: float = ground_velocity.length()
+	if speed < STANDING_SPEED:
+		return Vector3.ZERO
+	var speed_fraction: float = minf(speed / LOOK_ROOM_FULL_SPEED, 1.0)
+	return ground_velocity / speed * look_room_meters * speed_fraction
+
+
+func _ground_velocity() -> Vector3:
+	return Vector3(_target.velocity.x, 0.0, _target.velocity.z)
 
 
 ## The angle around her where the camera stands: in front of her face, turned a little to
