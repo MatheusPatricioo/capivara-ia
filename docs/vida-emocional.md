@@ -75,8 +75,8 @@ Ele muda o peso dos próximos acontecimentos:
 
 ```python
 # mood.py
-negative_impact = 1.0 - 0.4 * valence   # bom humor (0,4): coisas ruins pesam 0,84×
-positive_impact = 1.0 + 0.3 * valence   # mau humor (-0,4): coisas boas pesam 0,88×
+negative_impact = 1.0 - 0.4 * valence  # bom humor (0,4): coisas ruins pesam 0,84×
+positive_impact = 1.0 + 0.3 * valence  # mau humor (-0,4): coisas boas pesam 0,88×
 ```
 
 A cada dia novo, ela também acorda um pouco melhor ou pior, ao acaso: o `day_spirit`, entre -0,1 e +0,1, soma no alvo do humor daquele dia.

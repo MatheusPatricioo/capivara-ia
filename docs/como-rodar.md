@@ -134,6 +134,7 @@ Na raiz do projeto:
 ```bash
 pytest
 ruff check .
+ruff format --check .   # sem --check, formata os arquivos
 mypy brain/src
 ```
 

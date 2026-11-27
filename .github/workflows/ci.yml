@@ -1,5 +1,5 @@
 # Runs the brain's quality checks on every push and pull request:
-# lint (ruff), types (mypy strict) and the whole test suite, including the tests
+# lint and format (ruff), types (mypy strict) and the whole test suite, including the tests
 # marked "database", against a real PostgreSQL + pgvector started as a service.
 name: CI
 
@@ -52,6 +52,9 @@ jobs:
 
       - name: Lint
         run: ruff check .
+
+      - name: Format
+        run: ruff format --check .
 
       - name: Type check
         run: mypy brain/src

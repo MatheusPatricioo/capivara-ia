@@ -25,4 +25,3 @@
   - Se a primeira mensagem chega nos ~40 s em que o modelo ainda está carregando, ela ainda espera o resto: avisar no mundo que ela está "acordando".
   - Com um jogo pesado aberto (ex: CS2), o modelo não cabe nos 8 GB da GPU e ela fica muito lenta. Avaliar um modelo menor (`qwen2.5:3b`) como opção no `.env`, comparado pelos evals.
   - Decidir se o Esc também encerra a conversa (hoje ele só fecha a caixa).
-  - 7 arquivos fora do `ruff format`: formatar e colocar o `ruff format --check` no CI.

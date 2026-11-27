@@ -42,7 +42,8 @@ packages = []
 [dependency-groups]
 dev = [
     "pytest",
-    "ruff",
+    # Pinned: a new ruff release can change the formatting style and fail format --check in CI.
+    "ruff==0.17.6",
     "mypy",
     # Checks real messages against the protocol's JSON Schema in docs/protocol.
     "jsonschema",

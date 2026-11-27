@@ -51,9 +51,7 @@ def test_finds_nothing_below_the_minimum_similarity(
 
 
 def test_finds_nothing_when_there_are_no_earlier_suggestions() -> None:
-    repeated_suggestions = RepeatedSuggestions(
-        archive_with([]), OfflineEmbedder(), MIN_SIMILARITY
-    )
+    repeated_suggestions = RepeatedSuggestions(archive_with([]), OfflineEmbedder(), MIN_SIMILARITY)
 
     assert repeated_suggestions.earlier_version_of("Vaga-lumes no jardim") is None
 
