@@ -114,13 +114,18 @@
 [ext_resource type="Script" uid="uid://cw5lg5n8c8ph3" path="res://scripts/props/stepping_stones.gd" id="stepping_stones"]
 [ext_resource type="PackedScene" path="res://scenes/props/waterfall.tscn" id="waterfall"]
 [ext_resource type="Script" uid="uid://cfp3tmwrvk1xx" path="res://scripts/world_sky.gd" id="world_sky"]
+[ext_resource type="Shader" path="res://shaders/sky.gdshader" id="sky_shader"]
+[ext_resource type="Script" path="res://scripts/scenery/distant_hills.gd" id="distant_hills"]
+[ext_resource type="Script" path="res://scripts/scenery/hill_ring.gd" id="hill_ring"]
 [ext_resource type="PackedScene" path="res://scenes/props/writing_desk.tscn" id="writing_desk"]
 [ext_resource type="Script" uid="uid://np7fn8eueqpg" path="res://scripts/writing_desk/writing_desk_viewer.gd" id="writing_desk_viewer"]
 
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sky"]
+shader = ExtResource("sky_shader")
 
 [sub_resource type="Sky" id="Sky_main"]
-sky_material = SubResource("ProceduralSkyMaterial_sky")
+sky_material = SubResource("ShaderMaterial_sky")
+process_mode = 1
 
 [sub_resource type="Environment" id="Environment_main"]
 background_mode = 2
@@ -129,6 +134,31 @@ tonemap_mode = 2
 ssao_enabled = true
 ssao_radius = 0.5
 glow_enabled = true
+fog_aerial_perspective = 1.0
+
+[sub_resource type="Resource" id="HillRing_near"]
+script = ExtResource("hill_ring")
+inner_radius = 26.0
+depth = 8.0
+min_height = 2.0
+max_height = 5.5
+color = Color(0.24, 0.44, 0.33, 1)
+
+[sub_resource type="Resource" id="HillRing_middle"]
+script = ExtResource("hill_ring")
+inner_radius = 40.0
+depth = 12.0
+min_height = 4.0
+max_height = 8.0
+color = Color(0.34, 0.52, 0.48, 1)
+
+[sub_resource type="Resource" id="HillRing_far"]
+script = ExtResource("hill_ring")
+inner_radius = 62.0
+depth = 18.0
+min_height = 6.0
+max_height = 11.0
+color = Color(0.5, 0.63, 0.68, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_grass"]
 albedo_color = Color(0.36, 0.55, 0.3, 1)
@@ -160,6 +190,10 @@ directional_shadow_max_distance = 30.0
 script = ExtResource("world_sky")
 sun = NodePath("../Sun")
 world_environment = NodePath("../Environment")
+
+[node name="DistantHills" type="MeshInstance3D" parent="."]
+script = ExtResource("distant_hills")
+rings = Array[ExtResource("hill_ring")]([SubResource("HillRing_near"), SubResource("HillRing_middle"), SubResource("HillRing_far")])
 
 [node name="Floor" type="CSGCombiner3D" parent="." unique_id=6226552 groups=["navigation_source"]]
 
@@ -217,7 +251,7 @@ shape = SubResource("BoxShape3D_floor")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.11967622, 0)
 
 [node name="Camera3D" type="Camera3D" parent="Capybara" unique_id=1340388870]
-transform = Transform3D(1, 0, 0, 0, 0.70710677, 0.70710677, 0, -0.70710677, 0.70710677, 0, 6, 6)
+transform = Transform3D(1, 0, 0, 0, 0.8660254, 0.5, 0, -0.5, 0.8660254, 0, 5, 8.660254)
 
 [node name="Nature" type="Node3D" parent="." unique_id=1789617569 groups=["navigation_source"]]
 
