@@ -9,15 +9,15 @@ extends Node
 ## seconds, drawing the next one by weight among medium, close, profile and low (never the
 ## same twice in a row, and behind her while she walks), with the wide landscape now and
 ## then to show the world and its sky, and cuts to close when she speaks or her feeling
-## changes. The calm changes (medium,
-## close and landscape taking turns) glide from one framing to the other; what reacts to
-## her (lines, feelings, arriving somewhere) cuts, the way an editor cuts on action. Cuts
-## follow game time, so they land on the same frames in the Movie Maker. Until the brain is
+## changes. Every change glides from one framing to the other: the calm ones (medium,
+## close and landscape taking turns) slowly; what reacts to her (lines, feelings,
+## arriving somewhere) quicker, but still without a jump. Changes follow game time, so
+## they land on the same frames in the Movie Maker. Until the brain is
 ## ready (ClipRecorder.story_started) it holds the wide shot: that part is cut off later.
 ## When she arrives at an interaction point (the computer, the mailbox...), it cuts over her
 ## shoulder to show her and the object, alternating with close shots, until she walks away.
-## When she turns her back on the camera for a moment, it cuts to her front again, the way
-## an editor would, instead of letting the camera swing slowly around her.
+## When she turns her back on the camera for a moment, the camera swings to her front
+## quicker than usual (ClipCamera.catch_up), instead of crawling around her.
 ## Without clip mode it does nothing, and the game keeps its normal camera, until Reels
 ## mode asks it to film live (start_live) for the vertical preview.
 
@@ -31,7 +31,10 @@ const SHOTS_BETWEEN_LANDSCAPES: int = 4
 ## Seconds a landscape lasts in the middle of the story, counting the glide into it.
 const LANDSCAPE_SECONDS: float = 5.0
 ## Seconds a glide between two calm shots takes. It counts as part of the new shot.
-const GLIDE_SECONDS: float = 2.0
+const GLIDE_SECONDS: float = 3.0
+## Seconds a glide takes when it reacts to her (a line, a feeling, an activity): quick
+## enough to catch the moment, slow enough not to jolt.
+const REACTION_GLIDE_SECONDS: float = 1.2
 ## How often each calm shot is drawn, relative to the others: a shot with twice the
 ## weight comes up twice as often.
 const CALM_SHOT_WEIGHTS: Dictionary[String, float] = {
@@ -104,6 +107,7 @@ func _ready() -> void:
 		_set_filming(false)
 		return
 	_hide_interface()
+	_set_filming(true)
 	_use_filming_shadows()
 	clip_camera.current = true
 	clip_camera.follow(capybara)
@@ -159,6 +163,7 @@ func _use_filming_shadows() -> void:
 func _set_filming(is_filming: bool) -> void:
 	clip_camera.set_process(is_filming)
 	set_process(is_filming)
+	capybara.set_filmed(is_filming)
 
 
 ## The opening counts from here, and only from here can her lines and feelings cut.
@@ -191,19 +196,19 @@ func _interaction_points() -> Array[InteractionPoint]:
 
 func _process(delta: float) -> void:
 	_seconds += delta
-	_cut_to_her_front_when_back_turned(delta)
+	_catch_up_when_back_turned(delta)
 	if not _is_auto:
 		return
 	if _activity_point != null and _has_left(_activity_point):
 		_end_activity()
 	_end_follow_when_she_stops(delta)
 	if _seconds >= _shot_ends_at:
-		_cut_to_next_shot()
+		_change_to_next_shot()
 
 
-## Using something: over the shoulder, then her face, and again (cuts). Otherwise a calm
-## shot drawn by weight, with a landscape every few shots (glides).
-func _cut_to_next_shot() -> void:
+## Using something: over the shoulder, then her face, and again (quick glides). Otherwise
+## a calm shot drawn by weight, with a landscape every few shots (slow glides).
+func _change_to_next_shot() -> void:
 	if _activity_point == null and _shots_since_landscape >= SHOTS_BETWEEN_LANDSCAPES:
 		_shots_since_landscape = 0
 		_glide_to("wide", LANDSCAPE_SECONDS)
@@ -211,9 +216,9 @@ func _cut_to_next_shot() -> void:
 		_shots_since_landscape += 1
 		_glide_to(_draw_calm_shot(), randf_range(MIN_SHOT_SECONDS, MAX_SHOT_SECONDS))
 	elif _current_shot_name == "activity":
-		_cut_to("close", ACTIVITY_CLOSE_SECONDS)
+		_react_with("close", ACTIVITY_CLOSE_SECONDS)
 	else:
-		_cut_to("activity", randf_range(MIN_ACTIVITY_SECONDS, MAX_ACTIVITY_SECONDS))
+		_react_with("activity", randf_range(MIN_ACTIVITY_SECONDS, MAX_ACTIVITY_SECONDS))
 
 
 ## The next calm shot, never the current one. While she walks, the shot behind her joins
@@ -259,7 +264,7 @@ func _end_follow_when_she_stops(delta: float) -> void:
 ## She turned and the camera is still swinging around her, showing her side or back. Not
 ## behind her while she walks: there the camera is meant to see her back, and swinging
 ## along her path is the shot.
-func _cut_to_her_front_when_back_turned(delta: float) -> void:
+func _catch_up_when_back_turned(delta: float) -> void:
 	if _current_shot_name == "follow" or not clip_camera.is_lagging_behind():
 		_back_turned_seconds = 0.0
 		return
@@ -269,9 +274,7 @@ func _cut_to_her_front_when_back_turned(delta: float) -> void:
 	if _seconds - _shot_started_at < MIN_SECONDS_BEFORE_CUT:
 		return
 	_back_turned_seconds = 0.0
-	# The same shot, cut again: the camera snaps to its place, the shot keeps its end.
-	_shot_started_at = _seconds
-	clip_camera.cut_to(ClipShot.named(_current_shot_name))
+	clip_camera.catch_up()
 
 
 func _on_arrived_at(point: InteractionPoint) -> void:
@@ -291,14 +294,14 @@ func _has_left(point: InteractionPoint) -> bool:
 func _end_activity() -> void:
 	_activity_point = null
 	if _current_shot_name == "activity":
-		_cut_to("medium", randf_range(MIN_SHOT_SECONDS, MAX_SHOT_SECONDS))
+		_react_with("medium", randf_range(MIN_SHOT_SECONDS, MAX_SHOT_SECONDS))
 
 
 func _on_speech_received(_speech_id: int, caption: String) -> void:
 	var hold_seconds: float = clampf(
 		caption.length() * SECONDS_PER_CHARACTER, MIN_SPEECH_HOLD_SECONDS, MAX_SPEECH_HOLD_SECONDS
 	)
-	_cut_to_close_for(hold_seconds)
+	_go_close_for(hold_seconds)
 
 
 func _on_feelings_changed(
@@ -308,18 +311,18 @@ func _on_feelings_changed(
 	var is_change: bool = _last_emotion != &"" and emotion != _last_emotion
 	_last_emotion = emotion
 	if is_change:
-		_cut_to_close_for(FEELING_HOLD_SECONDS)
+		_go_close_for(FEELING_HOLD_SECONDS)
 
 
-## Already close: it only holds longer. Otherwise it cuts, unless the current shot is too
-## young, or is the opening. A landscape in the middle of the story gives way to her lines.
-func _cut_to_close_for(hold_seconds: float) -> void:
+## Already close: it only holds longer. Otherwise it glides there, unless the current shot
+## is too young, or is the opening. A landscape in the middle of the story gives way to her lines.
+func _go_close_for(hold_seconds: float) -> void:
 	if _current_shot_name == "close":
 		_shot_ends_at = maxf(_shot_ends_at, _seconds + hold_seconds)
 		return
 	if _seconds < _opening_ends_at or _seconds - _shot_started_at < MIN_SECONDS_BEFORE_CUT:
 		return
-	_cut_to("close", hold_seconds)
+	_react_with("close", hold_seconds)
 
 
 func _cut_to(shot_name: String, hold_seconds: float) -> void:
@@ -328,6 +331,10 @@ func _cut_to(shot_name: String, hold_seconds: float) -> void:
 
 func _glide_to(shot_name: String, hold_seconds: float) -> void:
 	_change_shot(shot_name, hold_seconds, GLIDE_SECONDS)
+
+
+func _react_with(shot_name: String, hold_seconds: float) -> void:
+	_change_shot(shot_name, hold_seconds, REACTION_GLIDE_SECONDS)
 
 
 ## A transition of 0 seconds is a cut; longer, the camera glides there in that time.

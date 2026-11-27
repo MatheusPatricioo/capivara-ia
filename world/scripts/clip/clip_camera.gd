@@ -36,6 +36,9 @@ const MIN_CAMERA_HEIGHT: float = 0.15
 @export var follow_sharpness: float = 6.0
 ## How quickly the camera goes around her when she turns. Lower turns calmer.
 @export var turn_sharpness: float = 2.0
+## How quickly the camera goes around her while it catches up (catch_up) after she turned
+## her back: faster than turn_sharpness, but still a move, not a cut.
+@export var catch_up_sharpness: float = 5.0
 ## How quickly the camera goes back out after an obstacle left the view.
 @export var release_sharpness: float = 2.0
 ## Meters kept between the camera and whatever blocked the view.
@@ -76,6 +79,8 @@ var _detour: float = 0.0
 var _focus_point: Vector3 = Vector3.ZERO
 var _has_focus: bool = false
 var _is_framing_for_reels: bool = false
+## While true the camera goes around her at catch_up_sharpness; off once it is in place.
+var _is_catching_up: bool = false
 ## The glide in progress: from one framing to the shot it ends on; null when not gliding.
 var _glide_from: ClipShot = null
 var _glide_target: ClipShot = null
@@ -125,6 +130,11 @@ func cut_to(shot: ClipShot) -> void:
 	_place()
 
 
+## She turned and the camera lags behind: it swings to her front quicker, until in place.
+func catch_up() -> void:
+	_is_catching_up = true
+
+
 ## Travels from the current framing to this shot over these seconds. It leaves from the
 ## framing of this frame, movement and any glide in progress included, so it never jumps.
 ## The new shot's movement starts along with the glide.
@@ -146,7 +156,10 @@ func _process(delta: float) -> void:
 	_advance_framing(delta)
 	_pivot =_pivot.lerp(_aim_point(), _smoothing(follow_sharpness, delta))
 	_detour = _choose_detour(_desired_yaw())
-	_yaw = lerp_angle(_yaw, _desired_yaw() + _detour, _smoothing(turn_sharpness, delta))
+	if _is_catching_up and not is_lagging_behind():
+		_is_catching_up = false
+	var sharpness: float = catch_up_sharpness if _is_catching_up else turn_sharpness
+	_yaw = lerp_angle(_yaw, _desired_yaw() + _detour, _smoothing(sharpness, delta))
 	var clear_distance: float = _clear_distance(_yaw, _shot.distance)
 	# In at once, so the view is never blocked; out slowly, so it does not pop.
 	if clear_distance < _distance:
@@ -188,13 +201,13 @@ func _clear_fraction_of(framing: ClipShot) -> float:
 	return _clear_distance(yaw, framing.distance) / framing.distance
 
 
-## smoothstep eases the glide: slow at the start, faster in the middle and slow at the end.
+## The glide is eased: slow at the start, faster in the middle and slow at the end.
 func _advance_glide(delta: float) -> void:
 	if _glide_target == null:
 		return
 	_glide_elapsed += delta
 	var progress: float = minf(_glide_elapsed / _glide_seconds, 1.0)
-	_base_shot = ClipShot.blended(_glide_from, _glide_target, smoothstep(0.0, 1.0, progress))
+	_base_shot = ClipShot.blended(_glide_from, _glide_target, _smootherstep(progress))
 	if progress >= 1.0:
 		_base_shot = _glide_target
 		_glide_target = null
@@ -204,7 +217,13 @@ func _advance_glide(delta: float) -> void:
 func _movement_progress() -> float:
 	if _moving_shot.move_seconds <= 0.0:
 		return 0.0
-	return smoothstep(0.0, 1.0, minf(_move_elapsed / _moving_shot.move_seconds, 1.0))
+	return _smootherstep(minf(_move_elapsed / _moving_shot.move_seconds, 1.0))
+
+
+## Like smoothstep, but its speed also starts and ends at zero gently (no jolt), so a glide
+## leaves and lands softer, the way a camera on a slider does.
+static func _smootherstep(progress: float) -> float:
+	return progress * progress * progress * (progress * (progress * 6.0 - 15.0) + 10.0)
 
 
 ## True while the camera is far from its place around her, still swinging after she turned.
