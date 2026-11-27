@@ -1,7 +1,8 @@
 class_name SearchLogEntry
 extends RefCounted
 
-## One web search the capybara did, as written by the brain in history/searches.jsonl.
+## One web search the capybara did, as the brain sends it in a search_history reply:
+## {"searched_at": "2026-11-23T10:15", "query": "...", "pages": [{"title": "...", "url": "..."}]}
 
 
 ## A site that came back in the search results.
@@ -14,7 +15,7 @@ class FoundPage:
 		url = page_url
 
 
-## ISO 8601 date and time, like 2026-11-23T10:15:02-03:00.
+## Local date and time, like 2026-11-23T10:15.
 var searched_at: String
 var query: String
 var pages: Array[FoundPage] = []
@@ -25,7 +26,20 @@ func _init(search_time: String, search_query: String) -> void:
 	query = search_query
 
 
-## Turns 2026-11-23T10:15:02-03:00 into 23/11/2026 10:15. Unknown formats are shown as they are.
+## Returns null for a search without a text query; pages without an address are skipped.
+static func from_dictionary(search: Variant) -> SearchLogEntry:
+	if not search is Dictionary or not search.get("query") is String:
+		return null
+	var entry: SearchLogEntry = SearchLogEntry.new(str(search.get("searched_at", "")), search["query"])
+	var found_pages: Variant = search.get("pages", [])
+	if found_pages is Array:
+		for page: Variant in found_pages:
+			if page is Dictionary and page.get("url") is String:
+				entry.pages.append(FoundPage.new(str(page.get("title", "")), page["url"]))
+	return entry
+
+
+## Turns 2026-11-23T10:15 into 23/11/2026 10:15. Unknown formats are shown as they are.
 func display_date() -> String:
 	var date_and_time: PackedStringArray = searched_at.split("T")
 	var date_parts: PackedStringArray = date_and_time[0].split("-")

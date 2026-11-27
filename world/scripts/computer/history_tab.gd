@@ -8,6 +8,7 @@ extends MarginContainer
 ## never wraps, so a long title used to widen the whole computer screen on this tab only.
 
 const EMPTY_HISTORY_TEXT: String = "> nenhuma pesquisa ainda."
+const UNAVAILABLE_TEXT: String = "> não consegui falar com o cérebro."
 const NO_RESULTS_TEXT: String = "(nenhum site encontrado)"
 const QUERY_COLOR: String = "#9dffa8"
 const DATE_COLOR: String = "#5fae6c"
@@ -16,16 +17,41 @@ const MAX_TITLE_LENGTH: int = 110
 
 @onready var _entry_list: VBoxContainer = %EntryList
 
+## Grows on every show_history(), so an answer to an older call is ignored.
+var _load_count: int = 0
 
-## Rebuilds the list from the search log. Called every time the computer screen opens.
-func show_history(discoveries_path: String) -> void:
+
+## Asks the brain for the searches and rebuilds the list. Called every time the computer
+## screen opens.
+func show_history() -> void:
+	_load_count += 1
+	var this_load: int = _load_count
 	_clear_entries()
-	var entries: Array[SearchLogEntry] = SearchLogReader.read_newest_first(discoveries_path)
+	var reply: Dictionary = await BrainQuestion.ask({"type": "get_search_history"})
+	if this_load != _load_count:
+		return
+	if reply.get("type") != "search_history":
+		_entry_list.add_child(_create_entry_text(UNAVAILABLE_TEXT))
+		return
+	var entries: Array[SearchLogEntry] = _entries_from(reply)
 	if entries.is_empty():
 		_entry_list.add_child(_create_entry_text(EMPTY_HISTORY_TEXT))
 		return
 	for entry: SearchLogEntry in entries:
 		_entry_list.add_child(_create_entry_text(_entry_to_bbcode(entry)))
+
+
+## The brain already sends the newest first.
+func _entries_from(reply: Dictionary) -> Array[SearchLogEntry]:
+	var entries: Array[SearchLogEntry] = []
+	var searches: Variant = reply.get("searches", [])
+	if not searches is Array:
+		return entries
+	for search: Variant in searches:
+		var entry: SearchLogEntry = SearchLogEntry.from_dictionary(search)
+		if entry != null:
+			entries.append(entry)
+	return entries
 
 
 func _clear_entries() -> void:

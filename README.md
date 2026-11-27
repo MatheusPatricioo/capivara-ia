@@ -242,7 +242,7 @@ O Godot é opcional: com ele fechado, a capivara continua pesquisando, salvando 
 
 Para conversar com ela no mundo, aperte **Enter**, escreva e aperte Enter de novo (Esc fecha a caixa). A resposta aparece num balão em cima dela. Enquanto vocês conversam, ela para de andar, vira para a câmera e pausa os próprios pensamentos antes do próximo passo. Para encerrar, aperte Enter com a caixa vazia: a caixa fecha e ela volta à rotina na hora. Sem isso, ela volta sozinha depois de `CONVERSATION_QUIET_MINUTES` (2 por padrão) sem mensagem nova. O modelo começa a carregar assim que o cérebro liga: espere a linha `Her model is loaded and ready` no log para a primeira resposta vir rápida.
 
-No mundo, ela vai até o computador antes de pesquisar e antes de salvar, e o desenho de cada descoberta sai ali mesmo. Para ver os desenhos, clique no computador e abra a aba **Desenhos**. Toda descoberta (Markdown) e todo desenho (PNG) ficam na pasta de descobertas (`DISCOVERIES_DIR` no `brain/.env`, ou `discoveries/` por padrão).
+No mundo, ela vai até o computador antes de pesquisar e antes de salvar, e o desenho de cada descoberta sai ali mesmo. Para ver os desenhos, clique no computador e abra a aba **Desenhos**. Toda descoberta (Markdown) e todo desenho (PNG) ficam na pasta de descobertas (`DISCOVERIES_DIR` no `brain/.env`, ou `discoveries/` por padrão). O mundo não lê essa pasta: o computador pede as notas, os desenhos e o histórico ao cérebro pelo WebSocket, então as abas só se enchem com o cérebro ligado.
 
 Aperte `Ctrl+C` para encerrar. O intervalo entre os ciclos e o limite de tokens por hora ficam no `brain/.env` (`AUTONOMOUS_CYCLE_INTERVAL_SECONDS`, `MAX_TOKENS_PER_HOUR`).
 
