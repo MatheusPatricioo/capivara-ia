@@ -1,0 +1,751 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Capivara IA: cérebro para mundo",
+  "description": "Mensagens que o cérebro manda a um cliente visual: ordens para o corpo (para todos os clientes) e respostas a pedidos (só para o cliente que perguntou).",
+  "$defs": {
+    "DiaryDayMessage": {
+      "properties": {
+        "day": {
+          "title": "Day",
+          "type": "string"
+        },
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/DiaryEntryMessage"
+          },
+          "title": "Entries",
+          "type": "array"
+        },
+        "mood": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mood"
+        }
+      },
+      "required": [
+        "day",
+        "entries"
+      ],
+      "title": "DiaryDayMessage",
+      "type": "object"
+    },
+    "DiaryEntryMessage": {
+      "properties": {
+        "written_at": {
+          "title": "Written At",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "mood": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mood"
+        }
+      },
+      "required": [
+        "written_at",
+        "text"
+      ],
+      "title": "DiaryEntryMessage",
+      "type": "object"
+    },
+    "DiaryMessage": {
+      "description": "The latest pages of her diary, the newest day first.",
+      "properties": {
+        "type": {
+          "const": "diary",
+          "default": "diary",
+          "title": "Type",
+          "type": "string"
+        },
+        "days": {
+          "items": {
+            "$ref": "#/$defs/DiaryDayMessage"
+          },
+          "title": "Days",
+          "type": "array"
+        }
+      },
+      "required": [
+        "type",
+        "days"
+      ],
+      "title": "DiaryMessage",
+      "type": "object"
+    },
+    "DiscoveryListReply": {
+      "description": "The notes of one folder, the newest first.",
+      "properties": {
+        "type": {
+          "const": "discovery_list",
+          "default": "discovery_list",
+          "title": "Type",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "folder": {
+          "enum": [
+            "discoveries",
+            "suggestions"
+          ],
+          "title": "Folder",
+          "type": "string"
+        },
+        "folder_path": {
+          "title": "Folder Path",
+          "type": "string"
+        },
+        "discoveries": {
+          "items": {
+            "$ref": "#/$defs/SavedItemSummary"
+          },
+          "title": "Discoveries",
+          "type": "array"
+        }
+      },
+      "required": [
+        "type",
+        "request_id",
+        "folder",
+        "folder_path",
+        "discoveries"
+      ],
+      "title": "DiscoveryListReply",
+      "type": "object"
+    },
+    "DiscoveryReply": {
+      "properties": {
+        "type": {
+          "const": "discovery",
+          "default": "discovery",
+          "title": "Type",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "folder": {
+          "enum": [
+            "discoveries",
+            "suggestions"
+          ],
+          "title": "Folder",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+\\.[a-z]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "markdown": {
+          "title": "Markdown",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "request_id",
+        "folder",
+        "id",
+        "title",
+        "markdown"
+      ],
+      "title": "DiscoveryReply",
+      "type": "object"
+    },
+    "DrawingListReply": {
+      "description": "Her drawings, the newest first, without the images: each one is asked for apart,\nso no message grows with the size of the gallery.",
+      "properties": {
+        "type": {
+          "const": "drawing_list",
+          "default": "drawing_list",
+          "title": "Type",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "folder_path": {
+          "title": "Folder Path",
+          "type": "string"
+        },
+        "drawings": {
+          "items": {
+            "$ref": "#/$defs/SavedItemSummary"
+          },
+          "title": "Drawings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "type",
+        "request_id",
+        "folder_path",
+        "drawings"
+      ],
+      "title": "DrawingListReply",
+      "type": "object"
+    },
+    "DrawingReply": {
+      "description": "One drawing as a PNG file in base64, because JSON only carries text.",
+      "properties": {
+        "type": {
+          "const": "drawing",
+          "default": "drawing",
+          "title": "Type",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+\\.[a-z]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "png_base64": {
+          "minLength": 1,
+          "title": "Png Base64",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "request_id",
+        "id",
+        "title",
+        "png_base64"
+      ],
+      "title": "DrawingReply",
+      "type": "object"
+    },
+    "FeelingsMessage": {
+      "description": "How she feels, for the body to show it: posture, pace and a small symbol.",
+      "properties": {
+        "type": {
+          "const": "feelings",
+          "default": "feelings",
+          "title": "Type",
+          "type": "string"
+        },
+        "emotion": {
+          "title": "Emotion",
+          "type": "string"
+        },
+        "intensity": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Intensity",
+          "type": "number"
+        },
+        "valence": {
+          "maximum": 1.0,
+          "minimum": -1.0,
+          "title": "Valence",
+          "type": "number"
+        },
+        "arousal": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Arousal",
+          "type": "number"
+        }
+      },
+      "required": [
+        "type",
+        "emotion",
+        "intensity",
+        "valence",
+        "arousal"
+      ],
+      "title": "FeelingsMessage",
+      "type": "object"
+    },
+    "FoundPage": {
+      "properties": {
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "url": {
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "url"
+      ],
+      "title": "FoundPage",
+      "type": "object"
+    },
+    "GoToMessage": {
+      "properties": {
+        "type": {
+          "const": "go_to",
+          "default": "go_to",
+          "title": "Type",
+          "type": "string"
+        },
+        "point": {
+          "minLength": 1,
+          "title": "Point",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "point"
+      ],
+      "title": "GoToMessage",
+      "type": "object"
+    },
+    "HeardMessage": {
+      "description": "What she understood when her creator talked to her out loud (\"\" when nothing),\nso the world can show it. Never remembered.",
+      "properties": {
+        "type": {
+          "const": "heard",
+          "default": "heard",
+          "title": "Type",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "text"
+      ],
+      "title": "HeardMessage",
+      "type": "object"
+    },
+    "LetterMessage": {
+      "properties": {
+        "file_name": {
+          "title": "File Name",
+          "type": "string"
+        },
+        "written_at": {
+          "title": "Written At",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "unread": {
+          "title": "Unread",
+          "type": "boolean"
+        },
+        "replied_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Replied At"
+        },
+        "reply": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reply"
+        }
+      },
+      "required": [
+        "file_name",
+        "written_at",
+        "text",
+        "unread"
+      ],
+      "title": "LetterMessage",
+      "type": "object"
+    },
+    "ListeningMessage": {
+      "description": "She stops, faces her creator and listens for the given seconds. Sent again on every\nexchange, so the world only extends the time and never needs an \"it is over\" message.",
+      "properties": {
+        "type": {
+          "const": "listening",
+          "default": "listening",
+          "title": "Type",
+          "type": "string"
+        },
+        "seconds": {
+          "exclusiveMinimum": 0.0,
+          "title": "Seconds",
+          "type": "number"
+        }
+      },
+      "required": [
+        "type",
+        "seconds"
+      ],
+      "title": "ListeningMessage",
+      "type": "object"
+    },
+    "MailboxMessage": {
+      "description": "Every letter in the mailbox, the newest first. Unread ones raise its flag.",
+      "properties": {
+        "type": {
+          "const": "mailbox",
+          "default": "mailbox",
+          "title": "Type",
+          "type": "string"
+        },
+        "letters": {
+          "items": {
+            "$ref": "#/$defs/LetterMessage"
+          },
+          "title": "Letters",
+          "type": "array"
+        }
+      },
+      "required": [
+        "type",
+        "letters"
+      ],
+      "title": "MailboxMessage",
+      "type": "object"
+    },
+    "RequestFailedReply": {
+      "description": "Sent instead of the expected reply, so the client stops waiting at once.",
+      "properties": {
+        "type": {
+          "const": "request_failed",
+          "default": "request_failed",
+          "title": "Type",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "reason": {
+          "enum": [
+            "not_found",
+            "unreadable",
+            "invalid_request"
+          ],
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "request_id",
+        "reason"
+      ],
+      "title": "RequestFailedReply",
+      "type": "object"
+    },
+    "SavedItemSummary": {
+      "description": "One note or drawing in a list: enough to show it and to ask for it later.",
+      "properties": {
+        "id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+\\.[a-z]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "saved_at": {
+          "title": "Saved At",
+          "type": "string"
+        },
+        "done": {
+          "default": false,
+          "title": "Done",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "saved_at"
+      ],
+      "title": "SavedItemSummary",
+      "type": "object"
+    },
+    "SearchEntry": {
+      "properties": {
+        "searched_at": {
+          "title": "Searched At",
+          "type": "string"
+        },
+        "query": {
+          "title": "Query",
+          "type": "string"
+        },
+        "pages": {
+          "items": {
+            "$ref": "#/$defs/FoundPage"
+          },
+          "title": "Pages",
+          "type": "array"
+        }
+      },
+      "required": [
+        "searched_at",
+        "query",
+        "pages"
+      ],
+      "title": "SearchEntry",
+      "type": "object"
+    },
+    "SearchHistoryReply": {
+      "description": "Every web search she did, the newest first.",
+      "properties": {
+        "type": {
+          "const": "search_history",
+          "default": "search_history",
+          "title": "Type",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "searches": {
+          "items": {
+            "$ref": "#/$defs/SearchEntry"
+          },
+          "title": "Searches",
+          "type": "array"
+        }
+      },
+      "required": [
+        "type",
+        "request_id",
+        "searches"
+      ],
+      "title": "SearchHistoryReply",
+      "type": "object"
+    },
+    "SkyMessage": {
+      "description": "The time of day and the weather, for the world to move the sun and make it rain.",
+      "properties": {
+        "type": {
+          "const": "sky",
+          "default": "sky",
+          "title": "Type",
+          "type": "string"
+        },
+        "day_fraction": {
+          "exclusiveMaximum": 1.0,
+          "minimum": 0.0,
+          "title": "Day Fraction",
+          "type": "number"
+        },
+        "day_length_seconds": {
+          "exclusiveMinimum": 0.0,
+          "title": "Day Length Seconds",
+          "type": "number"
+        },
+        "weather": {
+          "title": "Weather",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "day_fraction",
+        "day_length_seconds",
+        "weather"
+      ],
+      "title": "SkyMessage",
+      "type": "object"
+    },
+    "SpeechAudio": {
+      "description": "Her voice: 16-bit mono PCM, little endian, in base64, because JSON only carries text.\nThe world plays it from these bytes, without writing a file.",
+      "properties": {
+        "sample_rate": {
+          "exclusiveMinimum": 0,
+          "title": "Sample Rate",
+          "type": "integer"
+        },
+        "pcm16_base64": {
+          "minLength": 1,
+          "title": "Pcm16 Base64",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sample_rate",
+        "pcm16_base64"
+      ],
+      "title": "SpeechAudio",
+      "type": "object"
+    },
+    "SpeechMessage": {
+      "description": "Something she says, shown in a speech balloon above her and, when there is audio,\nsaid by her voice. Never remembered: a world that connects later must not hear old\nreplies.",
+      "properties": {
+        "type": {
+          "const": "speech",
+          "default": "speech",
+          "title": "Type",
+          "type": "string"
+        },
+        "speech_id": {
+          "minimum": 1,
+          "title": "Speech Id",
+          "type": "integer"
+        },
+        "caption": {
+          "minLength": 1,
+          "title": "Caption",
+          "type": "string"
+        },
+        "audio": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SpeechAudio"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "type",
+        "speech_id",
+        "caption"
+      ],
+      "title": "SpeechMessage",
+      "type": "object"
+    }
+  },
+  "discriminator": {
+    "mapping": {
+      "diary": "#/$defs/DiaryMessage",
+      "discovery": "#/$defs/DiscoveryReply",
+      "discovery_list": "#/$defs/DiscoveryListReply",
+      "drawing": "#/$defs/DrawingReply",
+      "drawing_list": "#/$defs/DrawingListReply",
+      "feelings": "#/$defs/FeelingsMessage",
+      "go_to": "#/$defs/GoToMessage",
+      "heard": "#/$defs/HeardMessage",
+      "listening": "#/$defs/ListeningMessage",
+      "mailbox": "#/$defs/MailboxMessage",
+      "request_failed": "#/$defs/RequestFailedReply",
+      "search_history": "#/$defs/SearchHistoryReply",
+      "sky": "#/$defs/SkyMessage",
+      "speech": "#/$defs/SpeechMessage"
+    },
+    "propertyName": "type"
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/GoToMessage"
+    },
+    {
+      "$ref": "#/$defs/FeelingsMessage"
+    },
+    {
+      "$ref": "#/$defs/SkyMessage"
+    },
+    {
+      "$ref": "#/$defs/MailboxMessage"
+    },
+    {
+      "$ref": "#/$defs/DiaryMessage"
+    },
+    {
+      "$ref": "#/$defs/ListeningMessage"
+    },
+    {
+      "$ref": "#/$defs/SpeechMessage"
+    },
+    {
+      "$ref": "#/$defs/HeardMessage"
+    },
+    {
+      "$ref": "#/$defs/DiscoveryListReply"
+    },
+    {
+      "$ref": "#/$defs/DiscoveryReply"
+    },
+    {
+      "$ref": "#/$defs/DrawingListReply"
+    },
+    {
+      "$ref": "#/$defs/DrawingReply"
+    },
+    {
+      "$ref": "#/$defs/SearchHistoryReply"
+    },
+    {
+      "$ref": "#/$defs/RequestFailedReply"
+    }
+  ]
+}

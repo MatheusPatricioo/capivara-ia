@@ -1,0 +1,383 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Capivara IA: mundo para cérebro",
+  "description": "Mensagens que um cliente visual manda ao cérebro: eventos (avisos, sem resposta) e pedidos (com request_id, sempre respondidos com o mesmo request_id).",
+  "$defs": {
+    "ConversationEndedMessage": {
+      "description": "Sent by the world when her creator closes the chat with an empty Enter: he does not\nwant to talk anymore, so she goes back to her own life without waiting.",
+      "properties": {
+        "type": {
+          "const": "conversation_ended",
+          "default": "conversation_ended",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "title": "ConversationEndedMessage",
+      "type": "object",
+      "required": [
+        "type"
+      ]
+    },
+    "CreatorSaidMessage": {
+      "description": "Sent by the world when her creator talks to her (typed in the chat box).",
+      "properties": {
+        "type": {
+          "const": "creator_said",
+          "default": "creator_said",
+          "title": "Type",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "text"
+      ],
+      "title": "CreatorSaidMessage",
+      "type": "object"
+    },
+    "CreatorTalkingMessage": {
+      "description": "Sent by the world when her creator presses (true) and releases (false) the talk\nbutton: the brain records the microphone in between.",
+      "properties": {
+        "type": {
+          "const": "creator_talking",
+          "default": "creator_talking",
+          "title": "Type",
+          "type": "string"
+        },
+        "talking": {
+          "title": "Talking",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "talking"
+      ],
+      "title": "CreatorTalkingMessage",
+      "type": "object"
+    },
+    "GetDiscoveryRequest": {
+      "properties": {
+        "type": {
+          "const": "get_discovery",
+          "default": "get_discovery",
+          "title": "Type",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "folder": {
+          "enum": [
+            "discoveries",
+            "suggestions"
+          ],
+          "title": "Folder",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+\\.[a-z]+$",
+          "title": "Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "request_id",
+        "folder",
+        "id"
+      ],
+      "title": "GetDiscoveryRequest",
+      "type": "object"
+    },
+    "GetDrawingRequest": {
+      "properties": {
+        "type": {
+          "const": "get_drawing",
+          "default": "get_drawing",
+          "title": "Type",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 120,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+\\.[a-z]+$",
+          "title": "Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "request_id",
+        "id"
+      ],
+      "title": "GetDrawingRequest",
+      "type": "object"
+    },
+    "GetSearchHistoryRequest": {
+      "properties": {
+        "type": {
+          "const": "get_search_history",
+          "default": "get_search_history",
+          "title": "Type",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Request Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "request_id"
+      ],
+      "title": "GetSearchHistoryRequest",
+      "type": "object"
+    },
+    "LetterOpenedMessage": {
+      "description": "Sent by the world when her creator opens a letter in the mailbox.",
+      "properties": {
+        "type": {
+          "const": "letter_opened",
+          "default": "letter_opened",
+          "title": "Type",
+          "type": "string"
+        },
+        "letter": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Letter",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "letter"
+      ],
+      "title": "LetterOpenedMessage",
+      "type": "object"
+    },
+    "LetterRepliedMessage": {
+      "description": "Sent by the world when her creator writes back to a letter.",
+      "properties": {
+        "type": {
+          "const": "letter_replied",
+          "default": "letter_replied",
+          "title": "Type",
+          "type": "string"
+        },
+        "letter": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Letter",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 1500,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "letter",
+        "text"
+      ],
+      "title": "LetterRepliedMessage",
+      "type": "object"
+    },
+    "ListDiscoveriesRequest": {
+      "properties": {
+        "type": {
+          "const": "list_discoveries",
+          "default": "list_discoveries",
+          "title": "Type",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "folder": {
+          "enum": [
+            "discoveries",
+            "suggestions"
+          ],
+          "title": "Folder",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "request_id",
+        "folder"
+      ],
+      "title": "ListDiscoveriesRequest",
+      "type": "object"
+    },
+    "ListDrawingsRequest": {
+      "properties": {
+        "type": {
+          "const": "list_drawings",
+          "default": "list_drawings",
+          "title": "Type",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 64,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "title": "Request Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "request_id"
+      ],
+      "title": "ListDrawingsRequest",
+      "type": "object"
+    },
+    "NoticedMessage": {
+      "description": "Sent by the world when the capybara passes close to something worth noticing.",
+      "properties": {
+        "type": {
+          "const": "noticed",
+          "default": "noticed",
+          "title": "Type",
+          "type": "string"
+        },
+        "thing": {
+          "maxLength": 64,
+          "minLength": 1,
+          "title": "Thing",
+          "type": "string"
+        },
+        "description": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "thing",
+        "description"
+      ],
+      "title": "NoticedMessage",
+      "type": "object"
+    },
+    "VoiceMode": {
+      "description": "How much she speaks out loud, chosen by her creator.",
+      "enum": [
+        "mute",
+        "conversation"
+      ],
+      "title": "VoiceMode",
+      "type": "string"
+    },
+    "VoiceModeMessage": {
+      "description": "Sent by the world when it connects and whenever her creator switches her voice.",
+      "properties": {
+        "type": {
+          "const": "voice_mode",
+          "default": "voice_mode",
+          "title": "Type",
+          "type": "string"
+        },
+        "mode": {
+          "$ref": "#/$defs/VoiceMode"
+        }
+      },
+      "required": [
+        "type",
+        "mode"
+      ],
+      "title": "VoiceModeMessage",
+      "type": "object"
+    }
+  },
+  "discriminator": {
+    "mapping": {
+      "conversation_ended": "#/$defs/ConversationEndedMessage",
+      "creator_said": "#/$defs/CreatorSaidMessage",
+      "creator_talking": "#/$defs/CreatorTalkingMessage",
+      "get_discovery": "#/$defs/GetDiscoveryRequest",
+      "get_drawing": "#/$defs/GetDrawingRequest",
+      "get_search_history": "#/$defs/GetSearchHistoryRequest",
+      "letter_opened": "#/$defs/LetterOpenedMessage",
+      "letter_replied": "#/$defs/LetterRepliedMessage",
+      "list_discoveries": "#/$defs/ListDiscoveriesRequest",
+      "list_drawings": "#/$defs/ListDrawingsRequest",
+      "noticed": "#/$defs/NoticedMessage",
+      "voice_mode": "#/$defs/VoiceModeMessage"
+    },
+    "propertyName": "type"
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/NoticedMessage"
+    },
+    {
+      "$ref": "#/$defs/LetterOpenedMessage"
+    },
+    {
+      "$ref": "#/$defs/LetterRepliedMessage"
+    },
+    {
+      "$ref": "#/$defs/CreatorSaidMessage"
+    },
+    {
+      "$ref": "#/$defs/VoiceModeMessage"
+    },
+    {
+      "$ref": "#/$defs/CreatorTalkingMessage"
+    },
+    {
+      "$ref": "#/$defs/ConversationEndedMessage"
+    },
+    {
+      "$ref": "#/$defs/ListDiscoveriesRequest"
+    },
+    {
+      "$ref": "#/$defs/GetDiscoveryRequest"
+    },
+    {
+      "$ref": "#/$defs/ListDrawingsRequest"
+    },
+    {
+      "$ref": "#/$defs/GetDrawingRequest"
+    },
+    {
+      "$ref": "#/$defs/GetSearchHistoryRequest"
+    }
+  ]
+}
