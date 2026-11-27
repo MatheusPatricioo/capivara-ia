@@ -6,6 +6,11 @@ requires-python = ">=3.12"
 dependencies = [
     "ddgs",
     "httpx",
+    # Tracing: the brain opens spans with the API; the SDK and the OTLP exporter send them
+    # to Langfuse when TRACING_ENABLED=true (see docs/observabilidade.md).
+    "opentelemetry-api",
+    "opentelemetry-exporter-otlp-proto-http",
+    "opentelemetry-sdk",
     "pillow",
     # PostgreSQL driver (version 3) and its connection pool, for the long-term memory.
     # On Windows, Smart App Control blocks the unsigned DLL of psycopg[binary], so there

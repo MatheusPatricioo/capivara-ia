@@ -10,6 +10,7 @@ from src.domain.language_model import (
     LanguageModelError,
     Role,
     StructuredReply,
+    TokenUsage,
     ToolCall,
     ToolDefinition,
 )
@@ -102,7 +103,9 @@ class OllamaLanguageModel:
             raise LanguageModelError(NOT_A_JSON_OBJECT_MESSAGE) from error
         if not isinstance(parsed_content, dict):
             raise LanguageModelError(NOT_A_JSON_OBJECT_MESSAGE)
-        return StructuredReply(data=parsed_content, token_count=reply.token_count)
+        return StructuredReply(
+            data=parsed_content, token_count=reply.token_count, usage=reply.usage
+        )
 
     def _base_payload(self, messages: list[ChatMessage]) -> dict[str, object]:
         payload: dict[str, object] = {
@@ -175,11 +178,13 @@ class OllamaLanguageModel:
             raise LanguageModelError(UNEXPECTED_FORMAT_MESSAGE)
         tool_calls = tuple(cls._parse_tool_call(raw_tool_call) for raw_tool_call in raw_tool_calls)
         cls._log_timing(body)
+        usage = cls._token_usage(body)
         return ChatMessage(
             role=Role.ASSISTANT,
             content=content,
             tool_calls=tool_calls,
-            token_count=cls._token_count(body),
+            token_count=usage.input_tokens + usage.output_tokens if usage is not None else 0,
+            usage=usage,
         )
 
     @staticmethod
@@ -196,10 +201,17 @@ class OllamaLanguageModel:
         )
 
     @staticmethod
-    def _token_count(body: dict[str, object]) -> int:
-        """Ollama reports read tokens (prompt_eval_count) and written tokens (eval_count)."""
-        counts = (body.get("prompt_eval_count"), body.get("eval_count"))
-        return sum(count for count in counts if isinstance(count, int))
+    def _token_usage(body: dict[str, object]) -> TokenUsage | None:
+        """Ollama reports read tokens (prompt_eval_count) and written tokens (eval_count).
+        None when it reports neither."""
+        read_tokens = body.get("prompt_eval_count")
+        written_tokens = body.get("eval_count")
+        if not isinstance(read_tokens, int) and not isinstance(written_tokens, int):
+            return None
+        return TokenUsage(
+            input_tokens=read_tokens if isinstance(read_tokens, int) else 0,
+            output_tokens=written_tokens if isinstance(written_tokens, int) else 0,
+        )
 
     @staticmethod
     def _parse_tool_call(raw_tool_call: object) -> ToolCall:

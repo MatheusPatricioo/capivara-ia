@@ -2,6 +2,10 @@ import logging
 import time
 from collections.abc import Callable
 
+from opentelemetry import trace
+from opentelemetry.trace import Tracer
+
+from src.application import tracing
 from src.application.conversation import Conversation, StepLimitReachedError
 from src.application.token_budget import HourlyTokenBudget
 from src.domain.language_model import LanguageModelError
@@ -33,6 +37,8 @@ class AutonomousLoop:
     below 1 when she is in a good tide.
     wait_for_turn runs first in every cycle and may block, like while her creator is
     talking with her: the conversation comes first.
+    Every cycle that runs is one trace: a root span with everything she did inside it.
+    Skipped cycles leave no trace, so a spent budget does not fill the panel with nothing.
     """
 
     def __init__(
@@ -47,6 +53,7 @@ class AutonomousLoop:
         before_cycle: Callable[[], None] = _do_nothing,
         pace: Callable[[], float] = _steady_pace,
         wait_for_turn: Callable[[], None] = _do_nothing,
+        tracer: Tracer | None = None,
     ) -> None:
         self._start_conversation = start_conversation
         self._budget = budget
@@ -58,6 +65,7 @@ class AutonomousLoop:
         self._before_cycle = before_cycle
         self._pace = pace
         self._wait_for_turn = wait_for_turn
+        self._tracer = tracer or trace.get_tracer(__name__)
 
     def run(self, cycles: int | None = None) -> None:
         """Runs the given number of cycles, or forever when cycles is None."""
@@ -77,15 +85,25 @@ class AutonomousLoop:
                 self._budget.tokens_used_in_the_last_hour,
             )
             return None
+        with self._tracer.start_as_current_span("autonomous_cycle") as span:
+            span.set_attribute(tracing.OBSERVATION_TYPE, tracing.AGENT)
+            span.set_attribute(tracing.AGENT_NAME, tracing.CAPYBARA_AGENT_NAME)
+            return self._live_one_cycle(span)
+
+    def _live_one_cycle(self, span: trace.Span) -> str | None:
         self._before_cycle()
+        inner_voice = self._compose_inner_voice()
+        tracing.record_input(span, inner_voice)
         try:
-            thought = self._start_conversation().send(self._compose_inner_voice())
+            thought = self._start_conversation().send(inner_voice)
         except (LanguageModelError, StepLimitReachedError) as error:
             logger.warning("Cycle failed: %s", error)
+            tracing.mark_failed(span, str(error))
             return None
-        logger.info(
-            "Cycle finished (%d tokens in the last hour)", self._budget.tokens_used_in_the_last_hour
-        )
+        tokens_used = self._budget.tokens_used_in_the_last_hour
+        logger.info("Cycle finished (%d tokens in the last hour)", tokens_used)
+        tracing.record_output(span, thought)
+        tracing.record_metadata(span, "tokens_in_the_last_hour", tokens_used)
         self._on_cycle_finished()
         self._on_thought(thought)
         return thought

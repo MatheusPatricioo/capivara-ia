@@ -2,6 +2,7 @@
 
 import logging
 from collections.abc import Callable
+from dataclasses import asdict
 
 import httpx
 
@@ -51,6 +52,8 @@ from src.infrastructure.saved_files_reader import SavedFilesReader
 from src.infrastructure.serial_worker import SerialWorker
 from src.infrastructure.settings import Settings
 from src.infrastructure.sky_broadcaster import SkyBroadcaster
+from src.infrastructure.telemetry import tracing_to_langfuse
+from src.infrastructure.traced_language_model import TracedLanguageModel
 from src.infrastructure.websocket_body import WebSocketBody
 from src.infrastructure.websocket_conversation_display import WebSocketConversationDisplay
 from src.infrastructure.world_event_router import WorldEventRouter
@@ -112,8 +115,9 @@ def build_attention_inbox(settings: Settings) -> AttentionInbox:
 def build_language_model(
     settings: Settings, http_client: httpx.Client, budget: HourlyTokenBudget
 ) -> MeteredLanguageModel:
-    """The local model, with every call counted against the hourly token budget. It starts
-    loading in the background right away, so the first reply does not wait for the disk."""
+    """The local model, with every call traced (when tracing is on) and counted against
+    the hourly token budget. It starts loading in the background right away, so the first
+    reply does not wait for the disk."""
     ollama_model = OllamaLanguageModel(
         client=http_client,
         model=settings.ollama_model,
@@ -121,7 +125,13 @@ def build_language_model(
         keep_alive=settings.ollama_keep_alive,
     )
     warm_up_in_background(ollama_model)
-    return MeteredLanguageModel(ollama_model, budget)
+    traced_model = TracedLanguageModel(
+        ollama_model,
+        model_name=settings.ollama_model,
+        provider_name="ollama",
+        model_parameters=asdict(settings.ollama_generation_options()),
+    )
+    return MeteredLanguageModel(traced_model, budget)
 
 
 def build_related_discoveries(
@@ -254,6 +264,7 @@ def main() -> None:
     voice_mode = VoiceModeSwitch()
     world_events.when_voice_mode_changed(voice_mode.switch_to)
     with (
+        tracing_to_langfuse(settings),
         WorldServer(
             settings.world_server_host,
             settings.world_server_port,

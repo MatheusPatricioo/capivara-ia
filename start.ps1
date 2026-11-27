@@ -8,6 +8,8 @@
     2. Starts the long-term memory (PostgreSQL in Docker) and waits until it is healthy,
        opening Docker Desktop first when needed. The memory is optional: when Docker is
        missing or the database fails, it warns and the capybara runs without remembering.
+       With TRACING_ENABLED=true in brain/.env, it also starts Langfuse
+       (compose.observability.yaml), where her traces are seen.
     3. Opens the brain (python -m src.live_capybara) in a new PowerShell window, so its logs stay visible.
     4. Waits for the brain's WebSocket server, then runs the Godot world (skipped with -SkipWorld,
        which is how the world itself starts the brain when Play is pressed in the Godot editor).
@@ -49,6 +51,8 @@ $dockerDesktopCandidates = @(
     (Join-Path $env:LOCALAPPDATA "Programs\DockerDesktop\Docker Desktop.exe")
 )
 $memoryUnavailableMessage = "The capybara will run without long-term memory (her discoveries are still saved as files)."
+$observabilityComposeFile = Join-Path $projectRoot "compose.observability.yaml"
+$tracingUnavailableMessage = "The capybara runs normally; her traces are dropped until Langfuse is up."
 
 function Test-OllamaRunning {
     try {
@@ -182,8 +186,37 @@ else {
     }
 }
 
-# 2. The long-term memory, before the brain, so the brain starts with it ready.
+function Test-TracingEnabled {
+    if (-not (Test-Path $brainEnvFile)) {
+        return $false
+    }
+    return [bool](Select-String -Path $brainEnvFile -Pattern '^\s*TRACING_ENABLED\s*=\s*(true|1|yes|on)\s*$' -Quiet)
+}
+
+function Start-Observability {
+    if (-not (Test-TracingEnabled)) {
+        return
+    }
+    if (-not (Get-Command docker -ErrorAction SilentlyContinue) -or -not (Start-DockerIfNeeded)) {
+        Write-Warning "Docker is not available. $tracingUnavailableMessage"
+        return
+    }
+    Write-Host "Starting Langfuse (the first start downloads its images and takes a few minutes)..."
+    $composeArguments = @(
+        "compose", "--project-directory", $projectRoot, "--file", $observabilityComposeFile, "up", "--detach", "--wait"
+    )
+    if (Invoke-Docker -Arguments $composeArguments) {
+        Write-Host "Langfuse is up: http://localhost:3000"
+    }
+    else {
+        Write-Warning "Langfuse did not start. $tracingUnavailableMessage"
+    }
+}
+
+# 2. The long-term memory, before the brain, so the brain starts with it ready. Then
+#    Langfuse, only when TRACING_ENABLED=true in brain/.env.
 Start-MemoryDatabase
+Start-Observability
 
 # 3. The brain, in its own window so the logs can be followed.
 if (-not (Test-Path $venvPython)) {

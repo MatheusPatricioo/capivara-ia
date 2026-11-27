@@ -125,6 +125,13 @@ class Settings(BaseSettings):
     speech_recognition_device: str = "cpu"
     # How the model numbers are stored: int8 is light on the CPU, float16 suits the GPU.
     speech_recognition_compute_type: str = "int8"
+    # Observability: every cycle, chat answer, model call and tool as OpenTelemetry spans,
+    # sent to the Langfuse of compose.observability.yaml. The default keys are the ones
+    # that compose file creates on its first start, for a Langfuse only this machine sees.
+    tracing_enabled: bool = False
+    langfuse_host: str = "http://localhost:3000"
+    langfuse_public_key: str = "pk-lf-capivara-local"
+    langfuse_secret_key: SecretStr = SecretStr("sk-lf-capivara-local")
     log_level: LogLevel = "INFO"
     log_file: Path = PROJECT_ROOT / "logs" / "capybara.log"
 

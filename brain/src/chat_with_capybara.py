@@ -1,6 +1,7 @@
 import argparse
 import sys
 from collections.abc import Sequence
+from dataclasses import asdict
 from typing import TYPE_CHECKING
 
 import httpx
@@ -15,6 +16,8 @@ from src.domain.speech import SpeechError
 from src.infrastructure.logging_setup import configure_logging
 from src.infrastructure.ollama_language_model import OllamaLanguageModel
 from src.infrastructure.settings import Settings
+from src.infrastructure.telemetry import tracing_to_langfuse
+from src.infrastructure.traced_language_model import TracedLanguageModel
 from src.long_term_memory import open_long_term_memory
 
 if TYPE_CHECKING:
@@ -109,17 +112,23 @@ def main() -> None:
     voice = load_voice(settings) if arguments.voice else None
     heart = build_heart(settings)
     with (
+        tracing_to_langfuse(settings),
         httpx.Client(
             base_url=settings.ollama_base_url,
             timeout=settings.ollama_timeout_seconds,
         ) as http_client,
         open_long_term_memory(settings, http_client) as memory,
     ):
-        language_model = OllamaLanguageModel(
-            client=http_client,
-            model=settings.ollama_model,
-            generation_options=settings.ollama_generation_options(),
-            keep_alive=settings.ollama_keep_alive,
+        language_model = TracedLanguageModel(
+            OllamaLanguageModel(
+                client=http_client,
+                model=settings.ollama_model,
+                generation_options=settings.ollama_generation_options(),
+                keep_alive=settings.ollama_keep_alive,
+            ),
+            model_name=settings.ollama_model,
+            provider_name="ollama",
+            model_parameters=asdict(settings.ollama_generation_options()),
         )
         conversation = start_creator_conversation(
             settings, language_model, http_client, memory, heart

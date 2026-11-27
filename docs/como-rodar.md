@@ -127,6 +127,10 @@ No mundo, ela vai até o computador antes de pesquisar e antes de salvar, e o de
 
 Aperte `Ctrl+C` para encerrar. O intervalo entre os ciclos e o limite de tokens por hora ficam no `brain/.env` (`AUTONOMOUS_CYCLE_INTERVAL_SECONDS`, `MAX_TOKENS_PER_HOUR`).
 
+## Ver os traces no Langfuse
+
+Com `TRACING_ENABLED=true` no `brain/.env`, o `start.ps1` também sobe um Langfuse local, e cada ciclo dela vira um trace em http://localhost:3000. O passo a passo está em [Observabilidade](observabilidade.md).
+
 ## Rodar os testes
 
 Na raiz do projeto:

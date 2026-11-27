@@ -23,6 +23,8 @@ As principais escolhas do projeto, cada uma com o contexto, as alternativas cons
 - [Modelo sempre pronto e GPU para ele](#modelo-sempre-pronto-e-gpu-para-ele)
 - [psycopg puro com libpq assinado no Windows](#psycopg-puro-com-libpq-assinado-no-windows)
 - [O mundo pede ao cérebro em vez de ler o disco](#o-mundo-pede-ao-cérebro-em-vez-de-ler-o-disco)
+- [Observabilidade com OpenTelemetry, vista no Langfuse](#observabilidade-com-opentelemetry-vista-no-langfuse)
+- [Prompts versionados no git, com a versão em cada trace](#prompts-versionados-no-git-com-a-versão-em-cada-trace)
 
 ---
 
@@ -164,3 +166,17 @@ As principais escolhas do projeto, cada uma com o contexto, as alternativas cons
 - **Alternativas:** manter a leitura de disco; servir os arquivos por HTTP; pedidos e respostas no WebSocket que já existia.
 - **Escolha:** pedidos com `request_id` (`list_drawings`, `get_discovery`...), respondidos só para quem perguntou, com títulos prontos e PNGs em base64, um por pedido. O contrato é um JSON Schema gerado dos modelos Pydantic, em [`docs/protocol/`](protocol/README.md), e um teste valida mensagens reais contra ele.
 - **Por quê:** o mundo vira um cliente qualquer, que não sabe onde os arquivos ficam nem como se chamam. Os desenhos têm uns 3 KB, então os 33% a mais do base64 não pesam, e tudo fica num canal só, coberto pelo contrato.
+
+## Observabilidade com OpenTelemetry, vista no Langfuse
+
+- **Contexto:** o que ela fez num ciclo só aparecia no log em texto: dava para ver qual ferramenta foi chamada, mas não o prompt inteiro que o modelo leu, quantos tokens cada passo gastou nem onde o tempo foi.
+- **Alternativas:** o SDK do Langfuse direto no código; o OpenTelemetry com o Jaeger, que é leve mas não entende chamadas de LLM; o OpenTelemetry com o Langfuse, que recebe OTLP e mostra prompt, resposta e tokens.
+- **Escolha:** spans do OpenTelemetry para cada ciclo, cada resposta ao criador, cada turno, cada chamada ao modelo e cada ferramenta, exportados por OTLP/HTTP para um Langfuse local no Docker (`compose.observability.yaml`). A camada de aplicação usa só a API do OpenTelemetry, que não faz nada sem o SDK, como o `logging`. O SDK e o exportador ficam na infraestrutura, e o modelo é medido por um decorator (`TracedLanguageModel`), igual ao `MeteredLanguageModel`. Tudo desligado por padrão (`TRACING_ENABLED`).
+- **Por quê:** o OpenTelemetry é o padrão aberto, então trocar o Langfuse por outro painel é trocar o endereço do exportador, sem mexer no código. Os nomes dos atributos seguem as convenções GenAI do OpenTelemetry, e só entrada, saída e tipo usam os nomes do Langfuse, porque as convenções ainda não cobrem um turno de agente. Com o Langfuse fora do ar, os lotes são descartados com um aviso no log e ela segue vivendo.
+
+## Prompts versionados no git, com a versão em cada trace
+
+- **Contexto:** para comparar execuções, cada trace precisa dizer com quais prompts foi feito.
+- **Alternativas:** o gerenciamento de prompts do Langfuse, com o cérebro buscando cada prompt no painel; os prompts como arquivos no git, com uma impressão digital de cada um.
+- **Escolha:** os prompts continuam em `brain/prompts/`. Na partida, cada arquivo ganha uma impressão digital (12 caracteres do SHA-256 do texto, sem diferença de fim de linha), e todas juntas formam a versão dos prompts. Ela vai em todo span (`langfuse.version`) e no resource, uma por prompt.
+- **Por quê:** o cérebro não passa a depender da rede para saber quem ela é, os prompts continuam revisados e testados junto com o código, e o git guarda o texto de cada versão. No Langfuse, filtrar pela versão mostra o antes e o depois de uma mudança de prompt.
