@@ -30,6 +30,9 @@ const FADE_SECONDS: float = 0.15
 
 var _shown_speech_id: int = NO_SPEECH_YET
 var _hide_timer: Timer = Timer.new()
+var _layer: CanvasLayer
+## Where the balloon is drawn and whose camera places it; null for the main window.
+var _target_viewport: Viewport = null
 var _balloon: PanelContainer
 var _label: Label
 var _tip: Polygon2D
@@ -49,6 +52,44 @@ func _process(_delta: float) -> void:
 	if _balloon.visible:
 		_balloon.reset_size()
 		_follow_her_head()
+
+
+## Draws the balloon inside another viewport (the Reels picture), placed by its camera.
+## The balloon is scaled like the game's interface would be in a window of that size, so
+## it looks the same as in the Movie Maker clips.
+func draw_in(target_viewport: SubViewport) -> void:
+	_target_viewport = target_viewport
+	_move_layer_to(target_viewport)
+	_layer.scale = Vector2.ONE * _interface_scale(Vector2(target_viewport.size))
+
+
+## Back to the main window, at its usual size.
+func draw_on_screen() -> void:
+	_target_viewport = null
+	# Godot refuses null here: the main window is given by name.
+	_move_layer_to(get_viewport())
+	_layer.scale = Vector2.ONE
+
+
+## Changing the viewport of a layer that is in the tree confuses Godot 4.7 on the second
+## change (it disconnects a signal twice), so the layer leaves the tree while it moves.
+func _move_layer_to(target_viewport: Viewport) -> void:
+	remove_child(_layer)
+	_layer.custom_viewport = target_viewport
+	add_child(_layer)
+
+
+## The stretch the "canvas_items" mode would apply in a window of this size.
+static func _interface_scale(window_size: Vector2) -> float:
+	var base_size: Vector2 = Vector2(
+		ProjectSettings.get_setting("display/window/size/viewport_width"),
+		ProjectSettings.get_setting("display/window/size/viewport_height")
+	)
+	return minf(window_size.x / base_size.x, window_size.y / base_size.y)
+
+
+func _drawing_viewport() -> Viewport:
+	return _target_viewport if _target_viewport != null else get_viewport()
 
 
 func _show_thinking(_text: String) -> void:
@@ -96,13 +137,15 @@ func _hide_balloon() -> void:
 
 ## The tip sits right above her head; the balloon is centered on it but kept on screen.
 func _follow_her_head() -> void:
-	var camera: Camera3D = get_viewport().get_camera_3d()
+	var drawing_viewport: Viewport = _drawing_viewport()
+	var camera: Camera3D = drawing_viewport.get_camera_3d()
 	if camera == null or camera.is_position_behind(global_position):
 		_balloon.hide()
 		_tip.hide()
 		return
-	var head: Vector2 = camera.unproject_position(global_position)
-	var screen: Vector2 = get_viewport().get_visible_rect().size
+	# In the layer's own units: a scaled layer draws everything bigger.
+	var head: Vector2 = camera.unproject_position(global_position) / _layer.scale.x
+	var screen: Vector2 = drawing_viewport.get_visible_rect().size / _layer.scale.x
 	var balloon_size: Vector2 = _balloon.size
 	var tip_top: float = head.y - GAP_ABOVE_HEAD - TIP_SIZE.y
 	var left: float = clampf(
@@ -116,9 +159,9 @@ func _follow_her_head() -> void:
 
 
 func _build() -> void:
-	var layer: CanvasLayer = CanvasLayer.new()
-	layer.layer = LAYER
-	add_child(layer)
+	_layer = CanvasLayer.new()
+	_layer.layer = LAYER
+	add_child(_layer)
 
 	_balloon = PanelContainer.new()
 	_balloon.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -131,7 +174,7 @@ func _build() -> void:
 	style.content_margin_bottom = 9.0
 	style.anti_aliasing = true
 	_balloon.add_theme_stylebox_override("panel", style)
-	layer.add_child(_balloon)
+	_layer.add_child(_balloon)
 
 	_label = Label.new()
 	_label.add_theme_font_size_override("font_size", FONT_SIZE)
@@ -144,7 +187,7 @@ func _build() -> void:
 	_tip.polygon = PackedVector2Array([
 		Vector2(-TIP_SIZE.x / 2.0, 0.0), Vector2(TIP_SIZE.x / 2.0, 0.0), Vector2(0.0, TIP_SIZE.y)
 	])
-	layer.add_child(_tip)
+	_layer.add_child(_tip)
 	_hide_balloon()
 
 

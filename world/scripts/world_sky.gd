@@ -5,6 +5,9 @@ extends Node3D
 ## (Brain.sky_changed); between messages the sun moves on its own, so it never jumps.
 ## Until the first message the scene keeps the look it has in the editor.
 ## Lights that turn on at night find the sky by its group and follow daylight_changed.
+## The sky shader (shaders/sky.gdshader) owns the colors; this script only sends it
+## the state: daylight, sun direction, clouds, whether it is morning or afternoon and
+## the moon (its phase, from the brain, and where its path puts it).
 
 ## How much daylight there is, from 0 (night) to 1 (full day). Sent on every repaint.
 signal daylight_changed(daylight: float)
@@ -17,13 +20,11 @@ const SUNRISE_FRACTION: float = 0.25
 const REPAINT_SECONDS: float = 0.25
 ## Seconds for a new weather to settle in, so rain starts and clouds come little by little.
 const WEATHER_TRANSITION_SECONDS: float = 8.0
-const NIGHT_SKY_TOP: Color = Color(0.02, 0.03, 0.09)
-const NIGHT_SKY_HORIZON: Color = Color(0.06, 0.08, 0.16)
-const OVERCAST_SKY: Color = Color(0.5, 0.52, 0.56)
-const TWILIGHT_HORIZON: Color = Color(0.95, 0.55, 0.35)
 const LOW_SUN_COLOR: Color = Color(1.0, 0.72, 0.5)
 const MOON_COLOR: Color = Color(0.6, 0.7, 1.0)
+## Moon light at full moon and at new moon: a full moon lights the night more.
 const MOON_ENERGY: float = 0.25
+const NEW_MOON_ENERGY: float = 0.1
 ## Ambient light color that takes over at night, so the world is dark but still visible.
 const NIGHT_AMBIENT: Color = Color(0.25, 0.3, 0.45)
 ## How each sky looks: x = clouds (0 to 1), y = rain (0 to 1), z = fog density.
@@ -38,6 +39,10 @@ const CLEAR_LOOK: Vector3 = Vector3(0.0, 0.0, 0.0)
 
 @export var sun: DirectionalLight3D
 @export var world_environment: WorldEnvironment
+## How far the moon's path leans away from straight overhead. At 60 degrees she climbs
+## no higher than 30, so the low clip cameras see her; she rises behind the game camera
+## and sets in front of it, near dawn.
+@export_range(0.0, 80.0) var moon_path_tilt_degrees: float = 60.0
 
 ## Full day until the brain says otherwise, like the editor look of the scene.
 var current_daylight: float = 1.0
@@ -50,10 +55,9 @@ var _weather_tween: Tween
 var _overcast: float = 0.0
 var _rain_strength: float = 0.0
 var _fog_density: float = 0.0
-var _sky_material: ProceduralSkyMaterial
-var _day_sky_top: Color
-var _day_sky_horizon: Color
-var _day_ground_bottom: Color
+var _sky_material: ShaderMaterial
+## Full until the brain says otherwise.
+var _moon_phase: float = 0.5
 var _sun_energy: float
 var _sun_yaw: float
 var _rain: WorldRain
@@ -65,15 +69,13 @@ func _enter_tree() -> void:
 
 
 func _ready() -> void:
-	_sky_material = world_environment.environment.sky.sky_material as ProceduralSkyMaterial
-	_day_sky_top = _sky_material.sky_top_color
-	_day_sky_horizon = _sky_material.sky_horizon_color
-	_day_ground_bottom = _sky_material.ground_bottom_color
+	_sky_material = world_environment.environment.sky.sky_material as ShaderMaterial
 	_sun_energy = sun.light_energy
 	_sun_yaw = sun.rotation.y
 	_rain = WorldRain.new()
 	add_child(_rain)
 	Brain.sky_changed.connect(_on_sky_changed)
+	Brain.moon_changed.connect(_on_moon_changed)
 
 
 func _process(delta: float) -> void:
@@ -92,6 +94,11 @@ func _on_sky_changed(day_fraction: float, day_length_seconds: float, weather: St
 	_day_fraction = day_fraction
 	_day_length_seconds = maxf(day_length_seconds, 1.0)
 	_change_weather(WEATHER_LOOKS.get(weather, CLEAR_LOOK), is_first_message)
+	_paint()
+
+
+func _on_moon_changed(phase: float) -> void:
+	_moon_phase = fposmod(phase, 1.0)
 	_paint()
 
 
@@ -119,40 +126,58 @@ func _paint() -> void:
 	var elevation: float = sin(sun_angle)
 	current_daylight = smoothstep(0.0, 0.3, elevation)
 	_place_light(sun_angle, elevation, current_daylight)
-	_paint_sky(elevation, current_daylight)
+	_paint_sky(sun_angle, current_daylight)
 	_rain.fall(_rain_strength)
 	daylight_changed.emit(current_daylight)
 
 
-## The same light is the sun by day and the moon by night (half a turn behind it).
+## The same light is the sun by day and the moon by night, shining from where the sky
+## shader draws each of them.
 func _place_light(sun_angle: float, elevation: float, daylight: float) -> void:
-	var light_angle: float = sun_angle if elevation >= 0.0 else sun_angle - PI
-	sun.rotation = Vector3(-light_angle, _sun_yaw, 0.0)
+	if elevation >= 0.0:
+		sun.rotation = Vector3(-sun_angle, _sun_yaw, 0.0)
+	else:
+		# A light shines along its -Z: pointing -Z away from the moon brings her light down.
+		sun.basis = Basis.looking_at(-_direction_toward_moon(sun_angle))
 	var cloud_shade: float = 1.0 - 0.75 * _overcast
-	sun.light_energy = lerpf(MOON_ENERGY, _sun_energy, daylight) * cloud_shade
+	var moon_energy: float = lerpf(NEW_MOON_ENERGY, MOON_ENERGY, _moon_lit_fraction())
+	sun.light_energy = lerpf(moon_energy, _sun_energy, daylight) * cloud_shade
 	var sun_color: Color = LOW_SUN_COLOR.lerp(Color.WHITE, smoothstep(0.0, 0.5, elevation))
 	sun.light_color = MOON_COLOR.lerp(sun_color, daylight)
 
 
-func _paint_sky(elevation: float, daylight: float) -> void:
-	var clear_top: Color = NIGHT_SKY_TOP.lerp(_day_sky_top, daylight)
-	var clear_horizon: Color = NIGHT_SKY_HORIZON.lerp(_day_sky_horizon, daylight)
-	# An orange horizon around sunrise and sunset, hidden by clouds.
-	var twilight: float = (1.0 - clampf(absf(elevation) / 0.2, 0.0, 1.0)) * (1.0 - _overcast)
-	clear_horizon = clear_horizon.lerp(TWILIGHT_HORIZON, twilight * 0.6)
-	var clouds: Color = _dimmed(OVERCAST_SKY, lerpf(0.12, 1.0, daylight))
-	_sky_material.sky_top_color = clear_top.lerp(clouds, _overcast)
-	_sky_material.sky_horizon_color = clear_horizon.lerp(clouds, _overcast)
-	_sky_material.ground_horizon_color = _sky_material.sky_horizon_color
-	_sky_material.ground_bottom_color = _dimmed(_day_ground_bottom, lerpf(0.2, 1.0, daylight))
+## Sends the state to the sky shader; the fog takes its color from the sky itself
+## (fog_aerial_perspective in the scene), so it follows the shader's colors.
+func _paint_sky(sun_angle: float, daylight: float) -> void:
+	_sky_material.set_shader_parameter(&"daylight", daylight)
+	_sky_material.set_shader_parameter(&"sun_direction", _direction_toward_sun(sun_angle))
+	_sky_material.set_shader_parameter(&"overcast", _overcast)
+	_sky_material.set_shader_parameter(&"dusk", 1.0 if _day_fraction >= 0.5 else 0.0)
+	_sky_material.set_shader_parameter(&"moon_phase", _moon_phase)
+	_sky_material.set_shader_parameter(&"moon_direction", _direction_toward_moon(sun_angle))
 	var environment: Environment = world_environment.environment
 	environment.ambient_light_color = NIGHT_AMBIENT
 	environment.ambient_light_sky_contribution = lerpf(0.5, 1.0, daylight)
 	environment.fog_enabled = _fog_density > 0.001
 	environment.fog_density = _fog_density
-	environment.fog_light_color = _sky_material.sky_horizon_color
 
 
-## Darker color with the same alpha (Color * float would also scale the alpha).
-func _dimmed(color: Color, brightness: float) -> Color:
-	return Color(color.r * brightness, color.g * brightness, color.b * brightness, color.a)
+## The light shines along its -Z axis, so +Z of the sun's rotation points toward the sun.
+func _direction_toward_sun(sun_angle: float) -> Vector3:
+	return Basis.from_euler(Vector3(-sun_angle, _sun_yaw, 0.0)).z
+
+
+## Half a turn behind the sun, so she rises as it sets. The sun's path, (0, sin, cos)
+## turned by its yaw, passes overhead; the moon's leans sideways by moon_path_tilt_degrees.
+func _direction_toward_moon(sun_angle: float) -> Vector3:
+	var moon_angle: float = sun_angle + PI
+	var tilt: float = deg_to_rad(moon_path_tilt_degrees)
+	var on_path := Vector3(
+		-sin(moon_angle) * sin(tilt), sin(moon_angle) * cos(tilt), cos(moon_angle)
+	)
+	return on_path.rotated(Vector3.UP, _sun_yaw)
+
+
+## How much of the moon's face is lit: 0 at new moon, 1 at full (as in the sky shader).
+func _moon_lit_fraction() -> float:
+	return 0.5 - 0.5 * cos(_moon_phase * TAU)

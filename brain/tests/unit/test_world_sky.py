@@ -1,4 +1,4 @@
-from datetime import datetime, time
+from datetime import UTC, datetime, time
 
 import pytest
 
@@ -36,7 +36,9 @@ class ManualTimer:
 
 @pytest.fixture
 def clock() -> WorldClock:
-    return WorldClock(ClockMode.FAST, 3600.0, now=lambda: datetime(2026, 11, 25, 10, 30))
+    return WorldClock(
+        ClockMode.FAST, 3600.0, now=lambda: datetime(2026, 11, 25, 10, 30, tzinfo=UTC)
+    )
 
 
 @pytest.fixture
@@ -107,3 +109,10 @@ def test_has_no_weather_when_the_first_reading_fails(clock: WorldClock, timer: M
     sky = sky_with(clock, timer, ScriptedForecast(None))
 
     assert sky.look().weather is None
+
+
+def test_shows_the_moon_phase_of_the_real_date(clock: WorldClock, timer: ManualTimer) -> None:
+    sky = sky_with(clock, timer, ScriptedForecast(RAIN))
+
+    # 25 Nov 2026 is the day after a full moon.
+    assert sky.look().moon_phase == pytest.approx(0.53, abs=0.01)

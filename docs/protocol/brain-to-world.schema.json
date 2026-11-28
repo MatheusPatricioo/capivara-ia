@@ -613,13 +613,20 @@
         "weather": {
           "title": "Weather",
           "type": "string"
+        },
+        "moon_phase": {
+          "exclusiveMaximum": 1.0,
+          "minimum": 0.0,
+          "title": "Moon Phase",
+          "type": "number"
         }
       },
       "required": [
         "type",
         "day_fraction",
         "day_length_seconds",
-        "weather"
+        "weather",
+        "moon_phase"
       ],
       "title": "SkyMessage",
       "type": "object"

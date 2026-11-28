@@ -5,6 +5,7 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from src.domain.moon import moon_phase
 from src.domain.weather import Weather, WeatherForecast, WeatherUnavailableError
 from src.domain.world_clock import WorldClock, WorldTime
 
@@ -18,6 +19,8 @@ class SkyView:
     """Real seconds in a whole world day, so the world can move the sun on its own."""
     weather: Weather | None
     """None while the weather was never read (or is switched off)."""
+    moon_phase: float
+    """From 0 (new moon) through 0.5 (full) to just under 1, by the real date."""
 
 
 class WorldSky:
@@ -42,7 +45,12 @@ class WorldSky:
         self._weather_checked_at: float | None = None
 
     def look(self) -> SkyView:
-        return SkyView(self._clock.now(), self._clock.day_length_seconds, self._current_weather())
+        return SkyView(
+            self._clock.now(),
+            self._clock.day_length_seconds,
+            self._current_weather(),
+            moon_phase(self._clock.real_moment()),
+        )
 
     def _current_weather(self) -> Weather | None:
         if self._forecast is not None and self._is_time_to_check_the_weather():

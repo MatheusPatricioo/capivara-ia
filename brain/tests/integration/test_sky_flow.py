@@ -2,7 +2,7 @@
 
 import json
 from collections.abc import Iterator
-from datetime import datetime
+from datetime import UTC, datetime
 
 import pytest
 from websockets.sync.client import connect
@@ -28,7 +28,9 @@ def server() -> Iterator[WorldServer]:
 
 @pytest.fixture
 def rainy_fast_noon() -> WorldSky:
-    clock = WorldClock(ClockMode.FAST, ONE_HOUR, now=lambda: datetime(2026, 11, 25, 10, 30))
+    clock = WorldClock(
+        ClockMode.FAST, ONE_HOUR, now=lambda: datetime(2026, 11, 25, 10, 30, tzinfo=UTC)
+    )
     return WorldSky(clock, FixedWeatherForecast(Sky.RAIN), weather_refresh_seconds=900.0)
 
 
@@ -46,4 +48,5 @@ def test_a_world_that_connects_later_gets_the_sky_right_away(
         "day_fraction": 0.5,
         "day_length_seconds": ONE_HOUR,
         "weather": "rain",
+        "moon_phase": 0.5256,
     }

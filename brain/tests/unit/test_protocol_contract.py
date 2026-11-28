@@ -58,7 +58,7 @@ CAT_DRAWING = SavedItemSummary(id="2026-11-23-gato.png", title="gato", saved_at=
 BRAIN_TO_WORLD_SAMPLES: list[BaseModel] = [
     GoToMessage(point="computer"),
     FeelingsMessage(emotion="joy", intensity=0.7, valence=0.5, arousal=0.4),
-    SkyMessage(day_fraction=0.5, day_length_seconds=86400.0, weather="clear"),
+    SkyMessage(day_fraction=0.5, day_length_seconds=86400.0, weather="clear", moon_phase=0.25),
     MailboxMessage(
         letters=[
             LetterMessage(

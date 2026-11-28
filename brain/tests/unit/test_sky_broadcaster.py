@@ -1,4 +1,4 @@
-from datetime import datetime, time
+from datetime import UTC, datetime, time
 
 import pytest
 
@@ -27,26 +27,28 @@ def broadcaster() -> RecordingBroadcaster:
 
 @pytest.fixture
 def rainy_noon() -> WorldSky:
-    clock = WorldClock(ClockMode.FAST, ONE_HOUR, now=lambda: datetime(2026, 11, 25, 10, 30))
+    clock = WorldClock(
+        ClockMode.FAST, ONE_HOUR, now=lambda: datetime(2026, 11, 25, 10, 30, tzinfo=UTC)
+    )
     return WorldSky(clock, FixedWeatherForecast(Sky.RAIN), weather_refresh_seconds=900.0)
 
 
-def test_sky_message_carries_the_time_the_day_length_and_the_weather() -> None:
-    view = SkyView(WorldTime(time(12, 0)), ONE_HOUR, Weather(Sky.RAIN, 19.0))
+def test_sky_message_carries_the_time_the_day_length_the_weather_and_the_moon() -> None:
+    view = SkyView(WorldTime(time(12, 0)), ONE_HOUR, Weather(Sky.RAIN, 19.0), 0.5)
 
     assert sky_message(view) == SkyMessage(
-        day_fraction=0.5, day_length_seconds=ONE_HOUR, weather="rain"
+        day_fraction=0.5, day_length_seconds=ONE_HOUR, weather="rain", moon_phase=0.5
     )
 
 
 def test_sky_message_says_unknown_when_the_weather_was_never_read() -> None:
-    view = SkyView(WorldTime(time(12, 0)), ONE_HOUR, None)
+    view = SkyView(WorldTime(time(12, 0)), ONE_HOUR, None, 0.5)
 
     assert sky_message(view).weather == "unknown"
 
 
 def test_a_moment_just_before_midnight_is_sent_as_midnight() -> None:
-    view = SkyView(WorldTime(time(23, 59, 59, 999999)), ONE_HOUR, None)
+    view = SkyView(WorldTime(time(23, 59, 59, 999999)), ONE_HOUR, None, 0.5)
 
     assert sky_message(view).day_fraction == 0.0
 
@@ -57,7 +59,12 @@ def test_publish_sends_a_remembered_sky_message(
     SkyBroadcaster(rainy_noon, broadcaster, interval_seconds=10.0).publish()
 
     assert broadcaster.sent == [
-        (SkyMessage(day_fraction=0.5, day_length_seconds=ONE_HOUR, weather="rain"), True)
+        (
+            SkyMessage(
+                day_fraction=0.5, day_length_seconds=ONE_HOUR, weather="rain", moon_phase=0.5256
+            ),
+            True,
+        )
     ]
 
 

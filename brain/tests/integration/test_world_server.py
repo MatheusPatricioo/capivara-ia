@@ -59,7 +59,8 @@ def test_sends_a_broadcast_message_to_the_connected_world(
 
 def test_replays_remembered_messages_to_a_world_that_connects_later(server: WorldServer) -> None:
     server.broadcast(
-        SkyMessage(day_fraction=0.5, day_length_seconds=3600.0, weather="rain"), remember=True
+        SkyMessage(day_fraction=0.5, day_length_seconds=3600.0, weather="rain", moon_phase=0.5),
+        remember=True,
     )
 
     with connect_world(server) as late_world:
@@ -68,6 +69,7 @@ def test_replays_remembered_messages_to_a_world_that_connects_later(server: Worl
             "day_fraction": 0.5,
             "day_length_seconds": 3600.0,
             "weather": "rain",
+            "moon_phase": 0.5,
         }
 
 

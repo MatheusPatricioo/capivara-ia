@@ -12,7 +12,7 @@ DAY_LENGTH_SECONDS = 86400.0
 
 
 def world_now_at(time_of_day: time, weather: Weather | None) -> WorldNow:
-    view = SkyView(WorldTime(time_of_day), DAY_LENGTH_SECONDS, weather)
+    view = SkyView(WorldTime(time_of_day), DAY_LENGTH_SECONDS, weather, 0.5)
     return WorldNow(lambda: view, TEMPLATE)
 
 
@@ -46,8 +46,8 @@ def test_leaves_the_weather_out_while_it_was_never_read() -> None:
 def test_looks_at_the_sky_again_on_every_call() -> None:
     views = iter(
         [
-            SkyView(WorldTime(time(17, 0)), DAY_LENGTH_SECONDS, None),
-            SkyView(WorldTime(time(19, 0)), DAY_LENGTH_SECONDS, None),
+            SkyView(WorldTime(time(17, 0)), DAY_LENGTH_SECONDS, None, 0.5),
+            SkyView(WorldTime(time(19, 0)), DAY_LENGTH_SECONDS, None, 0.5),
         ]
     )
     world_now = WorldNow(lambda: next(views), TEMPLATE)

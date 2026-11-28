@@ -27,10 +27,15 @@ enum ControlMode { AUTONOMOUS, MANUAL }
 @export var final_step_max_seconds: float = 1.5
 ## Close enough to the interaction point to stop the final step, in meters.
 @export var final_step_tolerance: float = 0.05
+## Fraction of her walking speed kept while the clip camera films: on video, close up, the
+## game's pace looks rushed.
+@export_range(0.2, 1.0) var filming_pace: float = 0.6
 
 var control_mode: ControlMode = ControlMode.AUTONOMOUS
 var _is_walking_to_destination: bool = false
 var _current_speed_scale: float = 1.0
+## 1.0 in the game; filming_pace while she is filmed.
+var _pace: float = 1.0
 ## Set while she goes to an interaction point: where to stand and what to face on arrival.
 var _point_position: Vector3 = Vector3.ZERO
 var _look_target: Vector3 = Vector3.ZERO
@@ -64,6 +69,11 @@ func walk_to(destination: Vector3, speed_scale: float = 1.0) -> void:
 	_target_point = null
 	_is_taking_final_step = false
 	_is_facing_look_target = false
+
+
+## While filmed she walks at filming_pace, so the video looks calm; the game keeps its pace.
+func set_filmed(is_filmed: bool) -> void:
+	_pace = filming_pace if is_filmed else 1.0
 
 
 ## Sends the capybara to the interaction point with this id (bed, food_bowl, computer...).
@@ -144,7 +154,13 @@ func _navigation_velocity() -> Vector3:
 	var next_path_position: Vector3 = _navigation_agent.get_next_path_position()
 	var direction: Vector3 = next_path_position - global_position
 	direction.y = 0.0
-	return direction.normalized() * navigation_speed * _current_speed_scale * _arrival_speed_ratio()
+	return (
+		direction.normalized()
+		* navigation_speed
+		* _current_speed_scale
+		* _pace
+		* _arrival_speed_ratio()
+	)
 
 
 ## 1.0 while far away, dropping smoothly to arrival_min_speed_ratio near the destination.
